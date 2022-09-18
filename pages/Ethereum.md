@@ -17,11 +17,12 @@ title:: Ethereum
 			- Then anyone could transact ([[PlasmaChain]]), but there's chance of censorship due to [[PlasmaChainOperator]]
 			- Finally, censorship is solved with [[RollUps]]
 		- ### L2 scaling solutions
-			- ### [Channels](https://ethereum.org/en/developers/docs/scaling/state-channels/) (State Channels and Payment Channels) #StateChannel
+			- ### [State Channels](https://ethereum.org/en/developers/docs/scaling/state-channels/) (State Channels and Payment Channels) #StateChannel
 			  collapsed:: true
 				- > TL;DR: Channels use multisig contracts to perform multiple operations off-chain, coming back and write to the root chain later
 				- Channels are made possible via multisig contracts. It lets participants transact their funds off-chain multiple times, before committing the root chain.
-				- Channels downsides are that __channels don't offer open partition__, that is, participants need to be known up front, and users'll have to lock their funds in the multisig contract. Each of the channel is also application-specific.
+				- Channels downsides are that __channels don't offer open participation__, that is, participants need to be known up front, and users'll have to lock their funds in the multisig contract. Each of the channel is also application-specific.
+				- Due to use of multisig contracts, __censorship can be done by any party__ of the multisig used
 				- Channels are some of the fist scaling solution for blockchains, having been adopted within the Bitcoin environment. [Raiden](https://raiden.network/) provides channel scaling on Ethereum
 			- ### [Plasma chains](https://ethereum.org/ph/developers/docs/scaling/plasma/) #PlasmaChain
 			  collapsed:: true
@@ -62,8 +63,14 @@ title:: Ethereum
 					- > Faster and more efficient than optimistic rollups, although it does not really help with migrating current smart contracts on the root chain to L2.
 					- Examples are Loopring, DeversiFi, etc.
 				- #### [Optimistic Rollups](https://ethereum.org/en/developers/docs/scaling/optimistic-rollups/) #OptimisticRollup
-					- > The solution uses an EVM-compatible VM (_OVM_), which executes the same bytecode as Ethereum Mainnet. This means that the existing, battle-tested smart contracts can be migrated to L2.
+					- > Optimistic rollups aggregates their L2 blocks and publish them to L1 chain, effectively _borrowing_ L1 consensus security features. It is optimistic in that it _simply trusts_ L1.
+					- The solution uses an __EVM-compatible VM (_OVM_)__, which executes the same bytecode as Ethereum Mainnet. This means that the existing, battle-tested smart contracts can be migrated to L2.
 					- Examples include [Optimism](https://community.optimism.io/docs/how-optimism-works/)
+					- ### Optimistic rollup commitments and fraud-proof #OptimisticRollupCommitments
+						- Like [[PlasmaChain]], optimistic commitments are needed for L2 -> L1 communication/withdrawal. This also involves the same _challenge period_ during which challengers can knock down bad TXs and gain reward for their work.
+					- #### EVM-compatible vs EVM-equivalence #EVM-Compatible #EVM-Equivalence
+						- EVM-compatibility means that the L2 network can run Solidity code from L1, but extra low-level code is needed to port it to run on the L2 infrastructure
+						- [[EVM-Equivalence]] network is in complete __compliance with [Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)__. This is like literally saying that this L2 can just execute the L1 contracts as if they were on L1. The equivalence is how a L2 network _bridges_ the gap between L1 network effects and L2 execution environment.
 					- #### Optimistic Rollup Disputes
 						- According to Optimism blog post, the main idea for optimistic rollups is always about disputes. To quote the blog: _If you think of Ethereum as an almighty, decentralized court, then the core insight of L2 scalability is: “don’t go to court to cash a check — just go if the check bounces.”_
 			- ### [Sidechains](https://ethereum.org/en/developers/docs/scaling/sidechains/) #SideChain
