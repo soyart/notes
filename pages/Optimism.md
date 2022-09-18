@@ -1,0 +1,3 @@
+- > Optimism is a L2 scaling solution for Ethereum using [[OptimisticRollup]]
+- Design goal is to be simple
+-
