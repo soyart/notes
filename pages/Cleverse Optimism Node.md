@@ -1,0 +1,35 @@
+- # [[Cleverse Arbitrum Node]] + [[Cleverse Optimism Node]] (140.82.22.144)
+- ## Host info
+	- Purpose: [[Cleverse Arbitrum Node]] and [[Cleverse Optimism Node]]
+- ## [[Cleverse Arbitrum Node]]
+	- Run as [[Docker Container]] `node-nitro_arb-node_1`.
+		- Connected to Docker network `node-nitro_default`
+			- Subnet: `172.27.0.0/16`.
+			- Container IP address: `172.27.0.2/16`.
+			- Network gateway:  `172.27.0.1`.
+		- Docker volumes: none. Data is bind mounted from `/root/.arbitrum` on the host to `/home/user/.arbitrum` on the container.
+		- Host port mappings:
+			- `0.0.0.0:8547-8548->8547-8548/tcp`
+			- `:::8547-8548->8547-8548/tcp`
+- ## [[Cleverse Optimism Node]]
+	- Run as [[Docker Container]]s. See [project's `docker-compose.yml`](https://github.com/ethereum-optimism/optimism/blob/develop/ops/docker-compose.yml) to get basic idea
+		- ### Services overview and dependencies
+			- As per [[OptimismClient]], we need 2 explicit components running: (1) Optimism client (99% Geth) and (2) [[DTL]], __and we need L1 chain some where__.
+				- 1. Optimism client is referred to as `l2geth` on the project monorepo Docker files.
+					- `l2geth` depends on `l1chain`
+					- `l2geth` depends on `deployer`
+				- 2. [[DTL]] is referred to as `dtl` on the project monorepo Docker files.
+					- `dtl` depends on `l1chain` to pull data from [[CTC]]
+					- `dtl` depends on `deployer`
+					- `dtl` depends on `l2geth`
+				- 3. `deployer` is not mentioned in [How Optimism Works](https://community.optimism.io/docs/how-optimism-works/), but is required by other services.
+					- `deployer` depends on `l1chain`
+				- 4. `l1chain` can be Cleverse's Ethereum node `http://45.77.189.55:8545`, so, 3 containers in total (`l2geth`, `deployer`, `dtl`)
+	- ## Optimism Containers
+		- #### `l2geth` (Optimism Client)
+			- [[Docker Image]] `ethereumoptimism/l2geth:${DOCKER_TAG_L2GETH:-latest}`
+			- This container exposes `:8545/HTTP` and `:8546/WS` for Optimism endpoints
+			- Container settings as ENV in `./ops/env/geth.env`. You can see example in the project's `docker-compose.yml`
+				- Set `l1chain` with `ETH1_HTTP` to use our existing Ethereum node
+			- Volumes should mirror [[Cleverse Arbitrum Node]], so we will be using [[Bind Mount]] from `/root/.optimism` on the host to `/data/optimism` on the container.
+-
