@@ -98,7 +98,7 @@
 			  volumes:
 			  	todo-mysql-data:
 			  ```
-	- ## Bringing up containers
-		- CD to your [[docker-compose.yaml]], and Use `docker compose up -d [-f path/to/docker-compose.yml]` to bring up your containers.
+	- ## Bringing containers up/down
+		- CD to your [[docker-compose.yaml]], and Use `docker compose up -d [-f path/to/docker-compose.yml]` to bring up your containers. Likewise, `docker compose down` brings down your containers.
 		- You can supply `-e <ENV>` with `docker compose`, and that env variables will be used in [[docker-compose.yaml]].
 		-

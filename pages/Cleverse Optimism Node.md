@@ -26,6 +26,7 @@
 					- `deployer` depends on `l1chain`
 				- 4. `l1chain` can be Cleverse's Ethereum node `http://45.77.189.55:8545`, so, 3 containers in total (`l2geth`, `deployer`, `dtl`)
 	- ## Optimism Containers
+		- We can deploy Optimism node using [[Docker Image]] from [these repositories](https://hub.docker.com/u/ethereumoptimism), and there's a dedicated Docker repository for each component.
 		- #### `l2geth` (Optimism Client)
 			- [[Docker Image]] `ethereumoptimism/l2geth:${DOCKER_TAG_L2GETH:-latest}`
 			- This container exposes `:8545/HTTP` and `:8546/WS` for Optimism endpoints

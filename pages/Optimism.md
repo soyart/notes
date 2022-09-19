@@ -4,26 +4,26 @@ title:: Optimism
 - Design goal is to be _simple_ and [[EVM-Equivalence]].
 - See also: [Optimism Protocol](https://community.optimism.io/docs/protocol/)
 - ## How Optimism achieve [[EVM-Equivalence]]
-	- Optimism first aimed to be [[EVM-Compatible]], but as the project and Ethereum move forward, they realize the only way to create nice L2 without having to add more custom code to L2 contracts, they need to have EVM-equivalence.
+	- Optimism first aimed to be [[EVM-Compatible]], but as the project and Ethereum move forward, they realize the only way to create nice L2 without having to add more custom code to L2 contracts, is to achieve [[EVM-Equivalence]] .
 	- It has now become the first L2 chain to brag [[EVM-Equivalence]].
 	- They do this by **separating _block generation_ and _block execution_**.
-	- ### Block generation
-		- On L1, nodes use PoS to determine consensus.
-		- On L2, blocks are collected and sent to L1 in batch; __if L2 blocks use its own L2 PoS to decide consensus on L2 blocks too, then it would be pointless to scale to EVM-equivalence this way__ (slow+expensive).
+- ## Optimism L2 block generation
+	- On L1, nodes use PoS to determine consensus.
+	- On L2, blocks are collected and sent to L1 in batch; __if L2 blocks use its own L2 PoS to decide consensus on L2 blocks too, then it would be pointless to scale to EVM-equivalence this way__ (slow+expensive).
 	- On Optimism, L2 just defines a function that takes in L1 blocks, process them for rollups, and then __output the L2 blocks out in L1 format__. This is why L2 block produced this way is _equivalent_ to L1 block.
-- ## Optimism L2 block storage [[CTC]]
-	- All Optimism blocks (L2 blocks) are stored on Ethereum (L1) in contract [`CanonicalTransactionChain`](https://etherscan.io/address/0x5E4e65926BA27467555EB562121fac00D24E9dD2) ([[CTC]]).
-	- Optimism blocks live inside [[CTC]] on L1 as append-only list. In other word, __this append-only list represents Optimism blockchain__.
-	- [[CTC]] code prevents existing L2 blocks to change from new L1/L2 transactions.
-	- Optimism L2 can tolerate up to 50 [[Chain Reorgs]] from L1. If L1 reorged more than 50 blocks, Optimism reorgs as well.
-- ## Optimism L2 block production
-	- **Optimism L2 block production is managed solely be the _sequencer_**.
-	- __Alternatively, users can bypass the sequencer by directly sending L1 TX to [[CTC]]__, perhaps to avoid censorship, but this will end up with more expensive gas.
-	- ### Sequencer
-		- As of the writing, **_OP Labs PBC_ runs the only block producer on the Optimism network**.
-		- The sequencer provides (1) __instant state confirmations/updates__, (2) __constructing/executing L2 blocks__, (2) __submitting user TXs to L1__.
-		- The sequencer has no mempool, so it executes TXs in the order they arrive.
-		- A user sends their transaction to the sequencer, the sequencer checks that the transaction is valid (i.e. pays a sufficient fee) and then applies the transaction to its local state as a pending block. These pending blocks are periodically submitted in large, compressed batches to Ethereum.
+		- ### Optimism L2 block storage #CTC
+			- All Optimism blocks (L2 blocks) are stored on Ethereum (L1) in contract [`CanonicalTransactionChain`](https://etherscan.io/address/0x5E4e65926BA27467555EB562121fac00D24E9dD2) ([[CTC]]).
+			- Optimism blocks live inside [[CTC]] on L1 as append-only list. In other word, __this append-only list represents Optimism blockchain__.
+			- [[CTC]] code prevents existing L2 blocks to change from new L1/L2 transactions.
+			- Optimism L2 can tolerate up to 50 [[Chain Reorgs]] from L1. If L1 reorged more than 50 blocks, Optimism reorgs as well.
+		- ### Optimism L2 block production #OptimismSequencer
+			- __Optimism L2 block production is managed solely by the [[OptimismSequencer]]__.
+			- __Alternatively, users can bypass the sequencer by directly sending L1 TX to [[CTC]]__, perhaps to avoid censorship, but this will end up with more expensive gas.
+			- ### [[OptimismSequencer]]
+				- As of the writing, **_OP Labs PBC_ runs the only block producer on the Optimism network**.
+				- The sequencer provides (1) __instant state confirmations/updates__, (2) __constructing/executing L2 blocks__, (2) __submitting user TXs to L1__.
+				- The sequencer has no mempool, so it executes TXs in the order they arrive.
+				- A user sends their transaction to the sequencer, the sequencer checks that the transaction is valid (i.e. pays a sufficient fee) and then applies the transaction to its local state as a pending block. These pending blocks are periodically submitted in large, compressed batches to Ethereum.
 - ## Optimism L2 block execution
 	- On Ethereum, the node (client) downloads blocks from L1 P2P network.
 	- On Optimism, the node (client) instead downloads the _block list_ stored inside [[CTC]], and work on L2 from there.
@@ -56,9 +56,3 @@ title:: Optimism
 			- See [[OptimisticRollupCommitments]]
 			- On Optimism, if a TX was invalidated during the challenge period, the TX will be removed from `StateCommitmentChain`. __However, this won't roll back Optimism__. Instead a new, updated state commitment is published.
 			- On Optimism, the TX ordering and Optimism state does not change after a successful challenge.
-- ## Optimism nodes
-	- There's [Optimism Monorepo](https://github.com/ethereum-optimism/optimism), complete with
-		- `docker-compose.yaml` for [[Docker]] deployment
-	- As of this writing, we know that [[OptimismClientComponents]] has 2 critical parts - the [[DTL]] and the L2 Geth.
-	- We can deploy Optimism node using [[Docker Image]] from [these repositories](https://hub.docker.com/u/ethereumoptimism), and there's a dedicated Docker repository for each component.
-	- TODO See what is essentially needed, since some parts like the [`fault-detecter`](https://hub.docker.com/r/ethereumoptimism/fault-detector) may not be needed for our use case.
