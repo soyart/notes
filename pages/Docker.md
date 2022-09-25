@@ -55,9 +55,9 @@
 				  docker run -v /var/data:/data myapp-img-name
 				  ```
 		- ### Setup [[Docker Container Networking]]
-			- Networking is done with `--network` and `--network-alias`.
-			- `--network` specifies Docker network to use
-			- `--network-alias` specifies container hostname inside that Docker network.
+			- Networking is done with `docker run --network` and `--network-alias`.
+				- `--network` specifies Docker network to use
+				- `--network-alias` specifies container hostname inside that Docker network.
 	- ## [[Multi Container Apps]]
 		- It is preferred that a container only hosts one application. So if an app requires 3 moving parts (i.e. 3 programs - webserver, back-end server, and database), then we will spin up 3 containers to run that app.
 		- Because multiple containers now need to talk to each other, we need something called [[Container Networking]].
@@ -67,12 +67,13 @@
 	- [[Docker Container Networking]] is managed using `docker-network` subcommand.
 		- List Docker networks with `docker network ls`.
 		- Inspect with `docker network inspect <network name>`
-	- A Docker network is attached to a container during [[Running Docker Containers]] with `docker run --network mynet --network-alias myhost`
+	- A Docker network is attached to a container during [[Running Docker Containers]] with `docker run --network mynet --network-alias myhost`.
 	  collapsed:: true
 		- To create a new network, use `docker network create <network name>`:
 			- ```
 			  docker network create myapp-net;
 			  ```
+	- If you want to connect an already running container to a network, use `docker network connect`
 - # [[Docker Volume]]
 	- To have that file persist, we'll need a Docker volume, and mount that volume to the target directory inside the container filesystem.
 	- [[Docker Volume]]s are managed using `docker-volume`

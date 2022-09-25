@@ -1,7 +1,6 @@
 - # [[Docker Compose]]
 	- > [[Docker Compose]] is a stand-alone software tool enabling us to _compose_ our containerized environment in a YAML file `docker-compose.yaml` #docker-compose.yaml
 	- ## [[docker-compose.yaml]]
-	  collapsed:: true
 		- ### [Basic composing/Boilerplate](https://docs.docker.com/get-started/08_using_compose/)
 			- In this example we're going to compose a [[Multi Container Apps]], This _todo app_ is going to use 2 containers - __a MySQL service _AND_ a backend service__, with its own Docker network `todo-net`.
 			- We want to use `docker-compose` to _bring everything up_ for us. Lego.
