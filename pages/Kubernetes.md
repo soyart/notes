@@ -1,0 +1,110 @@
+- > Kubernetes (k8s) is a container orchestration platform
+	- It manages containerized applications, e.g. a [[Docker Container]]
+	- It supports many different container technologies, e.g. [[Docker]]
+- # [[k8s node]]
+	- A machine (VM or physical) running Kubernetes
+	- 2 main types of nodes are:
+		- [[k8s Worker node]] running application [[k8s Pod]]s
+		- [[k8s Master node]] running [[k8s Control Plane]]
+- # [[k8s Pod]]
+  collapsed:: true
+	- Each running container in k8s is abstracted as a Kubernetes pod
+		- A pod abstracts k8s users from underlying container technologies
+		- Users only interact with k8s layer, not Docker
+		- Usually one container per pod
+			- Or with some helper containers and side service ([[k8s Sidecar]])
+		- Each pod gets its own IP address in the [[k8s virtual network]]
+			- A pod can connect to other pods via their internal IP addresses
+		- Pods are [[ephemeral]]
+			- They may die anytime, and the scheduler [[k8s sched]] will restart the application with a new pod
+			- New IP address when they are restarted
+			- So we **can't rely on the pod's IP address**
+			- Instead, k8s wraps a pod with a [[k8s Service]]
+- # [[k8s Service]] and [[k8s Ingress]]
+  collapsed:: true
+	- Because [[k8s Pod]] are [[ephemeral]], we need a way to manage access to these fragile pods.
+	- ## [[k8s Service]]
+		- A Service is assigned to 1 or more [[k8s Pod]]s
+		- A Service has static IP address
+		- The life cycle of a Service and [[k8s Pod]] are disconnected
+			- If a [[k8s Pod]] dies and is restarted, the restarted pod is assigned to the same service
+		- A Service also acts like a load balancer, balancing loads distributed to [[k8s Pod]]s connected to it
+	- ## [[k8s Ingress]]
+		- The Ingress is akin to default gateway in OS
+		- Any incoming requests first go to Ingress, then to the [[k8s Service]]s
+- # [[k8s Cluster]]
+  collapsed:: true
+	- Each deployed k8s system is called a cluster
+	- A cluster comprises of 1 or more [[k8s node]]s.
+		- A node is a machine, i.e. a VM or a physical machine
+		- There's ** [[k8s Master node]] ** node, connected to [[k8s Worker node]](s) via [[k8s virtual network]]
+	- Cluster components
+		- Multiple [[k8s Worker node]]s run containerized applications
+			- The workers are usually more powerful than the master
+		- A [[k8s Master node]] node runs important k8s processes, together called together called [[k8s Control Plane]]
+			- [[k8s api]] (API Server)
+				- A entry point to the [[k8s Control Plane]]
+				- kubectl commands talk to this processes
+			- [[k8s c-m]] (Controller Manager)
+				- Keeps track of what's happening in a [[k8s Cluster]]
+			- [[k9s sched]] (Scheduler)
+				- Akin to OS scheduler
+				- Ensures [[k8s Pod]] placement
+			- [[k8s etcd]]
+				- Key-value store for a [[k8s Cluster]]
+				- Data here is used to restore a whole [[k8s Cluster]] states. i.e. rollback
+			- If the only [[k8s Master node]] dies, the whole [[k8s Cluster]] dies, so it's normal to replicate and run 2 [[k8s Master node]]s to ensure [[zero downtime]]
+- # [[k8s Volume]]
+	- Persistent data provider for a [[k8s Cluster]]
+	- Kubernetes does not manage data persistence
+	- Similar to [[Docker Volume]], but on the orchestration level
+	- Can be remote or local
+- # Kubernetes configuration [[k8s config]]
+  collapsed:: true
+	- ## [[k8s ConfigMap]]
+	  collapsed:: true
+		- External configuration for apps
+		- Reduce the need to rebuild a container image
+	- ## [[k8s Secret]]
+	  collapsed:: true
+		- Sensitive external configuration, e.g. credentials like passwords and keys
+		- Similar to [[k8s ConfigMap]], but encrypted and encoded to Base64
+		- **[[k8s Secret]]s are managed by 3rd party tools, not Kubernetes itself!**
+	- ## [[k8s Deployment]]
+		- Declarative YAML states for our [[k8s Pod]]s running in our [[k8s Cluster]]s
+		- Similar to [[Docker Compose]]
+		- Used to define states for *stateless* applications.
+		- Stateful applications need [[k8s StatefulSet]]
+		- We are most likely to work with deployment and not [[k8s Pod]]s.
+		  collapsed:: true
+			- We can define a template for our apps, including replication, etc in our deployment file
+		- [[k8s Control Plane]] will try its best to maintain [[k8s Cluster]] state to be in sync with the deployment definition
+		- [[kubectl]] can send deployment YAML/JSON to [[k8s api]], and the [[k8s Control Plane]] will sync the cluster state to the one defined in the deployment
+	- ## [[k8s StatefulSet]]
+	  collapsed:: true
+		- Similar to [[k8s Deployment]]s, but for stateful applications
+		- Difficult to set up
+		- Most people just run one instance of a stateful app, e.g. one big database outside of the [[k8s Cluster]], and connect it to the whole cluster
+	- ## Writing [[k8s config]]
+		- k8s configurations are in YAML
+		- Multiple [[k8s config kinds]] exist and are specified by top-level key `kind`:
+			- Examples of values are `Deployment` and `Service`
+			- File `nginx-deployment.yaml` with entry `kind: Deployment` for a [[k8s Deployment]]
+			- File `nginx-service.yaml` with entry `kind: Service` for a [[k8s Service]]
+			- The filename does not matter
+		- Each configuration has 4 parts
+			- Header
+				- Includes fields `apiVersion` and kind ([[k8s config kinds]])
+			- [[k8s config metadata]]
+				- Includes fields such as `name` and `label`
+			- [[k8s config spec]]
+				- Valid keys depend on the type of [[k8s config kinds]]
+			- [[k8s config status]] **(auto-generated)**
+				- [[k8s Control Plane]] will read these configs, generate and maintain a [[k8s config status]] for each config
+					- The control plane actively compares the desired status with the actual states
+					- If there's discrepancy, the control plane tries to apply actions to sync actual states to that of the config status.
+						- e.g. if in the deployment, we say we want 2 replicas of NGINX
+						- One of the replicas died
+						- The pod actual status (dead) gets updated in [[k8s etcd]]
+						- [[k8s Control Plane]] sees that the current state in `etcd` differed from the desired state, and attempt to fix it by spinning another pod for the deployment
+		-

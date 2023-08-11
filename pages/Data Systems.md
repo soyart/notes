@@ -1,0 +1,32 @@
+- ## Transactional vs Analytics #Databases
+	- ### Transactions (OLTP)
+		- Most database use is transactional
+		- We only need to **read and write a small chunks of data in transactions**
+		- But these **transactions occur very frequently**, and users will most likely be writing and reading from these databases
+		- Optimized for low latency, for best user experience
+		- Most of the times, the query is **row-based** (i.e. the application consumes a lot of columns)
+	- ### Analytics (OTAP)
+		- E.g. business analysts query all sales data of the last month, summing up revenue and costs, etc.
+		- Usually #SQL
+		- Usually involve very large reads
+		- Because these analytics queries are expensive, we usually create new databases just for analytics, called [[Data Warehouse]]
+		- [[Data Warehouse]]
+		  collapsed:: true
+			- Data warehouses contains specialized tables just for analytics
+			- The created tables are called *fact tables*, or sometimes *view table*
+			- Fact tables sync with main database once every fixed intervals
+			- Fact tables usually have only columns for analytics, and usually extract some data from multiple OTLP databases and aggregate them (ETL - extract-transform-load)
+				- For example, a fact table `fact_sales` may contain data from multiple *dimension* tables `dim_date`, `dim_customers`, `dim_stocks`, `dim_products`. (star schema)
+				- Fact tables usually have very large number of columns - in the hundreds
+				- OTAP dimension tables allow analysts to normalize fact tables and to join multiple fact tables, and
+				- When dimension tables also get broken down, we call it *snowflake schema*
+			- Fact table storage: [[column-oriented storage]]
+				- Because fact tables usually have hundreds of columns, and millions of rows, we'll have bad performance if we simply query it all
+				- Most of the times we only need a few columns for a particular *analytics*, and so most other columns are ignored
+				- Even if we use indexes on interesting columns, the indexed data is still a full row
+				- Instead, we store data in columns, instead of rows, to speed up specific queries.
+				- **All column files have the same length, like keeping 2 arrays**
+				- We can also group these column files together by any columns which would make our analytics runs fastest
+				- Column values tend to be repetitive, so we can use compression to reduce I/O:
+					- Bitmap coding
+					- Bitmap coding + Run-length coding

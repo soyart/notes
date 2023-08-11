@@ -1,0 +1,122 @@
+- # Storage engine overview
+  id:: 64b848e9-88a9-4ebf-b907-99fcbb74dc84
+	- Storage engines are data structures behind databases
+	- They are optimized for different types of data, and the underlying storage, or even access patterns
+- # Storage engine types
+	- ## [[Page-based]]
+		- Treats underlying storage block as *pages*, i.e. a disk's 4K block is used as a page.
+		- Using storage as pages maps hardware (block) to software (page) more naturally
+		- ## B-Tree
+		  collapsed:: true
+			- Each page represent a node in the B-Tree
+			- Each page is identified/referred to by address/location (similar to pointers and disk offsets)
+			- ### B-Tree structure
+				- Each page can contain either *references to other pages, __OR__ values*.
+				- ```
+				  root: [ refer: p2 | A | refer: p56 | L | refer: p423 | Z ]
+				  
+				  p56:  [A | refer: p102 | F | refer: 103 ]
+				  
+				  p102: [A | value: "foo" | C | value: "bar" | H: value: "baz" ]
+				  ```
+					- The root page tells us that references to entries with key < `A` can be found on page `p2`, while references to key between `A`-`L` are stored in page `p56`, and references to key between `L`-`Z` on page `p423`
+					- The number of child pages in a page is called *branching factor*
+					- On page `p56`, it tells us that keys between `A` - `F` can be found on page `p102`
+					- On page `p102`, the page stores values for keys `A`, `C`, and `H`, while other keys that should be on this page are not yet set (missing keys in A-L are not yet set)
+				- #### Reading a value
+					- If we are reading key `C`, the query visits `root` -> `p56` -> `p102`, and we get value `"bar"`
+					- If we are reading key `X`, the query visits `root` -> `p423`, and then it follows the references until it finds value for key `X` some where deep in the tree
+					- Eventually, the query gets to a *leaf page* (*leaf node* in the tree), where **all individual keys are laid out (instead of ranges)**, and which contains values of those individual key, or a reference to that exact key.
+					- The different is that leaf page keys are not ranges, but individual keys.
+				- #### Writing to a page
+					- When updating data, if new data do not require moving/splitting the page to a new one (e.g. the page reference is still the same), then we only write to the updated page.
+					- If the write uses more space than available and new page is needed, then the data gets copied to a new page (split), and we'll have to update its parent's reference to match the new location.
+						- Split happens to maintain equal size for all nodes
+						- Example of cascading writes:
+						- If the parent had to be moved too, then we'll have to update the parent's reference in its grandparents. This goes on and on until all references are valid.
+							- Sometimes, the leaf page `leaf` might get split into 2 new nodes `l1` and `l2`
+							- Then we'll  have to update the parent `parent` to point to both `l2` and `l2`
+								- If `parent` still has some room, then we can just add new keys for `l2`
+								- If `parent` has 0 more slot, then we must split `parent` into `p1` and `p2` too, and we must then go on to update grandparent `grand`
+								- The same logic continues until we reach a node (shallow) where there is free space
+								- If it reaches the root node and still there's no space, then root itself is split, with new root pointing to old root
+			- ### Advantages:
+				- Not all keys have to be in memory
+				- Fast reads
+				- Ranged queries are fast
+			- ### **Limitations**:
+				- Slow writes due to cascading effect on writes
+				- In the middle of updating, the tree is in inconsistent states
+	- ## [[Log-based]] ([LSM](https://en.wikipedia.org/wiki/Log-structured_merge-tree))
+		- Stores data in long sequence of changes (logs)
+		- Logs have both keys and values
+		- Logs are separated into segment files on-disk, based on write time
+		- Each segment captures database writes during a specific timeframe
+			- Segment files are periodically merged and compacted to discard outdated data
+			- Values (of the same keys) in newer segment files will always have more priority
+		- Segment files are usually immutable and append-only
+			- Any maintenance will be committed to a new file, and old segment files will be deleted
+		- Advantages:
+			- Small storage size (segments are merged and compacted, leaving only most recent values)
+			- Naturally sequential
+		- Limitations:
+			- Compaction/merging can be expensive spikes
+		- ### **[Impractical]** Primitive, append-only, unsorted logs
+			- Use append-only log files, in segments
+			- Log files are usually in binary
+			- Older segments can be compacted (merged)
+			- More recent logs take precedence
+			- Reads start at the most recent segment files, searching for matching key. If key is not in recent segment files, scan older files, until we are sure we don't have it.
+			- [[Indexing]] with [[hash index]]
+				- Hash index
+					- Index is a hash map of keys and entry locations
+					- How it works:
+						- When writing new key, add the key to the index, with value being the key's value offset in the segment files
+						- We keep an index for every segment files still in-use
+						- Read from current index, if not found, then from older segment's index
+						- When current segment file got too large, switch writes to new segment files
+							- Merge/compact old segment files
+							- Build new index for merged segment files and delete the old segments
+					- Limitations:
+						- Memory: Large key size = large memory used for indexing
+						- Index must hold all keys in our database
+						- Runtime: ranged queries (i.e. from `foo001` -> `foo002`) will take O(n)
+		- ### [[SortedStringTree (SSTree)]]
+			- **SST files are immutable**. They are written once, and will only be read for merge/compaction.
+			- Keys and values are still stored in segmented log files. But the sequence of entries within a file must be *sorted by key*. Such files are known as SST files.
+			- We can't just append new writes to this SST files, since its entries must be sorted by key
+				- To do this, we can't just append writes to files as they appear
+				- We need a write buffer, with some structure, before writing to SST files.
+				- The buffer structure must allow us to append key-value pairs in any order and read them back sorted efficiently
+				- This can be done in-memory (*memtable*), usually using self-balancing binary search trees such as *AVL trees* and  *black-red trees*
+			- Using self-balancing tree write cache (memtable) before committing to SSTable segment files on-disk is called **LSM**.
+			- We also need a way to mark deleted keys - usually done with tombstones or bloom filters
+				- [*Tombstone*](https://en.wikipedia.org/wiki/Tombstone_(data_store)) - deletion as data
+					- When deletion occurs, write a new entry to memtable: `myDeletedKey: tombstone`
+					- Then when reads on the key occur, we can see in the memtable that the key was deleted
+					- After memtable got full, the tombstone is also dumped to newest SST just like any other values
+					- When merging SSTs, the same entries that were written before the tombsone entry will be discarded for the newly merged SSTs
+				- [*Bloom filter*](https://en.wikipedia.org/wiki/Bloom_filter) - a lookup table
+					- A structure that can efficiently answer if a particular key does not exist.
+			- Data loss may occur during crashes if recent writes in memtable are not yet synced to SST files
+				- To prevent data loss during crash when new changes only appear in *memtable*, most LSM DBs maintain a separate list of unsorted, append-only, on-disk write logs (WAL) for every recent write to the memtable, which is used to restore data after a crash.
+				- After the memtable's content been successfully dumped to SST files, the temporary WAL file is deleted.
+			- How it works:
+				- When writes come in, write to *memtable*, which is an in-memory self-balancing tree
+				- After *memtable* got too big, sort and dump it to new a SSTable segment file
+				- When reads come in, read from *memtable* first, if not found then read from *sparse indexes* of more recent segment files
+				- Periodically run merge and compaction tasks on segment files, while accepting writes to memtable
+					- Size-tiered (fast writes)
+						- Newer, smaller segments get merged into older, larger segments
+					- Leveled (fast reads)
+						- SSTs are merged/compacted to different *levels*, based on the key (range) and age to make reads faster
+			- [[Indexing]] with [[sparse index]]
+				- Each SST file will have its own sparse index
+				- The sparse index has *some* keys from SST mapped to their in-file offsets
+				- We can do binary search on this index, similar to mergesort
+				- (Optional) The segment data can even be compressed
+				- Benefits:
+					- Smaller size of in-memory indexes compared to hash index
+					- More efficient read queries compared to hash index
+			- Limitations:
+				- Reading for nonexistent keys can be expensive as the DB will have to go through all contents of memtable and SSTable segments. This can be remedied with *Bloom filters*, which efficiently tells us whether the key existed
