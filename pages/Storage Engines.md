@@ -8,7 +8,7 @@
 		- Using storage as pages maps hardware (block) to software (page) more naturally
 		- ## B-Tree
 		  collapsed:: true
-			- Each page represent a node in the B-Tree
+			- Each page represent a node in the [[B-Tree]]
 			- Each page is identified/referred to by address/location (similar to pointers and disk offsets)
 			- ### B-Tree structure
 				- Each page can contain either *references to other pages, __OR__ values*.
@@ -62,6 +62,7 @@
 		- Limitations:
 			- Compaction/merging can be expensive spikes
 		- ### **[Impractical]** Primitive, append-only, unsorted logs
+		  collapsed:: true
 			- Use append-only log files, in segments
 			- Log files are usually in binary
 			- Older segments can be compacted (merged)
@@ -88,7 +89,7 @@
 				- To do this, we can't just append writes to files as they appear
 				- We need a write buffer, with some structure, before writing to SST files.
 				- The buffer structure must allow us to append key-value pairs in any order and read them back sorted efficiently
-				- This can be done in-memory (*memtable*), usually using self-balancing binary search trees such as *AVL trees* and  *black-red trees*
+				- This can be done in-memory (*memtable*), usually using self-balancing binary search [[BBST]] trees such as *[[AVL tree]]  and  *Red-Black tree*
 			- Using self-balancing tree write cache (memtable) before committing to SSTable segment files on-disk is called **LSM**.
 			- We also need a way to mark deleted keys - usually done with tombstones or bloom filters
 				- [*Tombstone*](https://en.wikipedia.org/wiki/Tombstone_(data_store)) - deletion as data

@@ -1,0 +1,47 @@
+- B-Tree is a **self-balancing tree**, and it's *not a binary tree*.
+- ## In practice
+	- Usually, the height is the number of disk operations we perform
+	- Each node (page) in a B-Tree is typically mapped directly to disk block size
+		- Is good for
+		  collapsed:: true
+			- DB indexes
+			- Optimizing disk spaces
+				- Given `t` degree and `n` nodes, the height is $\boxed{\log_t(n+1)/2}$
+					- `t` is usually >2 and maybe in the hundreds or thousands
+					- So we can think of it as $\boxed{\log(n)}$
+- ## B-Tree nodes
+	- Each node has 2 main components: keys and values
+	- The keys are used for identifying targets
+	- Values could be references to children, or actual values
+- ## B-Tree node types
+	- Root node
+	- Internal nodes (always have children)
+	- Leaf nodes
+- ## B-Tree properties (Knuth definition)
+	- Every node has at most `m` children.
+	- Every internal node has at least `⌈m/2⌉` children.
+	- The root node has at least two children unless it is a leaf.
+	- All leaves appear on the same level.
+	- A non-leaf node with `k` children contains `k-1` keys.
+- ## B-Tree properties (with degree *t*)
+	- `t` is the minimum degree of the whole tree `T`
+		- if `t` is 2, then every nodes except the root can have at least 2 children
+	- Number of keys of internal nodes (except root)
+		- at least `t-1` keys
+		- at most `2t-1` keys
+	- Number of children of internal nodes
+	  collapsed:: true
+		- at least `t` children
+		- at most `2t` children
+- ## Search
+	- Start from root
+	- Assume nodes have 3 keys (therefore 4 child)
+	- ```
+	  [ ref1 | key1 | ref2 | key2 | ref3 | key3 | ref4]
+	  ```
+	- Compare target with keys in root, starting from its first key (key1)
+		- If `target == key1` or any other key -> return value
+		- If `target < key1` -> go search `ref1`
+		- If `key1 < target < key2` -> go search `ref2`
+		- If `key2 < target < key3` -> go search `ref3`
+		- If `key3 < target` -> go search `ref4`

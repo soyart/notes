@@ -1,6 +1,7 @@
 title:: Regular Expression
 
-- # [[Regex]]
+- # [[Regex]] syntax
+  collapsed:: true
 	- [[Regex]] is a query string format. For examples, see [regexr.com](https://regexr.com/)]
 		- Basic [[Regex Matching]] with alphabets
 		  collapsed:: true

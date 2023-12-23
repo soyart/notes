@@ -190,6 +190,7 @@
 			- Write down every possible states reachable by the the current state
 			- Simplify the regexes
 			- Examples
+			  collapsed:: true
 				- {{renderer code_diagram,plantuml}}
 					- ```plantuml
 					  @startuml
