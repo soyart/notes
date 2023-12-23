@@ -1,7 +1,6 @@
 - Is how we think of computation
 - Computation machines be categorized (least complex first) from [[FSM]], [[CFL]], [[Turing machine]], [[Undecidable]]
 - ## Prerequisites
-  collapsed:: true
 	- ### Symbol
 		- e.g. the individual `a`, `b`, `c`, `0`, `1`
 	- ### Alphabet (Σ)
@@ -13,7 +12,6 @@
 		- An empty string is an Epsilon ε
 		- e.g. we have symbols `0` and `1`, then `0011010` is a string
 	- ### Language
-	  collapsed:: true
 		- A set of strings
 		- e.g. the English language
 			- English language alphabets `Σ = {a, b, c, .., z}`
@@ -39,12 +37,13 @@
 			- e.g. if the language has this alphabet set `Σ = {0, 1}`
 			  id:: 6585ba6f-778d-4666-af9d-42ea5a9b07f3
 				- Then cardinality is 2^n (Σ has 2 elements)
-		- #### `Σ^*` (assume alphabets `Σ = {0, 1}`)
+		- #### `Σ* (or  Σ^*)` (assume alphabets `Σ = {0, 1}`)
 			- Sets of all possible strings over `{0, 1}`
-			- `Σ^* = Σ^0 ∪ Σ^1 ∪ Σ^2 ∪ Σ^3 ...`
-			- `Σ^* = {ε} ∪ {0, 1} ∪ {00, 01, 10, 11} ∪ {000, 001, 010, 011, 100, ...} ...`
-- ## [[FSM]] automata
-  collapsed:: true
+			- `Σ* = Σ^0 ∪ Σ^1 ∪ Σ^2 ∪ Σ^3 ...`
+			- `Σ* = {ε} ∪ {0, 1} ∪ {00, 01, 10, 11} ∪ {000, 001, 010, 011, 100, ...} ...`
+			- #### `Σ* (or  Σ^*)` (assume alphabets `Σ = {0, 1}`)
+		- **`Σ† (or Σ+)` is like `Σ*` but without `ε`**
+- ## [[FSM]] Finite state automata
 	- > **A machine with finite states**
 	- Simple, with known sets of states
 	- Have no memory
@@ -183,3 +182,79 @@
 				- This will also matches empty strings (hits `E` on both terms)
 				- This will also matches a single `a` (hits `a` and E)
 				- This will also matches `bb` (hits `b` and `b`)
+	- ### Converting regex to [[DFA]] and [[NFA]]
+		- The resulting regex will match all string inputs acceptable by the source state machines
+		- Unions are used to combine paths that lead to the same states
+		- #### DFA to regex
+			- Start from initial state, and work your way to the final state
+			- Write down every possible states reachable by the the current state
+			- Simplify the regexes
+			- Examples
+				- {{renderer code_diagram,plantuml}}
+					- ```plantuml
+					  @startuml
+					  state start <<start>>
+					  
+					  start --> q1
+					  
+					  q1-[#red]->q2: a
+					  q1-[#blue]->q3: b
+					  
+					  q2-[#red]->q4: a
+					  q2-[#blue]->q1: b
+					  
+					  q3-[#red]->q1: a
+					  q3-[#blue]->q4: b
+					  
+					  q4-[#red]->q4: a
+					  q4-[#blue]->q4: b
+					  
+					  @enduml
+					  ```
+				- We start from `q1`
+					- `q1 = E + q2b + q3a`
+					- `q2 = q1a`
+					- `q3 = q1b`
+					- `q4 = q2a + q3b + q4a + q4b`
+				- We can now solve for `p1`
+					- `q1 = E + q1ab + q1ba`
+					- `q1 = E + q1.(ab + ba)`
+					- Recall that `R = Q + R.P = Q.(P*)`
+					- `q1 = E.(ab+ba)*`
+					- `q1 = (ab+ba)*`
+		- #### NFA to regex
+		  collapsed:: true
+			- Start from final state, and work your way to the initial state
+			- Write down every possible previous states and their inputs to reach the current state
+			- Simplify the regexes
+			- Examples
+				- {{renderer code_diagram,plantuml}}
+				  collapsed:: true
+					- ```plantuml
+					  @startuml
+					  
+					  state start <<start>>
+					  start-->q1
+					  
+					  q1-[#red]->q1: a
+					  q1-[#red]->q2: a
+					  
+					  q2-[#red]->q3: a
+					  q2-[#blue]->q1: b
+					  q2-[#blue]->q2: b
+					  
+					  q3-[#blue]->q2: b
+					  @enduml
+					  ```
+				- We start from `q3`, and this gets us
+					- `q3 = q2a`
+					- `q2 = q1b + q2b + q3b`
+					- `q1 = E + q1a + q2b`
+				- Then we simplify (substitution)
+					- `q3 = q1a + q2ba + q3ba`
+					- `q2 = q1a + (b+ab)*`
+					- `q1 = (a + a(b+ab)*b)*`
+				- And finally, we solve for `q3`
+					- `q3 = q2a`
+					- `q3 = q1a + (b+ab)*`
+					- `q3 = (a+a(b+ab)*)b*.a(b+ab)*a`
