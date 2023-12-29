@@ -1,43 +1,66 @@
 - Is how we think of computation
-- Computation machines be categorized (least complex first) from [[FSM]], [[CFL]], [[Turing machine]], [[Undecidable]]
+  collapsed:: true
+	- Computability theory (1930-1950s)
+		- What we can compute
+		- e.g. Can we solve problem `x`?
+		- e.g. The halting problem
+	- Complexity theory (from 1960s)
+		- Can we compute `x` efficiently?
+- Computers can be categorized (least complex first) based on its computational models, from [[FSM]], [[CFL]], [[Turing machine]], [[Undecidable]]
+- Has roots in linguistics, so the study usually uses linguistics terms
+- Languages and finite state automatons (FSM) are actually 2 representations of the same abstract concept
 - ## Prerequisites
 	- ### Symbol
+	  collapsed:: true
 		- e.g. the individual `a`, `b`, `c`, `0`, `1`
 	- ### Alphabet (Σ)
-		- A collection of symbols
+	  collapsed:: true
+		- A set of symbols
 		- e.g. `{a, b, .., z}` is *Latin alphabets*
-		- e.g. `{0, 1}` is *binary alphabets*
+		- e.g. $B ∈ \{0, 1\}$ is *binary alphabets* named B, whose elements can only be 0 or 1
 	- ### String
-		- Sequence of symbols
+	  collapsed:: true
+		- Sequence over a set of symbols
 		- An empty string is an Epsilon ε
 		- e.g. we have symbols `0` and `1`, then `0011010` is a string
+		- e.g. If alphabet $Z ∈ \{0, 1\}$, then `011101` is a string of alphabets
 	- ### Language
+	  collapsed:: true
 		- A set of strings
 		- e.g. the English language
+		  collapsed:: true
 			- English language alphabets `Σ = {a, b, c, .., z}`
 			- Then any sets of strings containing only symbols from Σ is a valid English language string
 		- e.g. some simple binary language, Simbin
+		  collapsed:: true
 			- Simbin alphabets `Σ = {0, 1}`
 			- Then strings `0`, `1`, and `101011` are valid Simbin strings
 			- Strings `02`, `a10` are not valid Simbin strings
-		- e.g. Simbin2 language accepts any strings over Σ `{0, 1}` of length 2
+		- e.g. Simbin2 language accepts any strings over $Σ ∈ \{0, 1\}$ of length 2
+		  collapsed:: true
 			- Then strings `00`, `01`, `10`, `11` are valid Simbin2 strings
 			- But `0`, `100`, `12` are not valid Simbin2 strings
-		- e.g. Simbin3 language accepts any strings over Σ `{0, 1}` that starts with `0`
+		- e.g. Simbin3 language accepts any strings over $Σ ∈ \{0, 1\}$ that starts with symbol `0`
+		  collapsed:: true
 			- Then `0110`, `011111`, `0` are valid Simbin3 strings
 		- From examples Simbin1, Simbin2, and Simbin3, only Simbin2  have finite sets of valid strings
 	- ### Powers of Sigma Σ
+	  collapsed:: true
 		- Σ^n is the set of strings of length `n`
 		- e.g. the language has this alphabets: `Σ = {0, 1}`
+		  collapsed:: true
 			- Σ^0 -> All strings of length 0 -> `Σ^0 = {ε}`
 			- Σ^1 -> All strings of length 1 -> `Σ^1 = {0, 1}`
 			- Σ^2 -> All strings of length 2 -> `Σ^2 = {00, 01, 10, 11}`
 		- #### Cardinality = Σ^n
+		  collapsed:: true
 			- Number of elements in a set
 			- e.g. if the language has this alphabet set `Σ = {0, 1}`
 			  id:: 6585ba6f-778d-4666-af9d-42ea5a9b07f3
+			  collapsed:: true
 				- Then cardinality is 2^n (Σ has 2 elements)
 		- #### `Σ* (or  Σ^*)` (assume alphabets `Σ = {0, 1}`)
+		  collapsed:: true
 			- Sets of all possible strings over `{0, 1}`
 			- `Σ* = Σ^0 ∪ Σ^1 ∪ Σ^2 ∪ Σ^3 ...`
 			- `Σ* = {ε} ∪ {0, 1} ∪ {00, 01, 10, 11} ∪ {000, 001, 010, 011, 100, ...} ...`
@@ -48,25 +71,81 @@
 	- Simple, with known sets of states
 	- Have no memory
 	- Set of all states `Q`
+	  collapsed:: true
 		- Initial state `q1`
 	- Set of all inputs `Σ`
 	- ## [[DFA]]
+		- {{renderer code_diagram,plantuml}}
+			- ```plantuml
+			  @startuml
+			  left to right direction
+			  hide empty description
+			  
+			  state start <<start>>
+			  state q4 <<end>>
+			  
+			  start --> q1
+			  
+			  q1-[#red]->q1: a
+			  q1-[#red]->q2: b
+			  
+			  q2-[#red]->q1: a
+			  q2-[#blue]->q3: b
+			  
+			  q3-[#red]->q4: a
+			  q3-[#blue]->q4: b
+			  
+			  @enduml
+			  ```
+		- A [[FSM]] with **no outputs**
+		- **The transition table cells must be fully populated**
+		  collapsed:: true
+			- All states mush have known path given inputs, including the **dead** or **trap** states
+			  collapsed:: true
+				- `Q x Σ -> Q`
+			- All inputs must have known destinations for all states
+		- Accepts only if exits with one of the final states
 		- Deterministic and very simple
 		- Can have many final states, but only 1 initial states
-		- **No outputs**
-		- All states mush have known path given inputs, including the **dead** or **trap** states
-		  collapsed:: true
-			- `Q x Σ -> Q`
 		- Can be minimized (less states)
 	- ## [[NFA]]
-		- Not that deterministic (but still has **finite states**)
-		- **No outputs**
-		- A state + input can lead to >1 states
+		- {{renderer code_diagram,plantuml}}
+		  collapsed:: true
+			- ```plantuml
+			  @startuml
+			  left to right direction
+			  hide empty description
+			  
+			  state start <<start>>
+			  state q4 <<end>>
+			  
+			  start --> q1
+			  
+			  q1-[#red]->q1: a
+			  q1-[#red]->q2: a
+			  
+			  q2-[#red]->q1: b
+			  q2-[#blue]->q3: b
+			  
+			  q3-[#red]->q4: a
+			  q3-[#blue]->q4: ε
+			  
+			  @enduml
+			  ```
+			- Accepts `ab`, `aba`, `abb`
+			- Rejects `aa`
+		- A [[FSM]] with **no outputs**
+		- **Accepts input if *some* path leads to final states**
+		- Multiple paths possible
+			- A state + input can lead to >1 states
+			- State `q1` may go to `q2` *or* `q3` on input `a`
 		- Can have many final states, but only 1 initial states
+		- NFA does not map to a physical, real-world machine, but is used to do maths and model problems
+		- Not that deterministic (but still has **finite states**)
 		- The transition function maps Q and Σ to 2^Q
 			- `Q x Σ -> 2^Q`
 			- e.g. if `Q = [A, B, C]` then possible transitions are `[A, B, C, AA, AB, AC, BA, BB, BC, CA, CB, CC]`
-		- Phi `Φ` means the transition will not happen (not to be confused with epsilon `ε`)
+		- Phi `Φ` means the transition will not happen (not to be confused with Epsilon `ε`)
 		- Not to be confused with [[Epsilon-NFA]]
 		- Can be converted into [[DFA]] - the resulting DFA may have more states than the original NFA
 		- To solve complex problems, we can first design a NFA, and then convert it into [[DFA]], before finally minimizing the DFA.
@@ -91,12 +170,11 @@
 	- > **Represent sets of strings in algebraic fashion**, such that a finite automata [[FSM]] can describe a language  (see [[Regex]] for practical syntax
 	- > Λ and E are used to denote empty symbol (Epsilon), and Phi Φ used to denote empty set
 	- ### 5 rules
-		- 1. **Terminal symbols**, including empty `Λ` and null `ϕ`, are regex
+		- 1. **Terminal symbols**, including empty `Λ` and null/unaccepted `ϕ`, are regex
 		- 2. **Unions of 2 regexes** are also regex (`R1+R2`)
 		- 3. **Concatenation of 2 regexes** are also regex (`R1.R2`)
 		- 4. **Iteration or closures of regexes** are also regex `R -> R*`
 			- Closure of alphabet `a -> a*`, where `a*` expands to `a* =  {Λ, aa, aaa, aaaa}`
-			  collapsed:: true
 				- a* then includes empty symbol Λ, a, aa, aaa, aaaa, ...
 		- 5. The regular expression over Σ are those obtained by applying the 4 rules above
 	- ### Examples: define the following sets as regex
@@ -119,7 +197,8 @@
 			- `R -> 1†` (or `R -> 1+`)
 			- In other words, `R† = R.R*`, and `E + R† = R*`
 	- ### Identities
-		- > In this block, E is used as Λ
+		- > In this block, E is used as Epsilon Λ (accepted empty string),
+		  while Phi Φ refers to null input (not accepted)
 		- `Φ + R = R`
 		- `Φ.R + R.Φ = Φ`
 		  id:: 6585c5be-508d-4b4b-90fb-4469408566b6
@@ -141,6 +220,7 @@
 			- `R = Q + R.P` (and we know that `R = Q.P*`)
 			- `R = Q + Q.P*.P`
 			- `R = Q.(E + P*.P)`
+				- Recall that `E  + R*.R = R*`
 			- `R = Q.(E + P†)`
 			- `R = Q.(P*)`
 		- Or we can keep expanding R:
@@ -190,11 +270,11 @@
 			- Write down every possible states reachable by the the current state
 			- Simplify the regexes
 			- Examples
-			  collapsed:: true
 				- {{renderer code_diagram,plantuml}}
 					- ```plantuml
 					  @startuml
-					  state start <<start>>
+					  left to right direction
+					  hide empty description
 					  
 					  start --> q1
 					  
@@ -209,6 +289,7 @@
 					  
 					  q4-[#red]->q4: a
 					  q4-[#blue]->q4: b
+					  q4: Accepted
 					  
 					  @enduml
 					  ```
@@ -224,17 +305,19 @@
 					- `q1 = E.(ab+ba)*`
 					- `q1 = (ab+ba)*`
 		- #### NFA to regex
-		  collapsed:: true
-			- Start from final state, and work your way to the initial state
+			- Start from final state, and work your way back to the initial state
 			- Write down every possible previous states and their inputs to reach the current state
 			- Simplify the regexes
 			- Examples
 				- {{renderer code_diagram,plantuml}}
-				  collapsed:: true
 					- ```plantuml
 					  @startuml
 					  
+					  left to right direction
+					  hide empty description
+					  
 					  state start <<start>>
+					  
 					  start-->q1
 					  
 					  q1-[#red]->q1: a
@@ -245,6 +328,8 @@
 					  q2-[#blue]->q2: b
 					  
 					  q3-[#blue]->q2: b
+					  q3: Accepted
+					  
 					  @enduml
 					  ```
 				- We start from `q3`, and this gets us

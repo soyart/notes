@@ -1,3 +1,4 @@
+- #[[Data Structure]]
 - AVL tree is a balanced [[BST]] ([[BBST]])
 - AVL tree balances itself after insertion/deletion
 - AVL tree balances itself by determining *Balance Factor* BF, and using that information to perform rotation if needed.

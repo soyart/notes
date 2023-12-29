@@ -1,3 +1,4 @@
+- #[[Data Structure]]
 - B-Tree is a **self-balancing tree**, and it's *not a binary tree*.
 - ## In practice
 	- Usually, the height is the number of disk operations we perform
