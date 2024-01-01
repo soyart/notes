@@ -6,61 +6,70 @@
 		- e.g. The halting problem
 	- Complexity theory (from 1960s)
 		- Can we compute `x` efficiently?
-- Computers can be categorized (least complex first) based on its computational models, from [[FSM]], [[CFL]], [[Turing machine]], [[Undecidable]]
+- Computers can be categorized (least complex first) based on its computational models, from [[FSM]] (regular language), [[PDA]] (context-free language), [[Turing machine]], [[Undecidable]]
 - Has roots in linguistics, so the study usually uses linguistics terms
 - Languages and finite state automatons (FSM) are actually 2 representations of the same abstract concept
 - ## Prerequisites
 	- ### Symbol
+	  collapsed:: true
 		- e.g. the individual `a`, `b`, `c`, `0`, `1`
-	- ### Alphabet (Σ)
+	- ### Alphabet $\Sigma$
+	  collapsed:: true
 		- A set of symbols
-		- e.g. `{a, b, .., z}` is *Latin alphabets*
-		- e.g. $B ∈ \{0, 1\}$ is *binary alphabets* named B, whose elements can only be 0 or 1
+		- e.g. $\Sigma_\text{A} = \{a, b, c, \dots, z\}$ is *alphabet* over lowercase Latin characters
+		- e.g. $\Sigma_\text{B} = \{0, 1\}$ is *binary alphabets* named B, whose elements can only be symbols `0` or `1`
 	- ### String
+	  collapsed:: true
 		- Sequence over a set of symbols
 		- An empty string is an Epsilon ε
 		- e.g. we have symbols `0` and `1`, then `0011010` is a string
-		- e.g. If alphabet $Z ∈ \{0, 1\}$, then `011101` is a string of alphabets
+		- e.g. If alphabet $\Sigma = \{0, 1\}$, then `011101` is a string of legal alphabets `0` and `1`
 	- ### Language
+	  collapsed:: true
 		- A set of strings
 		- e.g. the English language
-			- English language alphabets `Σ = {a, b, c, .., z}`
+		  collapsed:: true
+			- English language alphabets $\Sigma_\text{English} = \{a, b, c, \dots, z\}$
 			- Then any sets of strings containing only symbols from Σ is a valid English language string
-		- e.g. some simple binary language, Simbin
-			- Simbin alphabets `Σ = {0, 1}`
+		- e.g. Language *Simbin* (simple binary language)
+		  collapsed:: true
+			- Simbin alphabets $\Sigma_\text{simbin} = \{0, 1\}$
 			- Then strings `0`, `1`, and `101011` are valid Simbin strings
-			- Strings `02`, `a10` are not valid Simbin strings
-		- e.g. Simbin2 language accepts any strings over $Σ ∈ \{0, 1\}$ of length 2
+			- Strings `02`, `a10` are not valid strings over
+		- e.g. Language *Simbin2* accepts any strings over $\Sigma_\text{simbin}$ **of length 2**
+		  collapsed:: true
 			- Then strings `00`, `01`, `10`, `11` are valid Simbin2 strings
 			- But `0`, `100`, `12` are not valid Simbin2 strings
-		- e.g. Simbin3 language accepts any strings over $Σ ∈ \{0, 1\}$ that starts with symbol `0`
+		- e.g. Language *Simbin3* language accepts any strings over $\Sigma_\text{simbin}$ that starts with symbol `0`
+		  collapsed:: true
 			- Then `0110`, `011111`, `0` are valid Simbin3 strings
 		- From examples Simbin1, Simbin2, and Simbin3, only Simbin2  have finite sets of valid strings
 	- ### Powers of Sigma Σ
 		- Σ^n is the set of strings of length `n`
-		- e.g. the language has this alphabets: `Σ = {0, 1}`
-			- Σ^0 -> All strings of length 0 -> `Σ^0 = {ε}`
-			- Σ^1 -> All strings of length 1 -> `Σ^1 = {0, 1}`
-			- Σ^2 -> All strings of length 2 -> `Σ^2 = {00, 01, 10, 11}`
+		- e.g. the language has this alphabets: $\Sigma = {0, 1}$
+			- $\Sigma^0$ -> All strings of length 0 -> $Σ^0 = \Epsilon = \{ε\}$
+			- $\Sigma^1$ -> All strings of length 1 -> $\Sigma^1 = \{0, 1\}$
+			- $\Sigma^2$ -> All strings of length 2 -> $\Sigma^2 = \{00, 01, 10, 11\}$
 		- #### Cardinality = Σ^n
 			- Number of elements in a set
-			- e.g. if the language has this alphabet set `Σ = {0, 1}`
+			- e.g. if the language has this alphabet set $\Sigma = {0, 1}$
 			  id:: 6585ba6f-778d-4666-af9d-42ea5a9b07f3
+			  collapsed:: true
 				- Then cardinality is 2^n (Σ has 2 elements)
-		- #### `Σ* (or  Σ^*)` (assume alphabets `Σ = {0, 1}`)
+		- #### $\Sigma^\ast$ and $\Sigma^+$  (assume alphabets $\Sigma = {0, 1}$)
 			- Sets of all possible strings over `{0, 1}`
-			- `Σ* = Σ^0 ∪ Σ^1 ∪ Σ^2 ∪ Σ^3 ...`
-			- `Σ* = {ε} ∪ {0, 1} ∪ {00, 01, 10, 11} ∪ {000, 001, 010, 011, 100, ...} ...`
-			- #### `Σ* (or  Σ^*)` (assume alphabets `Σ = {0, 1}`)
-		- **`Σ† (or Σ+)` is like `Σ*` but without `ε`**
+			- $\Sigma^\ast = \Sigma^0 \cup \Sigma^1 \cup \Sigma^2 \cup \Sigma^3 \cup \dots \cup \Sigma^n$
+			- $\Sigma^\ast = \Epsilon ∪ \{0, 1\} ∪ \{00, 01, 10, 11\} ∪ \{000, 001, 010, 011, 100, ...\}$
+			- $\Sigma^+$ is like $\Sigma^\ast$, but without $\Epsilon$
 - ## [[FSM]] Finite state automata
 	- > **A machine with finite states**
 	- Simple, with known sets of states
 	- Have no memory
-	- Set of all states `Q`
-	  collapsed:: true
-		- Initial state `q1`
-	- Set of all inputs `Σ`
+	- Set of all states $Q$
+		- Initial state $q_0$
+	- Set of all final states $F$
+	- Set of all input alphabets $\Sigma$
+	- Transition function $\delta$
 	- ## [[DFA]]
 		- A [[FSM]] with **no outputs**
 		- **The transition table cells must be fully populated**
