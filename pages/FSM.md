@@ -407,11 +407,12 @@
 	- Can be converted into [[DFA]] - the resulting DFA may have more states than the original NFA
 	- To solve complex problems, we can first design a NFA, and then convert it into [[DFA]], before finally minimizing the DFA.
 ## [[Moore machines]]
-	- Have outputs associated with states
+	- **Outputs associated with states**
 	- Can be converted into [[Mealy machines]]
 ## [[Mealy machines]]
-	- Have outputs associated with *transition*
+	- **Outputs associated with transition**
 	- Mealy conversion to [[Moore machines]] will result in more states in the target Moore machines
+	  collapsed:: true
 		- Let's say Mealy has `x` number of states, and `y` number of outputs
 		- The resulting Moore could have `x*y` number of states and the same `y` number of outputs
 		- The resulting Moore will not have output associated with its initial states

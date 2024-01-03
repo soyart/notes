@@ -31,7 +31,6 @@
 	- e.g. If alphabet $\Sigma = \{0, 1\}$, then `011101` is a string of legal alphabets `0` and `1`
 - ## Language
   id:: eb18ac5c-b11f-4447-833f-aa748e9c88f6
-  collapsed:: true
 	- A set of strings
 	- e.g. the English language
 		- English language alphabets $\Sigma_\text{English} = \{a, b, c, \dots, z\}$
