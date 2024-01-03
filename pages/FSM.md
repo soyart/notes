@@ -22,6 +22,7 @@
 	- **No outputs**
 	- **Accepts input only if exits with one of the final states**
 	- ### Examples
+	  collapsed:: true
 		- {{renderer code_diagram,plantuml}}
 			- ```plantuml
 			  @startuml
@@ -181,167 +182,167 @@
 			- Accepts `ab`, `aba`, `abb`
 			- Rejects `aa`
 	- ### Closures
-		- #### $A_1 \cup A_2$, if $L(M_1) = A_1$, and $L(M_2) = A_2$ (like [this DFA example](((dc35369f-7eee-4bb9-af21-e00b23a9109a))), but with NFA)
+		- #### $A_1 \cup A_2$ (like [this DFA example](((dc35369f-7eee-4bb9-af21-e00b23a9109a))), but with NFA)
 			- Like with DFA, we'll need a new machine $M$ that wraps $M_1$ and $M_2$.
 			- But with the power of non-determinism, we can just **non-deterministically connect** $M_0$ **to the start states of** $M_1$ and $M_2$ on empty input
-				- Think of this like parallel processing of both $A_1$ and $A_2$
-				- {{renderer code_diagram,plantuml}}
-				  collapsed:: true
-					- ```plantuml
-					  @startuml
-					  left to right direction
-					  hide empty description
-					  
-					  caption M1 recognizes A1
-					  
-					  state q0: start
-					  state q3: accepted
-					  state q4: accepted
-					  
-					  q0 -[#blue]-> q1: b
-					  
-					  q1-[#red]->q1: a
-					  q1-[#red]->q2: a
-					  q1-[#blue]->q4: b
-					  
-					  q2-[#red]->q1: a
-					  q2-[#blue]->q3: b
-					  
-					  @enduml
-					  ```
-				- {{renderer code_diagram,plantuml}}
-				  collapsed:: true
-					- ```plantuml
-					  @startuml
-					  left to right direction
-					  hide empty description
-					  
-					  caption M2 recognizes A2
-					  
-					  state r0: start
-					  state r3: accepted
-					  
-					  r0 -[#blue]-> r1: b
-					  
-					  r1-[#red]->r1: a
-					  r1-[#red]->r2: a
-					  
-					  r2-[#red]->r1: b
-					  r2-[#blue]->r3: b
-					  
-					  @enduml
-					  ```
-				- {{renderer code_diagram,plantuml}}
-				  collapsed:: true
-					- ```plantuml
-					  @startuml
-					  left to right direction
-					  hide empty description
-					  
-					  caption M wraps M1 to M2 for A1 U B1
-					  
-					  state start <<start>>
-					  state end <<end>>
-					  state q0 #lightblue: Start state M1
-					  state q3 #lightblue: Accept state M1
-					  state q4 #lightblue: Accept state M2
-					  state r0 #red: Start state M2
-					  state r3 #red: Accept state M2
-					  
-					  start -[#green]-> q0: e
-					  start -[#green]-> r0: e
-					  
-					  q0 --> q3: A1
-					  q0 --> q4: A1
-					  q3 -[#green]-> end: e
-					  q4 -[#green]-> end: e
-					  
-					  r0 --> r3: A2
-					  r3 -[#green]-> end: e
-					  
-					  @enduml
-					  ```
-			- Accept if *some* path leads to accept state in either $M_1$ or $M_2$
-		- #### $A_1 \circ A_2$, if $L(M_1) = A_1$, and $L(M_2) = A_2$
+			- Think of this like parallel processing of both $A_1$ and $A_2$
+			- Accept if *some path* leads to *some accepted state* in either $M_1$ or $M_2$
+			- {{renderer code_diagram,plantuml}}
+			  collapsed:: true
+				- ```plantuml
+				  @startuml
+				  left to right direction
+				  hide empty description
+				  
+				  caption M1 recognizes A1
+				  
+				  state q0: start
+				  state q3: accepted
+				  state q4: accepted
+				  
+				  q0 -[#blue]-> q1: b
+				  
+				  q1-[#red]->q1: a
+				  q1-[#red]->q2: a
+				  q1-[#blue]->q4: b
+				  
+				  q2-[#red]->q1: a
+				  q2-[#blue]->q3: b
+				  
+				  @enduml
+				  ```
+			- {{renderer code_diagram,plantuml}}
+			  collapsed:: true
+				- ```plantuml
+				  @startuml
+				  left to right direction
+				  hide empty description
+				  
+				  caption M2 recognizes A2
+				  
+				  state r0: start
+				  state r3: accepted
+				  
+				  r0 -[#blue]-> r1: b
+				  
+				  r1-[#red]->r1: a
+				  r1-[#red]->r2: a
+				  
+				  r2-[#red]->r1: b
+				  r2-[#blue]->r3: b
+				  
+				  @enduml
+				  ```
+			- {{renderer code_diagram,plantuml}}
+			  collapsed:: true
+				- ```plantuml
+				  @startuml
+				  left to right direction
+				  hide empty description
+				  
+				  caption M wraps M1 to M2 for A1 U B1
+				  
+				  state start <<start>>
+				  state end <<end>>
+				  state q0 #lightblue: Start state M1
+				  state q3 #lightblue: Accept state M1
+				  state q4 #lightblue: Accept state M1
+				  state r0 #red: Start state M2
+				  state r3 #red: Accept state M2
+				  
+				  start -[#green]-> q0: e
+				  start -[#green]-> r0: e
+				  
+				  q0 --> q3: A1
+				  q0 --> q4: A1
+				  q3 -[#green]-> end: e
+				  q4 -[#green]-> end: e
+				  
+				  r0 --> r3: A2
+				  r3 -[#green]-> end: e
+				  
+				  @enduml
+				  ```
+		- #### $A_1 \circ A_2$
 			- Like with DFA, we need a new machine $M$ that wraps $M_1$ and $M_2$
-			- We can *non-deterministically connect* the inner machines on empty input instead (so that the $M$ can just jump to $M_2$)
-				- {{renderer code_diagram,plantuml}}
-				  collapsed:: true
-					- ```plantuml
-					  @startuml
-					  left to right direction
-					  hide empty description
-					  
-					  caption M1 recognizes A1
-					  
-					  state q0: start
-					  state q3: accepted
-					  state q4: accepted
-					  
-					  q0 -[#blue]-> q1: b
-					  
-					  q1-[#red]->q1: a
-					  q1-[#red]->q2: a
-					  q1-[#blue]->q4: b
-					  
-					  q2-[#red]->q1: a
-					  q2-[#blue]->q3: b
-					  
-					  @enduml
-					  ```
-				- {{renderer code_diagram,plantuml}}
-				  collapsed:: true
-					- ```plantuml
-					  @startuml
-					  left to right direction
-					  hide empty description
-					  
-					  caption M2 recognizes A2
-					  
-					  state r0: start
-					  state r3: accepted
-					  
-					  r0 -[#blue]-> r1: b
-					  
-					  r1-[#red]->r1: a
-					  r1-[#red]->r2: a
-					  
-					  r2-[#red]->r1: b
-					  r2-[#blue]->r3: b
-					  
-					  @enduml
-					  ```
+			- {{renderer code_diagram,plantuml}}
+			  collapsed:: true
+				- ```plantuml
+				  @startuml
+				  left to right direction
+				  hide empty description
+				  
+				  caption M1 recognizes A1
+				  
+				  state q0: start
+				  state q3: accepted
+				  state q4: accepted
+				  
+				  q0 -[#blue]-> q1: b
+				  
+				  q1-[#red]->q1: a
+				  q1-[#red]->q2: a
+				  q1-[#blue]->q4: b
+				  
+				  q2-[#red]->q1: a
+				  q2-[#blue]->q3: b
+				  
+				  @enduml
+				  ```
+			- {{renderer code_diagram,plantuml}}
+			  collapsed:: true
 				- Then we can construct $M$ by wrapping $M_1$ and $M_2$, jumping on $\epsilon$ from any state in $F_1$ to $q1$ non-deterministically
-				- {{renderer code_diagram,plantuml}}
-				  collapsed:: true
-					- ```plantuml
-					  @startuml
-					  left to right direction
-					  hide empty description
-					  
-					  caption M connects M1 to M2
-					  
-					  state start <<start>>
-					  state end <<end>>
-					  state q0 #lightblue: Start state M1
-					  state q3 #lightblue: Accept state M1
-					  state q4 #lightblue: Accept state M2
-					  state r0 #red: Start state M2
-					  state r3 #red: Accept state M2
-					  
-					  start --> q0: e
-					  
-					  q0 --> q3: A1
-					  q0 --> q4: A1
-					  
-					  q3 -[#green]-> r0: e
-					  q4 -[#green]-> r0: e
-					  
-					  r0 --> r3: A2
-					  r3 -[#green]-> end: e
-					  
-					  @enduml
-					  ```
+				- ```plantuml
+				  @startuml
+				  left to right direction
+				  hide empty description
+				  
+				  caption M2 recognizes A2
+				  
+				  state r0: start
+				  state r3: accepted
+				  
+				  r0 -[#blue]-> r1: b
+				  
+				  r1-[#red]->r1: a
+				  r1-[#red]->r2: a
+				  
+				  r2-[#red]->r1: b
+				  r2-[#blue]->r3: b
+				  
+				  @enduml
+				  ```
+			- We can *non-deterministically connect* the inner machines on empty input instead (so that the $M$ can just jump to $M_2$)
+			- {{renderer code_diagram,plantuml}}
+			  collapsed:: true
+				- ```plantuml
+				  @startuml
+				  left to right direction
+				  hide empty description
+				  
+				  caption M connects M1 to M2
+				  
+				  state start <<start>>
+				  state end <<end>>
+				  state q0 #lightblue: Start state M1
+				  state q3 #lightblue: Accept state M1
+				  state q4 #lightblue: Accept state M1
+				  state r0 #red: Start state M2
+				  state r3 #red: Accept state M2
+				  
+				  start --> q0: e
+				  
+				  q0 --> q3: A1
+				  q0 --> q4: A1
+				  
+				  q3 -[#green]-> r0: e
+				  q4 -[#green]-> r0: e
+				  
+				  r0 --> r3: A2
+				  r3 -[#green]-> end: e
+				  
+				  @enduml
+				  ```
 			- This means that, the machine starts with recognizing $A_1$, but it may jump to do $A_2$ **at any point in time, non-deterministically**
 			- This NFA will only accept the input if the last state is in $F_2$ ($r3$).
 		- #### $A^\ast$
@@ -384,7 +385,7 @@
 				  state end <<end>>
 				  state q0 #lightblue: Start state M1
 				  state q3 #lightblue: Accept state M1
-				  state q4 #lightblue: Accept state M2
+				  state q4 #lightblue: Accept state M1
 				  
 				  start -[#green]-> q0: e
 				  start -[#green]-> end: e
