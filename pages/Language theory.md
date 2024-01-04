@@ -38,30 +38,38 @@
 	- An empty string is an Epsilon ε
 	- e.g. If $\Sigma = \{0, 1\}$, then `011101` is a legal string for this alphabet
 	- e.g. If $\Sigma = \{a, b, c, \dots, z\}$, then `art`, `hrr`, `kyt` are valid strings for this alphabet
+- ## Language rules
+	- Different types of languages have different classes of representation
+	- Regular language rules can be described by [[Regular Expression]]
+	- Context-free language can be described by [[Context-free grammar]]
 - ## Language
   id:: eb18ac5c-b11f-4447-833f-aa748e9c88f6
 	- A *formal* language is a set of strings that can be described using *formal* grammar
 	- Regular language examples
 		- > These examples will express language from [[Regular Expression]], that is, we write $$A = L(R)$$ to build language $A$ from regex $R$
-		- $\Sigma_\text{simbin} = \{0, 1\}$
+		- Alphabet $\Sigma_\text{simbin} = \{0, 1\}$
 		- e.g. Language $L_1$ accepts any strings with alphabet $\Sigma_{simbin}$
 			- $L_1 = L(\{\Sigma_{simbin}^+\})$
 			- Then strings `0`, `1`, and `101011` are valid $L_1$ strings
+			- Empty string $\epsilon$ is not valid string for $L_1$
+				- If we want $L_1$ to accept empty string, then we should describe it as $L_1 = \{\Sigma^\ast\}$
 			- Strings `02`, `a10` are not valid strings for $L_1$
 		- e.g. Language $L_2$ accepts any strings over $\Sigma_\text{simbin}$ **of exact length 2**
 			- $L_2 = L(\{\Sigma_{simbin}\Sigma_{simbin}\})$
 			- Then strings `00`, `01`, `10`, `11` are valid Simbin2 strings
 			- But `0`, `100`, `12` are not valid $L_2$ strings
 		- e.g. Language $L_3$ language accepts any strings over $\Sigma_\text{simbin}$ that starts with symbol `0`
-			- $L_3 = L(\{0\circ\Sigma_{simbin}^\ast\})$
-			- Then `0110`, `011111`, `0` are valid $L_3$ strings
+			- $L_3 = L(\{0\circ\Sigma_{simbin}^+\})$
+			- Then `0110`, `011111` are valid $L_3$ strings
+			- But `0` is not, because $\Sigma^+$ is not matched
+				- If we want $L_3$ to additionally accept `0` (a `zero` followed by empty string), then we should describe it as $L_3 = \{0\circ\Sigma^\ast\}$
 		- From examples $L_1$, $L_2$, and $L_3$, only $L_2$  have finite sets of valid strings.
 	- ### Regular languages
 		- Can be recognized by a finite state machine [[Finite state automata]] (e.g. a [[DFA]] or [[NFA]])
 		- Can be described by [[Regular Expression]]
 		- Will pass regular pumping lemma
 	- ### Context-free languages [[CFL]]
-		- Can be described by a context-free grammar [[CFG]]
+		- Can be described by a context-free grammar [[Context-free grammar]]
 		- Will pass context-free pumping lemma
 - ## Pumping lemma
 	- > A test for languages **if it's not** regular or context-free: i.e. regular pumping lemma cannot prove if a language is regular - it can only be used to prove that it's not regular
