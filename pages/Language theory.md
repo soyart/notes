@@ -1,34 +1,43 @@
-- ## Alphabet $\Sigma$
-  collapsed:: true
-	- A set of symbols
-	- e.g. $\Sigma_\text{A} = \{a, b, c, \dots, z\}$ is *alphabet* over lowercase Latin characters
-	- e.g. $\Sigma_\text{B} = \{0, 1\}$ is *binary alphabets* named B, whose elements can only be symbols `0` or `1`
 - ## Symbol
-  collapsed:: true
+	- The most basic unit of languages
 	- e.g. the individual `a`, `b`, `c`, `0`, `1`
-- ## Powers of Sigma Σ
-  collapsed:: true
-	- $\Sigma^n$ is the set of strings of length `n`
-	- e.g. the language has this alphabets: $\Sigma = {0, 1}$
-		- $\Sigma^0$ -> All strings of length 0 -> $Σ^0 = \Epsilon = \{ε\}$
+	- To be grouped in a set called alphabets, and are used to form strings
+- ## Alphabet $\Sigma$
+	- A set of symbols
+	- e.g. $\Sigma_\text{B} = \{0, 1\}$ is binary alphabet named B, whose elements can only be symbols $0$ or $1$
+	- e.g. $\Sigma_{Decimals} = \{0, 1, 2, 3, 4, 5, 6, 7, 8 ,9\}$ is alphabet over Arabic numerals $0$ to $1$
+	- e.g. $\Sigma_\text{Lower} = \{a, b, c, \dots, z\}$ is alphabet over lowercase Latin characters
+	- e.g. $\Sigma_\text{Upper} = \{A, B, C, \dots, Z\}$ is alphabet over uppercase Latin characters
+	- e.g. $\Sigma_{Latin} = \Sigma_{Lower} \cup \Sigma_{Upper}$
+	- e.g. $\Sigma_{English} = \{., ?\} \cup \Sigma_{Latin} \cup \Sigma_{Decimals}$ is alphabet for modern English language, which include Latin alphabets in all cases, Arabic numerals, and the full stop and question mark.
+	- #### Cardinality $\vert\Sigma\vert$
+	  collapsed:: true
+		- Number of elements in an alphabet set
+		- e.g. if $\Sigma = \{0, 1\}$
+			- Then cardinality is $\vert\{0, 1\}\vert$ = 2 (Σ has 2 elements)
+- ## Powers of Sigma $\Sigma^n$
+	- $$\vert\Sigma^n\vert = {\vert\Sigma\vert}^n$$
+	- $\Sigma^n$ is the set of strings of over $\Sigma$ of length $n$
+	- e.g. if $\Sigma = \{0, 1\}$
+		- $\Sigma^0$ -> All strings of length 0 -> $Σ^0 = \Epsilon = \{\epsilon\}$
 		- $\Sigma^1$ -> All strings of length 1 -> $\Sigma^1 = \{0, 1\}$
-		- $\Sigma^2$ -> All strings of length 2 -> $\Sigma^2 = \{00, 01, 10, 11\}$
-	- #### Cardinality = Σ^n
-		- Number of elements in a set
-		- e.g. if the language has this alphabet set $\Sigma = {0, 1}$
 		  collapsed:: true
-			- Then cardinality is 2^n (Σ has 2 elements)
-	- #### $\Sigma^\ast$ and $\Sigma^+$  (assume alphabets $\Sigma = {0, 1}$)
-		- Sets of all possible strings over `{0, 1}`
+			- $\Sigma^1 = {\Sigma} = \{\{0, 1\}\}$
+		- $\Sigma^2$ -> All strings of length 2 -> $\Sigma^2 = \{00, 01, 10, 11\}$
+		  collapsed:: true
+			- $\Sigma^2 = \{\Sigma,\Sigma\} = \{\{0, 1\}, \{0, 1\}\}$
+	- #### $\Sigma^\ast$ and $\Sigma^+$  (assume alphabets $\Sigma = \{0, 1\}$)
+		- Sets of all possible strings over symbols $0$ and $1$
 		- $\Sigma^\ast = \Sigma^0 \cup \Sigma^1 \cup \Sigma^2 \cup \Sigma^3 \cup \dots \cup \Sigma^n$
 		- $\Sigma^\ast = \Epsilon ∪ \{0, 1\} ∪ \{00, 01, 10, 11\} ∪ \{000, 001, 010, 011, 100, ...\}$
-		- $\Sigma^+$ is like $\Sigma^\ast$, but without $\Epsilon$
+		- $\Sigma^+$ is like $\Sigma^\ast$, but without $\Epsilon$, so it cannot contain empty string $\epsilon$
 - ## String
-  collapsed:: true
-	- Sequence over a set of symbols
+	- Sequence of symbols
+	- Languages will specify alphabet, and rules to expand them into valid strings
+	- Valid strings are formed only from accepted alphabet and rules
 	- An empty string is an Epsilon ε
-	- e.g. we have symbols `0` and `1`, then `0011010` is a string
-	- e.g. If alphabet $\Sigma = \{0, 1\}$, then `011101` is a string of legal alphabets `0` and `1`
+	- e.g. If $\Sigma = \{0, 1\}$, then `011101` is a legal string for this alphabet
+	- e.g. If $\Sigma = \{a, b, c, \dots, z\}$, then `art`, `hrr`, `kyt` are valid strings for this alphabet
 - ## Language
   id:: eb18ac5c-b11f-4447-833f-aa748e9c88f6
 	- A *formal* language is a set of strings that can be described using *formal* grammar
