@@ -100,6 +100,8 @@
 			- This means that NFA is allowed to jump without reading any input (i.e. reading $\epsilon$)
 		- Transition function $\delta$ does not map to $Q$, **but to powerset of Q** $\mathcal{P}(Q)$
 			- $\delta: Q \times \Sigma_\epsilon \mapsto \mathcal{P}(Q) = \{R \mid R \subseteq Q\}$
+			- $\vert\mathcal{P}(Q)\vert = 2^Q$
+				- e.g. if $Q = \{A, B, C\}$ then $\delta: Q \times \Sigma = \{A, B, C, AA, AB, AC, BA, BB, BC, CA, CB, CC\}$
 			- Example
 			  collapsed:: true
 				- {{renderer code_diagram,plantuml}}
@@ -152,8 +154,11 @@
 			- A state + input can lead to >1 states
 			- On input `a`, state $q_1$ *may* go to $q_2$ or $q_3$
 		- #### Empty string $\epsilon$ is legal as input
+			- In this case, if $q_j$ can be reached from $q_i$ via input $\epsilon$, the NFA can jump from $q_i$ to $q_j$ at any time without reading any input
 		- #### Empty set $\Phi$ is legal as destination (i.e. no state transition)
+			- To do nothing, just leave no paths on the state and the machine will not go to any state
 	- ### Examples
+	  collapsed:: true
 		- {{renderer code_diagram,plantuml}}
 		  collapsed:: true
 			- ```plantuml
@@ -182,6 +187,7 @@
 			- Accepts `ab`, `aba`, `abb`
 			- Rejects `aa`
 	- ### Closures
+	  collapsed:: true
 		- #### $A_1 \cup A_2$ (like [this DFA example](((dc35369f-7eee-4bb9-af21-e00b23a9109a))), but with NFA)
 			- Like with DFA, we'll need a new machine $M$ that wraps $M_1$ and $M_2$.
 			- But with the power of non-determinism, we can just **non-deterministically connect** $M_0$ **to the start states of** $M_1$ and $M_2$ on empty input
@@ -400,10 +406,7 @@
 				  ```
 	- NFA does not map to a physical, real-world machine, but is used to do maths and model problems
 	- Not that deterministic (but still has **finite states**)
-	- The transition function maps Q and Σ to 2^Q
-		- `Q x Σ -> 2^Q`
-		- e.g. if `Q = [A, B, C]` then possible transitions are `[A, B, C, AA, AB, AC, BA, BB, BC, CA, CB, CC]`
-	- Phi `Φ` means the transition will not happen (not to be confused with Epsilon `ε`)
+	-
 	- Can be converted into [[DFA]] - the resulting DFA may have more states than the original NFA
 	- To solve complex problems, we can first design a NFA, and then convert it into [[DFA]], before finally minimizing the DFA.
 ## [[Moore machines]]

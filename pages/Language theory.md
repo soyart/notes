@@ -31,23 +31,35 @@
 	- e.g. If alphabet $\Sigma = \{0, 1\}$, then `011101` is a string of legal alphabets `0` and `1`
 - ## Language
   id:: eb18ac5c-b11f-4447-833f-aa748e9c88f6
-	- A set of strings
-	- e.g. the English language
-		- English language alphabets $\Sigma_\text{English} = \{a, b, c, \dots, z\}$
-		- Then any sets of strings containing only symbols from Σ is a valid English language string
-	- e.g. Language *Simbin* (simple binary language)
-		- Simbin alphabets $\Sigma_\text{simbin} = \{0, 1\}$
-		- Then strings `0`, `1`, and `101011` are valid Simbin strings
-		- Strings `02`, `a10` are not valid strings over
-	- e.g. Language *Simbin2* accepts any strings over $\Sigma_\text{simbin}$ **of length 2**
-		- Then strings `00`, `01`, `10`, `11` are valid Simbin2 strings
-		- But `0`, `100`, `12` are not valid Simbin2 strings
-	- e.g. Language *Simbin3* language accepts any strings over $\Sigma_\text{simbin}$ that starts with symbol `0`
-		- Then `0110`, `011111`, `0` are valid Simbin3 strings
-	- From examples Simbin1, Simbin2, and Simbin3, only Simbin2  have finite sets of valid strings.
+	- A *formal* language is a set of strings that can be described using *formal* grammar
+	- Regular language examples
+		- > These examples will express language from [[Regular Expression]], that is, we write $$A = L(R)$$ to build language $A$ from regex $R$
+		- $\Sigma_\text{simbin} = \{0, 1\}$
+		- e.g. Language $L_1$ accepts any strings with alphabet $\Sigma_{simbin}$
+			- $L_1 = L(\{\Sigma_{simbin}^+\})$
+			- Then strings `0`, `1`, and `101011` are valid $L_1$ strings
+			- Strings `02`, `a10` are not valid strings for $L_1$
+		- e.g. Language $L_2$ accepts any strings over $\Sigma_\text{simbin}$ **of exact length 2**
+			- $L_2 = L(\{\Sigma_{simbin}\Sigma_{simbin}\})$
+			- Then strings `00`, `01`, `10`, `11` are valid Simbin2 strings
+			- But `0`, `100`, `12` are not valid $L_2$ strings
+		- e.g. Language $L_3$ language accepts any strings over $\Sigma_\text{simbin}$ that starts with symbol `0`
+			- $L_3 = L(\{0\circ\Sigma_{simbin}^\ast\})$
+			- Then `0110`, `011111`, `0` are valid $L_3$ strings
+		- From examples $L_1$, $L_2$, and $L_3$, only $L_2$  have finite sets of valid strings.
 	- ### Regular languages
 		- Can be recognized by a finite state machine [[FSM]] (e.g. a [[DFA]] or [[NFA]])
 		- Can be described by [[Regular Expression]]
 		- Will pass regular pumping lemma
 	- ### Context-free languages [[CFL]]
 		- Can be described by a context-free grammar [[CFG]]
+		- Will pass context-free pumping lemma
+- ## Pumping lemma
+	- > A test for languages **if it's not** regular or context-free: i.e. regular pumping lemma cannot prove if a language is regular - it can only be used to prove that it's not regular
+	- ### Regular pumping lemma
+		- Lemma
+			- If language $A$ is regular, then $A$ has a pumping length $P$ such that any string $S$ where $\vert S \vert \geq P$ maybe divided into 3 parts $S = x\circ y\circ z$ such that the following conditions are true
+			- $x\circ y\circ z \in A$ for every $i \geq 0$
+			- $\vert y \vert \gt 0$
+			- $\vert x \circ y \vert \leq P$
+	- ### Context-free pumping lemma
