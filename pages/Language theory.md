@@ -48,7 +48,7 @@
 			- Then `0110`, `011111`, `0` are valid $L_3$ strings
 		- From examples $L_1$, $L_2$, and $L_3$, only $L_2$  have finite sets of valid strings.
 	- ### Regular languages
-		- Can be recognized by a finite state machine [[FSM]] (e.g. a [[DFA]] or [[NFA]])
+		- Can be recognized by a finite state machine [[Finite state automata]] (e.g. a [[DFA]] or [[NFA]])
 		- Can be described by [[Regular Expression]]
 		- Will pass regular pumping lemma
 	- ### Context-free languages [[CFL]]
@@ -57,9 +57,16 @@
 - ## Pumping lemma
 	- > A test for languages **if it's not** regular or context-free: i.e. regular pumping lemma cannot prove if a language is regular - it can only be used to prove that it's not regular
 	- ### Regular pumping lemma
-		- Lemma
+		- #### Lemma
 			- If language $A$ is regular, then $A$ has a pumping length $P$ such that any string $S$ where $\vert S \vert \geq P$ maybe divided into 3 parts $S = x\circ y\circ z$ such that the following conditions are true
-			- $x\circ y\circ z \in A$ for every $i \geq 0$
+			- $x\circ y^i\circ z \in A$ \forall $i \geq 0$
 			- $\vert y \vert \gt 0$
 			- $\vert x \circ y \vert \leq P$
+		- #### Concept
+			- The lemma says that regular language $A$ has some constant value $P$ associated with it
+			- The lemma says that, we can get a large string $S \mid S\in A$ chopped into 3 parts, $x\circ y\circ z$
+			- Note that $y$ must comes after $x$, and the length of $x\circ y$ must not exceed $P$
+			- So $y$ is actually a middle part of $S$, and if $\vert S\vert$ is very large compared to $P$, then $y$ would be a bit further to the left
+			- The pumping lemma says that, if we pump $y \mapsto y^i$, then $x\circ y^i\circ z$ is still $\in A$
+			- This means that, if $A$ is regular, then we can pump $y$ however we want, and the resulting string must still be $\in A$
 	- ### Context-free pumping lemma

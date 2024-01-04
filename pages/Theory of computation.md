@@ -6,11 +6,13 @@
 		- e.g. The halting problem
 	- Complexity theory (from 1960s)
 		- Can we compute `x` efficiently?
-- Computers can be categorized (least complex first) based on its computational models, from [[FSM]] (regular language), [[PDA]] (context-free language), [[Turing machine]], [[Undecidable]]
-- Languages and finite state automatons (FSM) are actually 2 representations of the same abstract concept
+- Computers can be categorized (least complex first) based on its computational models, from [[Finite state automata]] (regular language), [[Push-down automata]] (context-free language), [[Turing machine]], [[Undecidable]]
+- Languages and machines are actually 2 representations of the same abstract concept
+	- e.g. regular languages can be accepted by [[Finite state automata]]
+	- e.g. context free languages can be accepted by [[Push-down automata]]
 - ## Prerequisites
 	- ### [[Language theory]]
 		- ToC has roots in linguistics, so the study usually uses linguistics terms
-- ## [[FSM]] Finite state automata (or finite state machines)
+- ## [[Finite state automata]] (finite state machines)
 	- Have no memory
-	- FSM can be used to implement [[Regular Expression]] and regular languages
+	- [[Finite state automata]] can be used to implement [[Regular Expression]] and regular languages

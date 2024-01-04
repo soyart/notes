@@ -2,6 +2,7 @@
 - The most basic type of machines.
 - Good for regular languages and [[Regular Expression]]
 - ## [[DFA]] - Deterministic finite automata
+  collapsed:: true
 	- ### Definition $M = (Q, \Sigma, \delta, q_0, F)$
 	  id:: 3d3cd125-712c-4563-b1d1-54b1be607b43
 		- Set of all states $Q$
@@ -94,6 +95,7 @@
 						- i.e. some states which either have $F_1$ or $F_2$
 	- ### Minimization
 ## [[NFA]] - Non-deterministic finite automata
+collapsed:: true
 	- ### Definition $M = (Q, \Sigma, \delta, q_0, F)$
 		- $Q$, $q_0$, $F$ is the same as with [DFA definition](((3d3cd125-712c-4563-b1d1-54b1be607b43)))
 		- Alphabet $\Sigma$ is actually $\Sigma_\epsilon = \{\Sigma \cup \Epsilon\}$
@@ -410,9 +412,11 @@
 	- Can be converted into [[DFA]] - the resulting DFA may have more states than the original NFA
 	- To solve complex problems, we can first design a NFA, and then convert it into [[DFA]], before finally minimizing the DFA.
 ## [[Moore machines]]
+collapsed:: true
 	- **Outputs associated with states**
 	- Can be converted into [[Mealy machines]]
 ## [[Mealy machines]]
+collapsed:: true
 	- **Outputs associated with transition**
 	- Mealy conversion to [[Moore machines]] will result in more states in the target Moore machines
 	  collapsed:: true

@@ -1,4 +1,4 @@
-- > **Represent sets of strings in algebraic fashion**, such that a finite automata [[FSM]] can describe a regular language (see also [[Language theory]], and [[Regex]] for practical syntax of regular expressions)
+- > **Represent sets of strings in algebraic fashion**, such that a finite automata [[Finite state automata]] can describe a regular language (see also [[Language theory]], and [[Regex]] for practical syntax of regular expressions)
 - > $\epsilon$ are used to denote empty symbol, the epsilon set (set with only $\epsilon$ as member) is denoted $\Epsilon$, and Phi $\Phi$ used to denote empty language (empty set).
 - ## 5 regex rules
 	- 1. **Terminal symbols** are regex, including empty string $\epsilon$ and empty set $\Phi$
