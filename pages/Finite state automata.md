@@ -95,7 +95,6 @@
 						- i.e. some states which either have $F_1$ or $F_2$
 	- ### Minimization
 ## [[NFA]] - Non-deterministic finite automata
-collapsed:: true
 	- ### Definition $M = (Q, \Sigma, \delta, q_0, F)$
 		- $Q$, $q_0$, $F$ is the same as with [DFA definition](((3d3cd125-712c-4563-b1d1-54b1be607b43)))
 		- Alphabet $\Sigma$ is actually $\Sigma_\epsilon = \{\Sigma \cup \Epsilon\}$
@@ -157,7 +156,7 @@ collapsed:: true
 			- On input `a`, state $q_1$ *may* go to $q_2$ or $q_3$
 		- #### Empty string $\epsilon$ is legal as input
 			- In this case, if $q_j$ can be reached from $q_i$ via input $\epsilon$, the NFA can jump from $q_i$ to $q_j$ at any time without reading any input
-		- #### Empty set $\Phi$ is legal as destination (i.e. no state transition)
+		- #### Empty set $\phi$ is legal as destination (i.e. no state transition)
 			- To do nothing, just leave no paths on the state and the machine will not go to any state
 	- ### Examples
 	  collapsed:: true

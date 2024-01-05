@@ -1,7 +1,7 @@
 - > **Represent sets of strings in algebraic fashion**, such that a finite automata [[Finite state automata]] can describe a regular language (see also [[Language theory]], and [[Regex]] for practical syntax of regular expressions)
-- > $\epsilon$ are used to denote empty symbol, the epsilon set (set with only $\epsilon$ as member) is denoted $\Epsilon$, and Phi $\Phi$ used to denote empty language (empty set).
+- > $\epsilon$ are used to denote empty symbol, the epsilon set (set with only $\epsilon$ as member) is denoted $\Epsilon$, and Phi $\phi$ used to denote empty language (empty set).
 - ## 5 regex rules
-	- 1. **Terminal symbols** are regex, including empty string $\epsilon$ and empty set $\Phi$
+	- 1. **Terminal symbols** are regex, including empty string $\epsilon$ and empty set $\phi$
 	- 2. **Unions of 2 regexes** are also regex (expressed as $R_1+R_2$)
 	- 3. **Concatenation of 2 regexes** are also regex (expressed as $R_1 \circ R_2$ or $R_1R_2$)
 	- 4. **Iteration or closures of regexes** are also regex (expressed as $R \mapsto R^\ast$)
@@ -9,10 +9,10 @@
 		- Plus closure of alphabet $a \mapsto a^+$, where $a^+ = \{a, aa, aaa, aaaa, \dots, a^k\}$
 	- 5. The regular expression over alphabet $\Sigma$ are those obtained by applying the 4 rules above
 - ## Identities
-	- $\Phi + R = R$
-	- $\Phi R + R\Phi = \Phi$
+	- $\phi + R = R$
+	- $\phi R + R\phi = \phi$
 	- $\Epsilon R = R\Epsilon = R$
-	- $\Epsilon^\ast = \Epsilon$, and $\Phi^\ast = \Epsilon$
+	- $\Epsilon^\ast = \Epsilon$, and $\phi^\ast = \Epsilon$
 	- $R + R = R$
 	- $R^\ast R^\ast = R^\ast$
 	- $RR^\ast = R^\ast R = R^+$
