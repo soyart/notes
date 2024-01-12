@@ -38,10 +38,6 @@
 	- An empty string is an Epsilon ε
 	- e.g. If $\Sigma = \{0, 1\}$, then `011101` is a legal string for this alphabet
 	- e.g. If $\Sigma = \{a, b, c, \dots, z\}$, then `art`, `hrr`, `kyt` are valid strings for this alphabet
-- ## Language rules
-	- Different types of languages have different classes of representation
-	- Regular language rules can be described by [[Regular expression]]
-	- Context-free language can be described by [[Context-free grammar]]
 - ## Formal languages
   id:: eb18ac5c-b11f-4447-833f-aa748e9c88f6
 	- A *formal* language is a set of strings that can be described using *formal* grammar
