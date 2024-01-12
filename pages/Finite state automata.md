@@ -1,8 +1,34 @@
 - > **A machine with finite states**
 - The most basic type of machines.
-- Good for regular languages and [[Regular Expression]]
-- ## [[DFA]] - Deterministic finite automata
+- Good for regular languages and [[Regular expression]]
+- ### Real world examples
   collapsed:: true
+	- Vending machines can accept patterns of coins without using memory
+		- {{renderer code_diagram,plantuml}}
+		  collapsed:: true
+			- ```plantuml
+			  @startuml
+			  left to right direction
+			  hide empty description
+			  
+			  caption Vending machine accepts 10 bath with coins 10 and 5
+			  
+			  state start <<start>>
+			  state end: accept
+			  state bad: reject
+			  
+			  start -[#blue]-> end: 10
+			  start -[#red]-> q1: 5
+			  q1-[#red]->end: 5
+			  q1-[#blue]->bad: 10
+			  bad-[#red]->bad: 5
+			  bad-[#blue]->bad: 10
+			  end-[#red]->bad: 5
+			  end-[#blue]->bad: 10
+			  
+			  @enduml
+			  ```
+- ## [[DFA]] - Deterministic finite automata
 	- ### Definition $M = (Q, \Sigma, \delta, q_0, F)$
 	  id:: 3d3cd125-712c-4563-b1d1-54b1be607b43
 		- Set of all states $Q$
@@ -65,6 +91,7 @@
 			  @enduml
 			  ```
 	- ### Weird examples
+	  collapsed:: true
 		- #### Recognize $A_1 \cup A_2$, where $A_1$ and $A_2$ are both regular languages
 		  id:: dc35369f-7eee-4bb9-af21-e00b23a9109a
 			- This proves that, if $A_1$ and $A_2$ are regular languages, then, if we could construct an FSM that recognizes $A_1 \cup A_2$, then that new language $A_1 \cup A_2$ is also regular
@@ -96,16 +123,21 @@
 	- ### Minimization
 ## [[NFA]] - Non-deterministic finite automata
 	- ### Definition $M = (Q, \Sigma, \delta, q_0, F)$
+	  collapsed:: true
 		- $Q$, $q_0$, $F$ is the same as with [DFA definition](((3d3cd125-712c-4563-b1d1-54b1be607b43)))
 		- Alphabet $\Sigma$ is actually $\Sigma_\epsilon = \{\Sigma \cup \Epsilon\}$
+		  collapsed:: true
 			- This means that NFA is allowed to jump without reading any input (i.e. reading $\epsilon$)
 		- Transition function $\delta$ does not map to $Q$, **but to powerset of Q** $\mathcal{P}(Q)$
+		  collapsed:: true
 			- $\delta: Q \times \Sigma_\epsilon \mapsto \mathcal{P}(Q) = \{R \mid R \subseteq Q\}$
 			- $\vert\mathcal{P}(Q)\vert = 2^Q$
+			  collapsed:: true
 				- e.g. if $Q = \{A, B, C\}$ then $\delta: Q \times \Sigma = \{A, B, C, AA, AB, AC, BA, BB, BC, CA, CB, CC\}$
 			- Example
 			  collapsed:: true
 				- {{renderer code_diagram,plantuml}}
+				  collapsed:: true
 					- ```plantuml
 					  @startuml
 					  left to right direction
@@ -129,6 +161,7 @@
 					  ```
 				- $\delta(q_1, a) = \{q_1, q_2\}$
 				- $\delta(q_1, b) = \varnothing$
+				  collapsed:: true
 					- Likewise
 					- $\delta(q_1, c) = \varnothing$
 					- $\delta(q_1, \epsilon) = \varnothing$
@@ -137,6 +170,7 @@
 				- $\delta(q_3, a) = \{q_4\}$
 				- $\delta(q_3, \epsilon) = \{q_4\}$
 	- ### Non-determinism
+	  collapsed:: true
 		- Think of it like the machine's *guessing*, or *branching*
 		- **The machine always guesses right**
 		- Any *bad* branch will be discarded/ignored on getting more input
@@ -161,7 +195,6 @@
 	- ### Examples
 	  collapsed:: true
 		- {{renderer code_diagram,plantuml}}
-		  collapsed:: true
 			- ```plantuml
 			  @startuml
 			  left to right direction
@@ -195,7 +228,6 @@
 			- Think of this like parallel processing of both $A_1$ and $A_2$
 			- Accept if *some path* leads to *some accepted state* in either $M_1$ or $M_2$
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- ```plantuml
 				  @startuml
 				  left to right direction
@@ -219,7 +251,6 @@
 				  @enduml
 				  ```
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- ```plantuml
 				  @startuml
 				  left to right direction
@@ -241,7 +272,6 @@
 				  @enduml
 				  ```
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- ```plantuml
 				  @startuml
 				  left to right direction
@@ -273,7 +303,6 @@
 		- #### $A_1 \circ A_2$
 			- Like with DFA, we need a new machine $M$ that wraps $M_1$ and $M_2$
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- ```plantuml
 				  @startuml
 				  left to right direction
@@ -297,7 +326,6 @@
 				  @enduml
 				  ```
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- Then we can construct $M$ by wrapping $M_1$ and $M_2$, jumping on $\epsilon$ from any state in $F_1$ to $q1$ non-deterministically
 				- ```plantuml
 				  @startuml
@@ -321,7 +349,6 @@
 				  ```
 			- We can *non-deterministically connect* the inner machines on empty input instead (so that the $M$ can just jump to $M_2$)
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- ```plantuml
 				  @startuml
 				  left to right direction
@@ -356,7 +383,6 @@
 			- We can just feed the machine back to a start state every time it landed in some accepted states
 			- But we'll also have to handle an empty string, which $\in A^\ast$
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- ```plantuml
 				  @startuml
 				  left to right direction
@@ -380,7 +406,6 @@
 				  @enduml
 				  ```
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- ```plantuml
 				  @startuml
 				  left to right direction
@@ -407,7 +432,105 @@
 				  ```
 	- NFA does not map to a physical, real-world machine, but is used to do maths and model problems
 	- Not that deterministic (but still has **finite states**)
-	-
+	- ### GNFA (generalized NFA)
+	  collapsed:: true
+		- GNFA is a high-level NFA whose transition allows [[Regular expression]] to be used as labels instead of simple symbols
+		- Example: the simplest GNFA for any regex
+			- Let $R$ be some regular expressions
+			- Let $r = R$
+			- Then our equivelent GNFA is:
+			- {{renderer code_diagram,plantuml}}
+			  id:: 65a17ad7-5035-47ad-85ec-d1080199050e
+			  collapsed:: true
+				- ```plantuml
+				  @startuml
+				  left to right direction
+				  hide empty description
+				  
+				  caption GNFA equivalent of regular expression r
+				  
+				  state q1 <<start>>
+				  state q2 <<end>>
+				  
+				  q1-->q2: r
+				  
+				  @enduml
+				  ```
+			- This GNFA is cool because it should be able to handle any regex $R$ (if you think about it, the minimum number of $k$ for GNFA is 2, start and end)
+			- This special GNFA with 2 states is **the base case for recursion when proving**
+		- #### Proving that [[Regular expression]] are [equivalent](((659712b0-694d-436f-8d4d-6dd52157c35a))) to NFAs
+			- id:: 65a17cc6-e53c-4dea-ab10-17a656881ab6
+			  > In this notes, the GNFA in use will have special forms (which can be converted into from any GNFA) with some special properties:
+			  
+			  1. Only 1 final state, separate from the initial state
+			  2. Only 1 arrow for any $q_i$ to $q_j$, except if (a) exiting initial state (b) entering final state
+			- Any GNFA with $k$ states can be converted into a new GNFA with $k-1$ states, given that $(k - 1) \geq 2$
+				- #### Convert GNFA to GNFA (from $k$ to $k-1$ states)
+					- 1. Pick any state $x$ except the initial and final state
+					  2. Remove $x$
+					  3. Repair damages from removing $x$
+					- > GNFA below is in [special form](((65a17cc6-e53c-4dea-ab10-17a656881ab6)))
+					- {{renderer code_diagram,plantuml}}
+					  collapsed:: true
+						- ```plantuml
+						  @startuml
+						  
+						  left to right direction
+						  hide empty description
+						  
+						  caption Original GNFA (k)
+						  
+						  state start <<start>>
+						  state end <<end>>
+						  state x: to be removed
+						  state qi
+						  state qj
+						  
+						  start --> qi
+						  qi --> x: r1
+						  x --> x: r2
+						  x --> qj: r3
+						  qi --> qj: r4
+						  qj --> end: r5
+						  
+						  @enduml
+						  ```
+					- We can see that if we remove $x$, the transition connection $q_i \rightarrow q_j$ via $x$  was damaged, so we must restore it.
+						- Note: see that $x$ loops on itself on input $r_2$, so $x \times {r_2}^\ast \mapsto x$
+					- The connection $q_i \rightarrow q_2$ via $x$ that was lost was 3 transitions:
+					  collapsed:: true
+					  1. $q_i \times r_1 \mapsto x$
+					  2. $x \times {r_2}^\ast \mapsto x$
+					  3. $x \times r_3 \mapsto q_j$
+						- This mean that, before we remove $x$, there was a transition $q_i \rightarrow q_j$ via $x$ that
+						  1. See $r_1$
+						  2. See $r_2$ one or many times
+						  3. See $r_3$
+					- That lost connection can be represented as $q_i \times r_1{r_2}^\ast r3 \mapsto q_j$
+					- Then we can $\cup$ this lost connection to the untouched transition $q_i \times r_4 \mapsto q_j$
+					- {{renderer code_diagram,plantuml}}
+					  collapsed:: true
+						- ```plantuml
+						  @startuml
+						  
+						  left to right direction
+						  hide empty description
+						  
+						  caption Original GNFA (k)
+						  
+						  state start <<start>>
+						  state end <<end>>
+						  state x: removed
+						  state qi
+						  state qj
+						  
+						  start --> qi
+						  qi --> qj: r1.(r2)*.r3 U r4
+						  qj --> end: r5
+						  
+						  @enduml
+						  ```
+			- Then we can recursively reduce $k$ until it becomes [the base case ($k = 2$)](((65a17ad7-5035-47ad-85ec-d1080199050e))), and prove that regexes and GNFA are equivalent
 	- Can be converted into [[DFA]] - the resulting DFA may have more states than the original NFA
 	- To solve complex problems, we can first design a NFA, and then convert it into [[DFA]], before finally minimizing the DFA.
 ## [[Moore machines]]

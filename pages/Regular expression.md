@@ -1,4 +1,6 @@
-- > **Represent sets of strings in algebraic fashion**, such that a finite automata [[Finite state automata]] can describe a regular language (see also [[Language theory]], and [[Regex]] for practical syntax of regular expressions)
+title:: Regular expression
+> **Represent sets of strings in algebraic fashion**, such that a finite automata [[Finite state automata]] can describe a regular language (see also [[Language theory]], and [[Regex]] for practical syntax of regular expressions)
+
 - > $\epsilon$ are used to denote empty symbol, the epsilon set (set with only $\epsilon$ as member) is denoted $\Epsilon$, and Phi $\phi$ used to denote empty language (empty set).
 - ## 5 regex rules
 	- 1. **Terminal symbols** are regex, including empty string $\epsilon$ and empty set $\phi$
@@ -117,6 +119,7 @@
 				- This will also matches $bb$ (hits $b$ and $b$)
 			- $L_3 = L(R_3) = L((\epsilon + a + b)(\epsilon + a + b))$
 - ## Regex to [[DFA]] and [[NFA]]
+  id:: 659712b0-694d-436f-8d4d-6dd52157c35a
 	- The resulting regex will match all string inputs acceptable by the source state machines
 	- Unions are used to combine paths that lead to the same states
 	- ### DFA to regex
@@ -203,4 +206,3 @@
 				- $q_3 = (a+a(b+ab)^\ast )b^\ast a(b+ab)^\ast a$
 	- ### DFA examples
 	- ### NFA examples
-	-

@@ -15,4 +15,4 @@
 		- ToC has roots in linguistics, so the study usually uses linguistics terms
 - ## [[Finite state automata]] (finite state machines)
 	- Have no memory
-	- [[Finite state automata]] can be used to implement [[Regular Expression]] and regular languages
+	- [[Finite state automata]] can be used to implement [[Regular expression]] and regular languages

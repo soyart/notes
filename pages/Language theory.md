@@ -40,13 +40,14 @@
 	- e.g. If $\Sigma = \{a, b, c, \dots, z\}$, then `art`, `hrr`, `kyt` are valid strings for this alphabet
 - ## Language rules
 	- Different types of languages have different classes of representation
-	- Regular language rules can be described by [[Regular Expression]]
+	- Regular language rules can be described by [[Regular expression]]
 	- Context-free language can be described by [[Context-free grammar]]
-- ## Language
+- ## Formal languages
   id:: eb18ac5c-b11f-4447-833f-aa748e9c88f6
 	- A *formal* language is a set of strings that can be described using *formal* grammar
 	- Regular language examples
-		- > These examples will express language from [[Regular Expression]], that is, we write $$A = L(R)$$ to build language $A$ from regex $R$
+	  collapsed:: true
+		- > These examples will express language from [[Regular expression]], that is, we write $$A = L(R)$$ to build language $A$ from regex $R$
 		- Alphabet $\Sigma_\text{simbin} = \{0, 1\}$
 		- e.g. Language $L_1$ accepts any strings with alphabet $\Sigma_{simbin}$
 			- $L_1 = L(\{\Sigma_{simbin}^+\})$
@@ -66,24 +67,72 @@
 		- From examples $L_1$, $L_2$, and $L_3$, only $L_2$  have finite sets of valid strings.
 	- ### Regular languages
 		- Can be recognized by a finite state machine [[Finite state automata]] (e.g. a [[DFA]] or [[NFA]])
-		- Can be described by [[Regular Expression]]
+		- Can be described by [[Regular expression]]
 		- Will pass regular pumping lemma
-	- ### Context-free languages [[CFL]]
+	- ### Context-free languages
+		- Can be recognized by a [[Push-down automata]]
 		- Can be described by a context-free grammar [[Context-free grammar]]
 		- Will pass context-free pumping lemma
 - ## Pumping lemma
-	- > A test for languages **if it's not** regular or context-free: i.e. regular pumping lemma cannot prove if a language is regular - it can only be used to prove that it's not regular
+	- The pumping lemma is usually used to prove that a language is not regular *by contradiction*
 	- ### Regular pumping lemma
 		- #### Lemma
-			- If language $A$ is regular, then $A$ has a pumping length $P$ such that any string $S$ where $\vert S \vert \geq P$ maybe divided into 3 parts $S = x\circ y\circ z$ such that the following conditions are true
-			- $x\circ y^i\circ z \in A$ \forall $i \geq 0$
-			- $\vert y \vert \gt 0$
-			- $\vert x \circ y \vert \leq P$
+			- > If language $A$ is regular, then $A$ has a pumping length $p$ such that any string $S$ where $\vert S \vert \geq p$ maybe divided into 3 parts $S = x\circ y\circ z$ such that the following conditions are true:
+			- $\vert y \vert \geq 1$
+			- $\vert xy \vert \leq p$
+			- $(\forall i \geq 0)({x}y^{i}z \in A)$
 		- #### Concept
-			- The lemma says that regular language $A$ has some constant value $P$ associated with it
+			- > If $\vert{S}\vert$ is very large and language $A$ is regular, then the [[Finite state automata]] that recognizes $A$ must repeat itself on some states in order to land at accepted states.
+			- The lemma says that regular language $A$ has some constant value $p$ associated with it
 			- The lemma says that, we can get a large string $S \mid S\in A$ chopped into 3 parts, $x\circ y\circ z$
-			- Note that $y$ must comes after $x$, and the length of $x\circ y$ must not exceed $P$
-			- So $y$ is actually a middle part of $S$, and if $\vert S\vert$ is very large compared to $P$, then $y$ would be a bit further to the left
+			- Note that $y$ must comes after $x$, and the length of $x\circ y$ must not exceed $p$
+			- So $y$ is actually a middle part of $S$, and if $\vert S\vert$ is very large compared to $p$, then $y$ would be a bit further to the left
 			- The pumping lemma says that, if we pump $y \mapsto y^i$, then $x\circ y^i\circ z$ is still $\in A$
 			- This means that, if $A$ is regular, then we can pump $y$ however we want, and the resulting string must still be $\in A$
+			- The pumping length $p$ is greater than the number of an [[Finite state automata]] that recognizes the regular language
+		- #### Proof examples
+			- Remember, it's a proof by contradiction, so we at first always assume test language to be regular.
+			- Each example may have multiple proofs
+			- #### $A_1 = L(\{a^{k}b^k \mid k \geq 0\})$
+			  collapsed:: true
+				- > $A_1$ is language of any strings with equal number of symbols $a$ and $b$
+				- $p = 8$
+					- Case 1: $x$ and $y$ is in the `a` part, while $z$ is strictly a string of `b`s
+					  collapsed:: true
+						- Let's assign $k = p \implies k = 8$
+						- $S = a^8b^8$ = `aaaaaaaabbbbbbbb`
+						- $x$ = `aa`
+						- $y$ = `aaaaaa`
+						- $b$ = `bbbbbbbb`
+						- $S_{pump} = xy^{3}z = aaaaaaaaaaaaaaaaaaaabbbbbbbb$
+						- $S_{pump} \notin A_1$ because $S_{pump}$ has different numbers of `a`s and `b`s
+					- Case 2: $x$ is in `a` part, $y$ has both `a` and `b`, and $z$ has `b` only
+					  collapsed:: true
+						- Let's say $S$ is super long, so we can liberally assign $y$
+						- $k = 100 \implies S = a^{100}b^{100}$
+						- We want $x$ to be in `a`-only part, $y$ to have both `a` and `b`, and $z$ to only contain `b`
+						  collapsed:: true
+							- In other words, $x = \{a^\ast\}$, $y= \{\{a,b\}^\ast\}$, and $z = \{b^\ast\}$
+						- But we can't divide $S = xyz$ such that $y$ has some `b` and satisfies $\vert{xy}\vert \leq p$
+						- So $A_1$ is not regular
+			- #### $A_2 = L(\{yy \mid y \in \{0, 1\}^\ast\})$
+			  id:: 65a173fb-af9f-49f8-9269-c92c2df58776
+			  collapsed:: true
+				- > $A_2$ is a language whose strings has 2 identical parts, i.e. the first half is identical to the second half. Or $L(S) = A$ and $S = 0101 = yy \implies y = 01$
+				  
+				  > We can clearly see that, since [[Finite state automata]] has no memory, it can't remember what the first half was, and thus is unable to recognize $A_2$.
+				- $p=7$ and $S = 0^p1\circ0^p1 = 0000000100000001$
+					- $x = 0^2 = 00$
+					- $y = 0^4 = 0000$
+					- $z = 01\circ0^71 = 0100000001$
+					- Pump $y \mapsto y^2 \implies S_{pump} = xy^2z$
+					- $S_{pump} = 00000000000100000001$
+					- $S_{pump} \notin A_2$
+		- #### Caveats
+			- $A = L(\{w \mid w$ has equal numbers of 0 and 1 $\})$ is *not regular*
+			- $B = L(\{w \mid w$ has equal numbers of 01 and 10 $\})$ is *regular*!
+			- $C = L(\{ww \mid w \in \Sigma^\ast\})$ is *not regular*
+				- This is similar to one of the [previous proof example](((65a173fb-af9f-49f8-9269-c92c2df58776)))
+				- If we prove with $S = 0^p0^p$, then we might fool ourselves thinking $C$ is regular because it can be pumped and stay $\in C$
+				- But if we choose $S = 0^p10^p1$, then we can prove that $C$ is not regular
 	- ### Context-free pumping lemma
