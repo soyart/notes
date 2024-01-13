@@ -21,7 +21,7 @@
 - # Substitutions
 	- ### Expand $S$ into RHS until only terminals remain
 	- $G_1$
-	  collapsed:: true
+	  id:: 65a18e03-1693-4786-8f40-949ecf0c8097
 	  $S \rightarrow  0S1$
 	  $S \rightarrow  R$
 	  $R \rightarrow  \epsilon$
