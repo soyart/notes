@@ -1,7 +1,9 @@
 - #[[Data Structure]]
 - # Graph theory
+  collapsed:: true
 	- A study of networks of vertices (nodes), connected by edges
 - # Properties
+  collapsed:: true
 	- ## Direction
 		- *Undirected graph* edge has no orientation, and the edge is usually denoted $(u, v)$ which means there's a connection between noode $u$ and $v$
 		- For undirected graphs, edges $(u, v) = (v, u)$
@@ -14,16 +16,48 @@
 		- A cyclic graph has nodes that can be reached again
 		- A acyclic graph has no circles - once we visit a node, we can't reach it again
 - # Problems
+  collapsed:: true
 	- ## Find connectivity
+	  collapsed:: true
 		- Whether $node_i$ could be reachable by $node_j$
+		  collapsed:: true
+			- e.g. BFS or DFS
 	- ## Find best routes
-		- **Smallest hops** for unweighted graphs
-		- **Cheapest path** for weighted graphs
+	  collapsed:: true
+		- **Smallest hops** , **shortest path**, and **cheapest path**
+		  collapsed:: true
+			- e.g. BFS or DFS for unweighted graphs
+			- e.g. Dijkstra, Bellman-Ford, Floyd-Marshall, A* for weighted graphs
 	- ## Find cycles
-		- #### Detect negative cycles
+	  collapsed:: true
+		- ### Detect negative cycles
+		  collapsed:: true
 			- Negative cycles might be problematic - because we keep getting cheaper and cheaper paths. Some algo, e.g. Djikstra, prohibits negative weight
 			- **Negative cycles are valid or even desirable in some use case**, e.g. finding currency swap arbitrage opportunities
+			  collapsed:: true
+				- For currency swap arbitrage, we could use the negative cycles such that we keep getting lower cost each time we cycle
+			- e.g. Bellman-Ford and Floyd-Marshall
+		- ### Detect strongly connected components (SSCs)
+		  collapsed:: true
+			- SSC is a self-contained cycle within a directed graph, where every node in the SSC can reach other nodes within the same SSC
+			- Usually used in other higher-level algorithms
+			- e.g. Tarjan and Kosaraju
+	- ## Traveling salesman
+	  collapsed:: true
+		- Given a map of roads, distances, and cities, find the best route to visit each city exactly once and return to the origin city
+		- e.g. Held-Karp, branch-and-bound, and other approximating algorithms
+	- ## Find/cut bridges
+		- Bridges are **edges**, whose removal increases number of *connected components*.
+		  id:: 65ac10f4-6468-4618-b9df-062b347b40e0
+		  collapsed:: true
+			- A component in an undirected graph is its subgraph that is not connected to any other larger subgraphs
+			- The image below depicts a graph with 3 components
+			- ![GraphWith3Components](https://upload.wikimedia.org/wikipedia/commons/8/85/Pseudoforest.svg)
+		- We can think of bridges as weak points, bottlenecks, etc.
+	- ## Find/cut articulation points
+		- Articulation points are vertices (nodes) whose removal increases the number of [connected components](((65ac10f4-6468-4618-b9df-062b347b40e0)))
 - # Types of graphs
+  collapsed:: true
 	- ## Tree
 		- Trees are *acyclic undirected* graphs
 		- > Any undirected graphs are trees in this sense, **although when we talk about trees we generally refer to the rootedd trees**
@@ -44,24 +78,49 @@
 	- ## Complete graphs
 		- Each node has edges to all other nodes
 		- Usually bad because they are very dense
+	- # Types of graphs
 - # Representing graphs
+  collapsed:: true
 	- ## Adjacency matrix
 		- Adjacency matrix $m$ is a matrix such that cell $m[i][j]$ represent edge between $node_i$ to $node_j$.
-			- For unweighted graphs, the cell values could be $1$ (connection) or $0$ (no connection)
-			- For weighted graphs, the cell value $m[i][j]$ could be the weight value from $node_i$ to $node_j$
-		- It is usually assumed that an edge going from a node to itself has $0$ value
+			- #### For unweighted graphs, the cell values could be $1$ (connection) or $0$ (no connection)
+			- It is usually assumed that an edge going from a node to itself has value of $0$
+			- #### For undirected graphs, the matrix is symmetric
+				- $\begin{matrix} 0 & 1 & 0 \\ 1 & 0 & 1 \\ 0 & 1 & 0 \end{matrix}$
+				  id:: 65ac017e-a33c-42f6-8b45-fda6d3b2b7b5
+				- The above adjacency matrix represents undirected graph with 3 nodes $A$, $B$, and $C$
+				- $B$ is connected to both $A$ and $C$, while $A$ and $C$ are connected
+				- i.e. $E = \{(B, A), (B, C)\}$ and because this graph id undirected, we can say that edges $(B, A) = (A, B)$, and edges $(B, C) = (C, B)$
+				  id:: 65ac03e2-2198-4b2c-8281-34b60f0380c0
+			- #### For directed graphs, the matrix reflects the direction of the edge
+				- $\begin{matrix} 0 & 0 & 0 \\ 1 & 0 & 1 \\ 0 & 0 & 0 \end{matrix}$
+				- Using the [same example](((65ac03e2-2198-4b2c-8281-34b60f0380c0))), this is the resulting matrix where $A$ and $C$ goes to nowhere, but $B$ goes to both $A$ and $C$
+				- i.e. $E = \{(B, A), (B, C)\}$
+				  id:: 65ac0434-eb20-4553-8e81-78559f5178d4
+			- #### For weighted graphs, the cell value $m[i][j]$ could be the weight value from $node_i$ to $node_j$
+				- $\begin{matrix} 0 & 0 & 0 \\ 20 & 0 & 7 \\ 0 & 0 & 0 \end{matrix}$
+				- Using the [same example of directed graph](((65ac0434-eb20-4553-8e81-78559f5178d4))), but this time, the edge $B$->$A$ has cost of 20, and edge $B$->$A$ has cost of 7
+				- i.e. $E = \{(B, A, 20), (B, C, 7)\}$
 		- **Nice for dense graphs**, because we can access edges in constant time
 		- Bad for not-so-dense graphs
 			- It takes $O(V^2)$ time to iterate through all edges
 			- It requires $O(V^2)$ space for graphs with $V$ nodes
 	- ## Adjacency list
-		- Map graphs from a node to list of edges
-			- e.g. using `map[node][]edges`in Go
+		- Map list of edges to a node, e.g. using `map[node][]edges`in Go
+			- For example, if we map the following graph as:
+			- ```
+			  A -> [(B, 10), (C, 2)]
+			  B -> []
+			  C -> [(B, 7)]
+			  ```
+			- This means that we have 3 edges: $(A, B, 10), (A, C, 2), (C, B, 7)$
 		- **Nice for sparse graphs**, because we *only* store the edges we have
 			- Good for iterating through all edges
 		- **Bad for dense graphs**, because we now have to duplicate the edges
+		  collapsed:: true
 			- Edge lookup takes $O(E)$
 	- ## Edge list
 		- Represent graphs as unordered list of edges
-		- Each edge is a triplet tuple $(u, v, w)$
-		- e.g. this list `[(a, b, 1), (b, c, 2), (a, c, 7), (c, a, 3)]` for a directed graph with 3 nodes and 4 edges
+		- Each edge is a triplet tuple $(u, v, w)$ or $(\text{from}, \text{to}, \text{weight})$
+		- Very simple (lack any structure)
+		- e.g. this list $\{(A, B, 1), (B, C, 2), (A, C, 7), (C, A, 3)\}$ for a directed graph with 3 nodes and 4 edges
