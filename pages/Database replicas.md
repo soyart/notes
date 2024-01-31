@@ -1,0 +1,46 @@
+- #[[Data systems]]
+- # Overview
+	- Replication is storing redundant data across multiple nodes
+	- Replication is not to be confused with [[Database partitions]]
+- # Benefits
+	- ## Durability
+		- More copies
+	- ## Availability
+		- We can afford some operations with faulty database nodes
+		- We can take a node down to perform maintenance (i.e. a reboot) without taking down the whole services
+	- ## Performance
+		- We can place database replica to be near the clients geographically
+		- In read-heavy applications, we can create more replicas to reduce loads across the databases with lower concerns about inconsistencies
+	- ## Features
+		- Local replicas allow features such as Google Docs concurrent editing
+- # How replicas are synced
+	- ## Statement-based replication
+		- A node can echo all of its write query requests to other nodes as statements (e.g. `INSERT INTO ..` for SQL)
+		- But if the statements contain non-deterministic functions, e.g. `NOW()` or `RAND()`, this technique will produce inconsistencies
+	- ## WAL shipping replication
+		- Most if not all databases handles write queries by first writing changes to write-ahead-logs
+		- So we can ship these WAL changes to other nodes
+		- WAL format is usually low-level (think "bytes changed"), and is therefore usually [[Storage engines]]-dependent
+	- ## Logical log replication
+		- Similar to WAL shipping, but instead the change streams are represented as per-row
+		- This decouples it from the sender's type of [[Storage engines]]
+			- Therefore it is *logical*, as opposed to WAL shipping replication which is more *physical*
+- # Leader and follower
+	- In replication, the *leader* is the node which receives writes from clients.
+	- The leader is the producer of change streams to be sent to other database nodes (*followers*)
+	- If the leader node fails, we can perform **failover**, i.e. promoting a follower as the new leader
+- # Sync/async replication
+	- ## Synchronous replication
+		- The leader waits until the follower returns a success, at which point the leader reports success
+		- This is good for durability - we can be sure that new data was written to all followers
+		- But if all replications are synchronous, then a single node failure will take down our entire operations
+	- ## Asynchronous replication
+		- The leader reports success to the client as soon as the leader finishes its own writes.
+		- This is good for throughput, but if the leader fails and none of the nodes caught up, then the recent writes might be lost.
+- # Patterns
+	- ## Single-leader replication
+		- A single database node is designated *leader*
+		- All writes go through the single leader first, and the changes are then propagated to other followers
+		- We can setup a single synchronous replication to 1 of the followers, and asynchronous replication for all other followers
+			- This way, we can be sure to always have 1 up-to-date follower whom we can later promote in a failover
+			- And because we don't wait for all the followers, a single follower failure won't affect our entire operations
