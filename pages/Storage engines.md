@@ -1,13 +1,12 @@
-- # Storage engine overview
-  id:: 64b848e9-88a9-4ebf-b907-99fcbb74dc84
+# Overview
+id:: 64b848e9-88a9-4ebf-b907-99fcbb74dc84
 	- Storage engines are data structures behind databases
 	- They are optimized for different types of data, and the underlying storage, or even access patterns
-- # Storage engine types
-	- ## [[Page-based]]
+- # Types of storage
+	- ## Page-based storage
 		- Treats underlying storage block as *pages*, i.e. a disk's 4K block is used as a page.
 		- Using storage as pages maps hardware (block) to software (page) more naturally
-		- ## B-Tree
-		  collapsed:: true
+		- ## [[B-Tree]]-based
 			- Each page represent a node in the [[B-Tree]]
 			- Each page is identified/referred to by address/location (similar to pointers and disk offsets)
 			- ### B-Tree structure
@@ -47,7 +46,7 @@
 			- ### **Limitations**:
 				- Slow writes due to cascading effect on writes
 				- In the middle of updating, the tree is in inconsistent states
-	- ## [[Log-based]] ([LSM](https://en.wikipedia.org/wiki/Log-structured_merge-tree))
+	- ## Log-based storage ([LSM](https://en.wikipedia.org/wiki/Log-structured_merge-tree))
 		- Stores data in long sequence of changes (logs)
 		- Logs have both keys and values
 		- Logs are separated into segment files on-disk, based on write time
@@ -68,7 +67,7 @@
 			- Older segments can be compacted (merged)
 			- More recent logs take precedence
 			- Reads start at the most recent segment files, searching for matching key. If key is not in recent segment files, scan older files, until we are sure we don't have it.
-			- [[Indexing]] with [[hash index]]
+			- [[Indexing]] with [[Hash index]]
 				- Hash index
 					- Index is a hash map of keys and entry locations
 					- How it works:
@@ -111,7 +110,7 @@
 						- Newer, smaller segments get merged into older, larger segments
 					- Leveled (fast reads)
 						- SSTs are merged/compacted to different *levels*, based on the key (range) and age to make reads faster
-			- [[Indexing]] with [[sparse index]]
+			- [[Indexing]] with [[Sparse index]]
 				- Each SST file will have its own sparse index
 				- The sparse index has *some* keys from SST mapped to their in-file offsets
 				- We can do binary search on this index, similar to mergesort

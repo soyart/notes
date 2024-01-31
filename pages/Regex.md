@@ -1,5 +1,5 @@
-- # [[Regex]] syntax
-  title:: Regex
+# [[Regex]] syntax
+title:: Regex
 	- A query string format for describing [[Regular expression]] . For examples, see [regexr.com](https://regexr.com/)]
 		- Basic Regex Matching with alphabets
 		  collapsed:: true
@@ -24,7 +24,7 @@
 			- Some chars we frequently use in strings are reserved as special characters, for example, `.` and `?`. If we want to actually match those characters, just escape - e.g. `/\./` and `/\?/`
 			- `/\./` -> I love you**.** (matches the last full stop `.`)
 			- `/.\./` -> I love yo**u.** (matches `u.`)
-		- ### [[Regex Special Characters]]
+		- ### [[Regex special characters]]
 			- > Note that only the body of the regex is shown, and no grouping is used in these Special Characters examples.
 			- `[]` char set
 				- `[f]at` -> Matt the **fat** cat
@@ -60,9 +60,9 @@
 					- `\w{7,}` -> RegExr was **created** by **gskinner**.com
 				- `{i,j}` matches between i to j chars of preceding token
 					- `\w{5,6}` -> **RegExr** was **create**d by **gskinn**er.com
-		- ### [[Regex Grouping]]
+		- ### [[Regex grouping]]
 			- Grouping is specified using parentheses `(regex)`
-			- For example, we can use [[Regex Grouping]] with the OR [[Regex Special Characters]] to match strings with more finesse:
+			- For example, we can use [[Regex grouping]] with the OR [[Regex special characters]] to match strings with more finesse:
 				- `(t|T)he` -> **The** Batman is **the** world's best detective -> the + The
 				- `(((d|D))o){1,2}` -> **Do**o dee **Do**nald **dodo**do dee **do** dee -> Do + Do + dodo + do
 				- `(((d|D))o{2}){1,2}` -> **Doo** dee Donald doDodoDodoDo **doo****Doo** **doo** dee do dee -> Doo + dooDoo + doo

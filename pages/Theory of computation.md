@@ -16,3 +16,4 @@
 - ## [[Finite state automata]] (finite state machines)
 	- Have no memory
 	- [[Finite state automata]] can be used to implement [[Regular expression]] and regular languages
+	  collapsed:: true

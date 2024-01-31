@@ -1,9 +1,9 @@
-- ## [Format](https://parquet.apache.org/docs/file-format/configurations/)
+## [Format](https://parquet.apache.org/docs/file-format/configurations/)
 	- Configuration
-		- [[Parquet Row Group]] size
+		- [[Parquet row group]] size
 			- Large row groups (512M - 1G) recommended
 			- Because we may need to read entire row groups, HDFS block size should be larger than row group size
-		- [[Parquet Page]] size
+		- [[Parquet page]] size
 			- Smaller page size (8K) recommended (more fine-grained control)
 			- Larger page size = less page header overhead
 	- Metadata
@@ -11,7 +11,7 @@
 		- Column (chunk) metadata
 		- Thrift metadata
 			- Serialized with `TCompactProtocol`
-	- [[Parquet Page]]
+	- [[Parquet page]]
 		- Represented by 3 parts, encoded back-to-back (page size in Configuration refer to these 3 combined)
 			- [Optional] definition-level data
 			- [Optional] repetition-level data

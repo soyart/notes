@@ -1,4 +1,4 @@
-- ## Transactional vs Analytics #Databases
+## Transactional vs Analytics #Databases
 	- ### Transactions (OLTP)
 		- Most database use is transactional
 		- We only need to **read and write a small chunks of data in transactions**
@@ -9,8 +9,8 @@
 		- E.g. business analysts query all sales data of the last month, summing up revenue and costs, etc.
 		- Usually #SQL
 		- Usually involve very large reads
-		- Because these analytics queries are expensive, we usually create new databases just for analytics, called [[Data Warehouse]]
-		- [[Data Warehouse]]
+		- Because these analytics queries are expensive, we usually create new databases just for analytics, called [[Data warehouse]]
+		- [[Data warehouse]]
 		  collapsed:: true
 			- Data warehouses contains specialized tables just for analytics
 			- The created tables are called *fact tables*, or sometimes *view table*
