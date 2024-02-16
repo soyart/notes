@@ -49,7 +49,7 @@ title:: Regex
 			- `\w` matches any **w**ordy chars (alphanumeric+underscore)
 			- `\W` matches non-**w**ordy chars
 			- `\s` matches any white**s**paces
-			- `\s` matches any non-white**s**paces
+			- `\S` matches any non-white**s**paces
 			- `{i}` matches i chars of preceding token
 				- `o{2}` -> f**oo**bar
 				- `/w{5}` -> **RegEx**r was **creat**ed by **gskin**ner.com
