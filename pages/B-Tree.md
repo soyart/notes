@@ -4,7 +4,6 @@
 	- Usually, the height is the number of disk operations we perform
 	- Each node (page) in a B-Tree is typically mapped directly to disk block size
 		- Is good for
-		  collapsed:: true
 			- DB indexes
 			- Optimizing disk spaces
 				- Given `t` degree and `n` nodes, the height is $\boxed{\log_t(n+1)/2}$
@@ -31,7 +30,6 @@
 		- at least `t-1` keys
 		- at most `2t-1` keys
 	- Number of children of internal nodes
-	  collapsed:: true
 		- at least `t` children
 		- at most `2t` children
 - ## Search

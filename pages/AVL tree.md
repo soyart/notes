@@ -10,8 +10,6 @@
 	- Right rotation (RR) can be performed to fix left-heavy tree
 	- Light rotation (LL) can be performed to fix right-heavy tree
 	- Left-Right rotation (LR) can be performed to fix left-heavy tree with zigzagness
-	  collapsed:: true
 		- First, we perform LL rotation on the left subtree, then RR on the root
 	- Right-Left rotation (RL) can be performed to fix right-heavy tree with zigzagness
-	  collapsed:: true
 		- First, we perform RR rotation on the right subtree, then LL on the root

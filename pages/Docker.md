@@ -68,7 +68,6 @@
 		- List Docker networks with `docker network ls`.
 		- Inspect with `docker network inspect <network name>`
 	- A Docker network is attached to a container during [[Running Docker Containers]] with `docker run --network mynet --network-alias myhost`.
-	  collapsed:: true
 		- To create a new network, use `docker network create <network name>`:
 			- ```
 			  docker network create myapp-net;
@@ -79,7 +78,6 @@
 	- [[Docker Volume]]s are managed using `docker-volume`
 		- List named volumes with `$ docker volume ls`.
 		- Create [[Named Docker Volume]] `$ docker volume create <volume name>`
-		  collapsed:: true
 			- ```
 			  docker volume create myapp-db;
 			  ```

@@ -2,7 +2,6 @@
 title:: Regex
 	- A query string format for describing [[Regular expression]] . For examples, see [regexr.com](https://regexr.com/)]
 		- Basic Regex Matching with alphabets
-		  collapsed:: true
 			- Let's say the word is `foobar200@huakuy.com`
 			- `foo` -> `"foo"`
 			- `foobar` -> `"foobar"`

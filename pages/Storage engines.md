@@ -61,7 +61,6 @@ id:: 64b848e9-88a9-4ebf-b907-99fcbb74dc84
 		- Limitations:
 			- Compaction/merging can be expensive spikes
 		- ### **[Impractical]** Primitive, append-only, unsorted logs
-		  collapsed:: true
 			- Use append-only log files, in segments
 			- Log files are usually in binary
 			- Older segments can be compacted (merged)

@@ -12,20 +12,17 @@ title:: Ethereum
 	- ## Ethereum L2 scaling #L2 #scaling #off-chain
 		- > L2 scaling is done off-chain, and the resulting aggregated chain data (not Ethereum Mainnet!) can then be committed to Ethereum Mainnet, spreading the TX costs and improving network throughput.
 		- ### L2 scaling little history
-		  collapsed:: true
 			- First came [[StateChannel]], which allows pre-agreed parties to transact among themselves.
 			- Then anyone could transact ([[PlasmaChain]]), but there's chance of censorship due to [[PlasmaChainOperator]]
 			- Finally, censorship is solved with [[RollUps]]
 		- ### L2 scaling solutions
 			- ### [State Channels](https://ethereum.org/en/developers/docs/scaling/state-channels/) (State Channels and Payment Channels) #StateChannel
-			  collapsed:: true
 				- > TL;DR: Channels use multisig contracts to perform multiple operations off-chain, coming back and write to the root chain later
 				- Channels are made possible via multisig contracts. It lets participants transact their funds off-chain multiple times, before committing the root chain.
 				- Channels downsides are that __channels don't offer open participation__, that is, participants need to be known up front, and users'll have to lock their funds in the multisig contract. Each of the channel is also application-specific.
 				- Due to use of multisig contracts, __censorship can be done by any party__ of the multisig used
 				- Channels are some of the fist scaling solution for blockchains, having been adopted within the Bitcoin environment. [Raiden](https://raiden.network/) provides channel scaling on Ethereum
 			- ### [Plasma chains](https://ethereum.org/ph/developers/docs/scaling/plasma/) #PlasmaChain
-			  collapsed:: true
 				- Plasma chains assume that __NOT__ every single transaction needs to be verified on the root chains.
 				- id:: 2ffae875-09f1-4c63-8f32-1ae6ed7d13d0
 				  > A plasma chain is a separate, secondary blockchain that is also anchored to Ethereum chain. In this case, the Mainnet is the _root chain_, while the plasma chain is _child chain_.
@@ -55,7 +52,6 @@ title:: Ethereum
 					- With plasma chains, commitments implement [commitment scheme](https://en.wikipedia.org/wiki/Commitment_scheme) in the form of Merkel roots (derived from [Merkel trees](https://ethereum.org/ph/whitepaper/#merkle-trees)) , called block roots.
 					- Plasma commitments comprise of compressed data on the plasma chain organized into a Merkel root, i.e. a cryptographic state (hash) tree of the plasma chain states at specific points in time. This way, plasma chain commitments are a from of commitment scheme in that the 2 chains can verify their data without revealing real data.
 			- ### Rollups (snark) #RollUps
-			  collapsed:: true
 				- > Rollups aggregate L2 data and wraps them all up (roll up) in a few transactions to be ultimately sent to root chain.
 				- Rollups will be more useful as Ethereum moved to 2.0 and sharding. This is because rollups only need the data layer of Ethereum.
 				- Most peeps within Ethereum community tends to view rollups as the main L2 scaling technique for Ethereum.
@@ -74,5 +70,4 @@ title:: Ethereum
 					- #### Optimistic Rollup Disputes
 						- According to Optimism blog post, the main idea for optimistic rollups is always about disputes. To quote the blog: _If you think of Ethereum as an almighty, decentralized court, then the core insight of L2 scalability is: “don’t go to court to cash a check — just go if the check bounces.”_
 			- ### [Sidechains](https://ethereum.org/en/developers/docs/scaling/sidechains/) #SideChain
-			  collapsed:: true
 				- > Sidechains are independent, EVM/Ethereum-compatible blockchains with their own consensus mechanism and block parameters. This means that almost no sidechain security is derived from Sidechains and Ethereum can talk. They can help scale Ethereum by moving the computations from Ethereum to the sidechains.

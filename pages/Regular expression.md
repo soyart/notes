@@ -24,7 +24,6 @@ title:: Regular expression
 	- $(P + Q)^\ast = (P^\ast Q^\ast)^\ast = (P^\ast + Q^\ast)^\ast$
 	- $(P + Q)R = PR + QR$ and $R(P + Q) = RP + RQ$
 - ## Arden's theorem
-  collapsed:: true
 	- If P and Q are regexes over $\Sigma$, and P does not contain $\epsilon$
 	- Then $R = Q + RP$ has a unique solution $R = Q(P^\ast)$
 	- Proof using identities
@@ -47,7 +46,6 @@ title:: Regular expression
 		- $R = Q(\Epsilon + P^+)$
 		- $R = Q(P^\ast)$
 - ## Proof examples
-  collapsed:: true
 	- Prove that $(1+00^\ast1)+(1+00^\ast1)(0+10^\ast1)*(0+10^\ast1)$ is equal to $0^\ast1(0+10^\ast)1^\ast$
 	- $(1+00^\ast1)+(1+00^\ast1)(0+10^\ast1)^\ast(0+10^\ast1)$
 		- We see here that there's a common term $(1+00^\ast1)$, which can be factored out
@@ -70,28 +68,22 @@ title:: Regular expression
 	- $0^\ast1(0+10^\ast1)^\ast$
 - ## Language to regex
 	- $L_1 = \{0, 1, 2\}$
-	  collapsed:: true
 		- Accepts any strings from the set
 		- $R_1 = 0 + 1 + 2$
 	- $L_2 = \{\epsilon, ab\}$
-	  collapsed:: true
 		- Accepts any strings from the set
 		- $R_2 =  \epsilon + ab$
 	- $L_3 = \{abb, a, b, bba\}$
-	  collapsed:: true
 		- Accepts any strings from the set
 		- $R_3 = abb + a + b + bba$
 	- $L_4 = \{\epsilon, 0, 00, 000, ...\}$
-	  collapsed:: true
 		- Accepts closure of terminal symbol $0$
 		- $R_4 = 0^\ast$
 			- Note: $\epsilon \in 0^\ast$
 	- $L_5 = \{1, 11, 111, 1111, \dots\}$
-	  collapsed:: true
 		- Looks like a star closure, but the set does not include empty string $\epsilon$
 		- $R_5 = 1^+$
 	- $L_6 = \{\Epsilon \cup \{a^i, b^j\}\}$
-	  collapsed:: true
 		- e.g. $L_6 \{\epsilon, a, b, aa, ab, bb, aaa, aab, \dots\}$
 		- Accepts an empty string or any iterations of $a$ and $b$
 		- $R_6 = a^\ast b^\ast$
@@ -113,7 +105,6 @@ title:: Regular expression
 			- $L_3 = \{\epsilon, a, b, aa, ab, ba, bb\}$
 			- $R_3 = \epsilon + a + b + aa + ab + ba + bb$
 			- $R_3 = (\epsilon + a + b)(\epsilon + a + b)$
-			  collapsed:: true
 				- This will also matches empty strings (hits $\epsilon$ on both terms)
 				- This will also matches a single $a$ (hits $a$ and $\epsilon$)
 				- This will also matches $bb$ (hits $b$ and $b$)
@@ -123,13 +114,11 @@ title:: Regular expression
 	- The resulting regex will match all string inputs acceptable by the source state machines
 	- Unions are used to combine paths that lead to the same states
 	- ### DFA to regex
-	  collapsed:: true
 		- Start from initial state, and work your way to the final state
 		- Write down every possible states reachable by the the current state
 		- Simplify the regexes
 		- Examples
 			- {{renderer code_diagram,plantuml}}
-			  collapsed:: true
 				- ```plantuml
 				  @startuml
 				  left to right direction
@@ -164,7 +153,6 @@ title:: Regular expression
 				- $q_1 = \Epsilon(ab+ba)^\ast$
 				- $q_1 = (ab+ba)^\ast$
 	- ### NFA to regex
-	  collapsed:: true
 		- Start from final state, and work your way back to the initial state
 		- Write down every possible previous states and their inputs to reach the current state
 		- Simplify the regexes

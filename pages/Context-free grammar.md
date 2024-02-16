@@ -36,7 +36,6 @@
 		- Expansion steps for $0011$ (*parse tree*)
 		- {{renderer code_diagram,tikz}}
 		  id:: 65a18fbb-2ed9-4307-931e-107d437bc62a
-		  collapsed:: true
 			- ```tikz
 			  \usepackage{tikz}
 			  \usetikzlibrary{positioning}
@@ -76,7 +75,6 @@
 			  
 			  ```
 	- $G_2$
-	  collapsed:: true
 	  $S \rightarrow  0S$
 	  $R \rightarrow  RR$
 		- $G_2$ does not expand into terminals, only variables, so no strings will be produced.

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+echo "running ./scripts/remove-collapsed.sh"
+
+./scripts/remove-collapsed.sh
+
+echo "adding hook changes to index"
+
+git add pages/*.md
+
+exit 0

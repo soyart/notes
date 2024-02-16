@@ -29,7 +29,6 @@
 		- ### [`RUN`, `ENTRYPOINT`, and `CMD`](https://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile)
 			- `RUN` is used to run commands during build, while `CMD` and `ENTRYPOINT` defines how our container will executes default commands and when we use `docker exec`.
 			- ### `RUN`
-			  collapsed:: true
 				- `RUN` can appear in 2 forms; _shell_ form and _exec_ form. The _exec_ from __DOES NOT invoke container's shell__.
 					- ```
 					  RUN <command>
@@ -46,7 +45,6 @@
 				- It is the container shell that manages environment variables in [[Dockerfile]], not Docker.
 				- You can use __`docker build --no-cache`__ to tell Docker not to cache the current `RUN` command for next build.
 			- ### `CMD`
-			  collapsed:: true
 				- `CMD` can appear in 3 forms, (1) _exec_, (2) _default_, and (3) _shell_ forms.
 					- ```
 					  CMD ["executable","param1","param2"] # exec form, preferred
@@ -57,7 +55,6 @@
 				- __The main purpose of a  `CMD`  is to provide defaults for an executing container.__ These defaults can include an executable, or they can omit the executable, in which case you must specify an  `ENTRYPOINT` instruction as well.
 				- The _exec_ form __DOES NOT INVOKE SHELL__.
 			- ### `ENTRYPOINT`
-			  collapsed:: true
 				- [[Docker Container]] has, by default, `/bin/sh -c` as "_entrypoint_".
 				- This allows `CMD` and `RUN` to be run by the _default_ entrypoint, and these 2 are usually shell statement strings.
 				- Later, users want custom entrypoint, hence the key `ENTRYPOINT` and flag `--entrypoint`
@@ -89,7 +86,6 @@
 		- ### `ADD` and `COPY`
 			- Both commands are very similar, but `ADD` can untar and download files from URLs, while `COPY` can only allow local files. Their general syntax is very similar, but it's the more advanced features that make them different.
 			- `ADD` copies files from the _build context_ to path in the image filesystem.
-			  collapsed:: true
 				- `dst` can be either (1) path relative to `WORKDIR`, or (2) absolute path.
 				- `ADD` has 2 forms, and `src` and `dst` can contain wildcards:
 					- ```

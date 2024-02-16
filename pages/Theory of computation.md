@@ -1,5 +1,4 @@
 - Is how we think of computation
-  collapsed:: true
 	- Computability theory (1930-1950s)
 		- What we can compute
 		- e.g. Can we solve problem `x`?
@@ -16,4 +15,3 @@
 - ## [[Finite state automata]] (finite state machines)
 	- Have no memory
 	- [[Finite state automata]] can be used to implement [[Regular expression]] and regular languages
-	  collapsed:: true

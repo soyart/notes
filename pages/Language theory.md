@@ -11,7 +11,6 @@
 	- e.g. $\Sigma_{Latin} = \Sigma_{Lower} \cup \Sigma_{Upper}$
 	- e.g. $\Sigma_{English} = \{., ?\} \cup \Sigma_{Latin} \cup \Sigma_{Decimals}$ is alphabet for modern English language, which include Latin alphabets in all cases, Arabic numerals, and the full stop and question mark.
 	- #### Cardinality $\vert\Sigma\vert$
-	  collapsed:: true
 		- Number of elements in an alphabet set
 		- e.g. if $\Sigma = \{0, 1\}$
 			- Then cardinality is $\vert\{0, 1\}\vert$ = 2 (Σ has 2 elements)
@@ -21,10 +20,8 @@
 	- e.g. if $\Sigma = \{0, 1\}$
 		- $\Sigma^0$ -> All strings of length 0 -> $Σ^0 = \Epsilon = \{\epsilon\}$
 		- $\Sigma^1$ -> All strings of length 1 -> $\Sigma^1 = \{0, 1\}$
-		  collapsed:: true
 			- $\Sigma^1 = {\Sigma} = \{\{0, 1\}\}$
 		- $\Sigma^2$ -> All strings of length 2 -> $\Sigma^2 = \{00, 01, 10, 11\}$
-		  collapsed:: true
 			- $\Sigma^2 = \{\Sigma,\Sigma\} = \{\{0, 1\}, \{0, 1\}\}$
 	- #### $\Sigma^\ast$ and $\Sigma^+$  (assume alphabets $\Sigma = \{0, 1\}$)
 		- Sets of all possible strings over symbols $0$ and $1$
@@ -42,7 +39,6 @@
   id:: eb18ac5c-b11f-4447-833f-aa748e9c88f6
 	- A *formal* language is a set of strings that can be described using *formal* grammar
 	- Regular language examples
-	  collapsed:: true
 		- > These examples will express language from [[Regular expression]], that is, we write $$A = L(R)$$ to build language $A$ from regex $R$
 		- Alphabet $\Sigma_\text{simbin} = \{0, 1\}$
 		- e.g. Language $L_1$ accepts any strings with alphabet $\Sigma_{simbin}$
@@ -90,11 +86,9 @@
 			- Remember, it's a proof by contradiction, so we at first always assume test language to be regular.
 			- Each example may have multiple proofs
 			- #### $A_1 = L(\{a^{k}b^k \mid k \geq 0\})$
-			  collapsed:: true
 				- > $A_1$ is language of any strings with equal number of symbols $a$ and $b$
 				- $p = 8$
 					- Case 1: $x$ and $y$ is in the `a` part, while $z$ is strictly a string of `b`s
-					  collapsed:: true
 						- Let's assign $k = p \implies k = 8$
 						- $S = a^8b^8$ = `aaaaaaaabbbbbbbb`
 						- $x$ = `aa`
@@ -103,17 +97,14 @@
 						- $S_{pump} = xy^{3}z = aaaaaaaaaaaaaaaaaaaabbbbbbbb$
 						- $S_{pump} \notin A_1$ because $S_{pump}$ has different numbers of `a`s and `b`s
 					- Case 2: $x$ is in `a` part, $y$ has both `a` and `b`, and $z$ has `b` only
-					  collapsed:: true
 						- Let's say $S$ is super long, so we can liberally assign $y$
 						- $k = 100 \implies S = a^{100}b^{100}$
 						- We want $x$ to be in `a`-only part, $y$ to have both `a` and `b`, and $z$ to only contain `b`
-						  collapsed:: true
 							- In other words, $x = \{a^\ast\}$, $y= \{\{a,b\}^\ast\}$, and $z = \{b^\ast\}$
 						- But we can't divide $S = xyz$ such that $y$ has some `b` and satisfies $\vert{xy}\vert \leq p$
 						- So $A_1$ is not regular
 			- #### $A_2 = L(\{yy \mid y \in \{0, 1\}^\ast\})$
 			  id:: 65a173fb-af9f-49f8-9269-c92c2df58776
-			  collapsed:: true
 				- > $A_2$ is a language whose strings has 2 identical parts, i.e. the first half is identical to the second half. Or $L(S) = A$ and $S = 0101 = yy \implies y = 01$
 				  
 				  > We can clearly see that, since [[Finite state automata]] has no memory, it can't remember what the first half was, and thus is unable to recognize $A_2$.

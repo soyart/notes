@@ -11,7 +11,6 @@
 		- Usually involve very large reads
 		- Because these analytics queries are expensive, we usually create new databases just for analytics, called [[Data warehouse]]
 		- [[Data warehouse]]
-		  collapsed:: true
 			- Data warehouses contains specialized tables just for analytics
 			- The created tables are called *fact tables*, or sometimes *view table*
 			- Fact tables sync with main database once every fixed intervals

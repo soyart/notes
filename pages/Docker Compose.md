@@ -6,7 +6,6 @@
 			- In this example we're going to compose a [[Multi Container Apps]], This _todo app_ is going to use 2 containers - __a MySQL service _AND_ a backend service__, with its own Docker network `todo-net`.
 			- We want to use `docker-compose` to _bring everything up_ for us. Lego.
 			- If our _app backend_ service was run like this ([[Running Docker Containers]]):
-			  collapsed:: true
 			  ```
 			  $ docker run -dp 3000:3000 \
 			    -w /app -v "$(pwd):/app" \
@@ -19,7 +18,6 @@
 			    sh -c "yarn install && yarn run dev";
 			  ```
 				- Based on the command above
-				  collapsed:: true
 					- We know that the [[Docker Image]] is `node:12-alpine`.
 					- And that the _command_ to be run is `sh -c 'yarn install && yarn run dev'`
 					- And that [[Docker Port Mapping]] is `-p 3000:3000`
