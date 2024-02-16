@@ -4,6 +4,8 @@ echo "running ./scripts/remove-collapsed.sh"
 
 ./scripts/remove-collapsed.sh
 
+git diff
+
 echo "adding hook changes to index"
 
 git add pages/*.md
