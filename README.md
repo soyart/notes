@@ -1,6 +1,6 @@
 # Git hooks
 
-To use Git hooks in [`.githooks`](./githooks/),
+To use Git hooks in [`.githooks`](./.githooks/),
 configure your local repository:
 
 ```shell
