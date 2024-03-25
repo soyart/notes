@@ -116,7 +116,7 @@
 					- Instead, $F_M = (F_1 \times Q_2) \cup (F_2 \times Q_1)$
 						- i.e. some states which either have $F_1$ or $F_2$
 	- ### Minimization
-## [[NFA]] - Non-deterministic finite automata
+- ## [[NFA]] - Non-deterministic finite automata
 	- ### Definition $M = (Q, \Sigma, \delta, q_0, F)$
 		- $Q$, $q_0$, $F$ is the same as with [DFA definition](((3d3cd125-712c-4563-b1d1-54b1be607b43)))
 		- Alphabet $\Sigma$ is actually $\Sigma_\epsilon = \{\Sigma \cup \Epsilon\}$
@@ -513,10 +513,10 @@
 			- Then we can recursively reduce $k$ until it becomes [the base case ($k = 2$)](((65a17ad7-5035-47ad-85ec-d1080199050e))), and prove that regexes and GNFA are equivalent
 	- Can be converted into [[DFA]] - the resulting DFA may have more states than the original NFA
 	- To solve complex problems, we can first design a NFA, and then convert it into [[DFA]], before finally minimizing the DFA.
-## [[Moore machines]]
+- ## [[Moore machines]]
 	- **Outputs associated with states**
 	- Can be converted into [[Mealy machines]]
-## [[Mealy machines]]
+- ## [[Mealy machines]]
 	- **Outputs associated with transition**
 	- Mealy conversion to [[Moore machines]] will result in more states in the target Moore machines
 		- Let's say Mealy has `x` number of states, and `y` number of outputs
