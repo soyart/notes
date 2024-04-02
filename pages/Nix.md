@@ -135,7 +135,11 @@
 - # [[Nix language]]
 	- > The Nix language is a domain-specific functional programming language created to compose [[Nix derivation]] , which is precise describing how contents of existing files are used to derive new files. Nix is also dynamically-typed, lazily-evaluated.
 	- Since Nix is a functional language, there're *no statements*, only **expression**
-	- Evaluating a Nix expression produces a Nix value
+	- The Nix language is used to describe derivations.
+	- Nix runs derivations to produce *build results*.
+	- Build results can in turn be used as *build inputs* for other derivations.
+	- ## Nix expressions
+		- Evaluating a Nix expression produces a Nix value
 		- e.g. evaluating `1+2` expression yields a value `3`, which itself is also an expression
 			- Other expression that evaluate to `3`
 			- ```nix
@@ -157,7 +161,8 @@
 			  nix-repl> :p { a.b.c = 1; }
 			  { a = { b = { c = 1; }; }; }
 			  ```
-	- Each `.nix` file is a Nix expression
+	- ## Nix files
+		- Each `.nix` file evaluates to a single Nix expression
 		- ```sh
 		  # Populate the file with expression `1+2`
 		  echo 1 + 2 > foo.nix
@@ -517,3 +522,121 @@
 					  true
 					  ```
 				- Most of the times, we can assume that `lib` is `pkgs.lib`. If we see that a function is expecting `{ pkgs, lib, ... }`, we can assume that `pkgs.lib` and `lib` are the same, but put there just for readability
+	- ## Impurities
+		- Most Nix expressions are pure
+		- Examples of impurities are *build inputs*, which may be read from files on the system
+		- ### Nix side effects
+			- **Paths**: **Whenever a path is used in string interpolation, its content is copied to Nix store**, and the string interpolation expression evals to the absolute path to that file/directory in the Nix store
+				- Why copy to Nix store? To make it more reproducible and robust. With hash-enforced access, content file changes will have less detrimental effects on our builds
+				- ```sh
+				  # File content is "123"
+				  echo 123 > data
+				  ```
+				- ```nix
+				  "${./data}" # Path inside string interpolation
+				  ```
+				- The expression above will evaluate to:
+				- ```txt
+				  "/nix/store/h1qj5h5n05b5dl5q4nldrqq8mdg7dhqk-data"
+				  ```
+			- **Fetches**: fetchers are used to get build inputs from non-FS locations (e.g. `builtins.fetchGit`). These fetchers will download the resources to Nix store, and so the fetcher expressions evaluate to Nix store path strings.
+			  id:: 660c3bd6-b1b2-42a0-bc1a-6adc76494082
+				- ```nix
+				  builtins.fetchTarball "https://github.com/NixOS/nix/archive/7c3ab5751568a0bc63430b33a5169c5e4784a0ff.tar.gz"
+				  ```
+				- The fetcher expression will save the files to Nix store
+				- Which means that the expression above evaluates to
+				- ```txt
+				  "/nix/store/d59llm96vgis5fy231x6m7nrijs0ww36-source"
+				  ```
+	- ## Derivations
+		- > Nix provides a primitive impure function `derivation`, but since this is impure and advised against, we rarely see the function in practice
+		- Nix derivations are in practice the results of `mkDerivation`
+		- ### Build results
+			- The return value of `mkDerivation`, aka *build results*, is what Nix will eventually build
+			- The build results are an attrset, with particular structure
+			- This build results attrset can be used in string interpolation, and like files and fetchers, a build result attrset will evaluates to a Nix store path string:
+				- ```nix
+				  let
+				    pkgs = import <nixpkgs> {};
+				  in "${pkgs.nix}"
+				  ```
+				- ```txt
+				  "/nix/store/sv2srrjddrp2isghmrla8s6lazbzmikd-nix-2.11.0"
+				  ```
+				- The resulting string is the file system path where the build result of that derivation will end up.
+				- A derivation’s output path is fully determined by its inputs, which in this case come from *some* version of `<nixpkgs>` (hence `-nix-2.11.0` suffix of the filename)
+	- ## Simple examples
+		- ### Declarative shell
+			- ```nix
+			  { pkgs ? import <nixpkgs> {} }:
+			  let
+			    message = "hello world";
+			  in
+			  pkgs.mkShellNoCC {
+			    buildInputs = with pkgs; [ cowsay ];
+			    shellHook = ''
+			      cowsay ${message}
+			    '';
+			  }
+			  ```
+			- The  expression (a Nix function) takes 1 attrset argument with `pkgs` attr. If `pkgs` is not in the caller's argument, it defaults to importing Nixpkgs using lookup paths with empty attrset: `import <nixpkgs> {}`
+		- ### System configuration
+			- ```nix
+			  { config, pkgs, ... }: {
+			  
+			    imports = [ ./hardware-configuration.nix ];
+			  
+			    environment.systemPackages = with pkgs; [ git ];
+			  
+			    # ...
+			  
+			  }
+			  ```
+			- The expression (a Nix function) takes 1 attrset  arg with attrs `config` and `pkgs`.
+			- We can see that the argument `config` was unused
+			- The returned expression will have the following attributes:
+				- `imports`: which is set to be a list with 1 element, a path: `./hardware-configuration.nix`
+				- `environment`: which has a nested attribute `systemPackages` set to `pkgs.git`
+		- ### Package
+			- ```nix
+			  { lib, stdenv, fetchurl }:
+			  
+			  stdenv.mkDerivation rec {
+			    pname = "hello";
+			    version = "2.12";
+			  
+			    src = fetchurl {
+			      url = "mirror://gnu/${pname}/${pname}-${version}.tar.gz";
+			      sha256 = "1ayhp9v4m4rdhjmnl2bq3cibrbqqkgjbl3s7yk2nhlh8vj3ay16g";
+			    };
+			  
+			    meta = with lib; {
+			      license = licenses.gpl3Plus;
+			    };
+			  }
+			  ```
+			- This Nix expression (a Nix function) takes an attrset with exactly 3 attrs: `lib`, `stdenv`, `fetchUrl`
+			- The whole Nix expression evaluates to the return value of  `stdenv.mkDerivation rec{..}`
+			- Let's take a look at the attrset arg passed to `stdenv.mkDerivation`
+				- It uses recursive attrset, so that it can refer to names from within the expr
+				- `name` and `version` are simple, they are just named values within this rattrset
+				- `src`
+					- [Assigned to what `fetchUrl <s>` evaluates to](((660c3bd6-b1b2-42a0-bc1a-6adc76494082)))
+					- The attrset `s` has 2 attrs
+						- `url`, which is assigned to a URL string interpolated using `name` and `version` from the rattrset
+						- `sha256`, which is assigned a hard-coded SHA2 checksum string
+				- `meta`
+					- Assigned to an attrset with 1 attr, `license`, which is `lib.license.gpl3Plus`
+	- ## Nix style guide and convention
+		- > See also: [Nix Pills](https://nixos.org/guides/nix-pills/)
+		- Avoiding reinventing the wheel, instead explore Nixpkgs first
+			- ```nix
+			  { x, y, z }: (x y) z.a
+			  ```
+			- How do we know the individual type of each names here?
+			- We can think that `x` is a function, and `x y` returns a function that takes `z.a`
+			- Still, we might be wrong
+			- It's possible that what we are going to do is already implemented in Nixpkgs
+		- Conform to [Nix modules](https://nixos.org/manual/nixos/stable/index.html#sec-writing-modules) for more complex expressions, especially if it's meant to be a module and not just a simple value
+	-
