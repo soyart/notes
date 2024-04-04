@@ -1083,6 +1083,7 @@
 			  Hello, Moon!
 			  ```
 		- ### Custom `callPackage` with `callPackageWith`
+			- > See [manual for `callPackageWith`](https://nixos.org/manual/nixpkgs/stable/#function-library-lib.customisation.callPackageWith)
 			- Let's say we have some set of packages that depend on each other, e.g. `e` depends on `c`, `d`:
 			- ```nix
 			  let
@@ -1122,6 +1123,113 @@
 			- Thanks to Nix lazy evaluation, `packages` will evaluate recursively up from `a` to `e`
 				- When Nix evaluates line 6, the argument sent to `./b.nix` would have been `pkgs` merged with `{ a = a; }`
 				- When Nix evaluates line 8, the argument sent to `./d.nix` would have been `pkgs` merged with `{ a = a; b = b; c = c; }`
+				- i.e. `packages` is being built up recursively with each call to custom `callPackage`.
+	- ## Local filesystem files
+		- By default, Nix builders run in isolation and only allow to read from Nixpkgs and Nix store
+		- Nix provides low-level features for moving our local files to Nix store for the builders
+			- > Paths can be coerced to strings, and when that happen, the local files are copied to the Nix store, and the paths then evaluate to the Nix store path to the copied local files
+			- Paths can be tricky, e.g. `src = ./.;` will make our drv depends on current dirname
+			- `builtins.path` function may help, but it's still difficult to express complex build logic
+		- ### File sets
+			- > File sets are sets, so we can perform generic set operations on them such as union, intersection, and difference.
+			- A file set is a data structure representing a *collection of local files*
+			- We use `lib.fileset` to work with file sets
+			- All function `lib.fileset` that accepts a file set also accepts a path, which will be converted into set which contains all files in that path
+			- Files in a file set are never copied to Nix store unless explicitly told to using [toSource](https://nixos.org/manual/nixpkgs/stable/#function-library-lib.fileset.toSource)
+			- See [nix.dev example projects](https://nix.dev/tutorials/working-with-local-files#example-project)
+			- #### Set differences
+				- With file set being a set, we can get the difference between 2 sets with the [`difference` function](https://nixos.org/manual/nixpkgs/stable/#function-library-lib.fileset.difference)
+					- Caveat: `difference` will throw an error if the latter dir `./result` does not exist
+					- ```nix
+					  sourceFiles = fs.difference ./foo ./result;
+					  ```
+					- Tips: use [`maybeMissing` to allow blind subtraction](https://nixos.org/manual/nixpkgs/stable/#function-library-lib.fileset.maybeMissing)
+					- ```nix
+					  # If ./result is empty -> diff = foo - empty set
+					  # If ./result has some -> diff = foo - result
+					  sourceFiles = fs.difference ./. (fs.maybeMissing ./result);
+					  ```
+				- If any file sets are used to built a drv, then any changes to any of the files included in the set will trigger a rebuild (because hash changes) when `nix-build` is run
+			- #### Set unions for explicit exclusion
+				- Using `<src> difference <union>` will exclude files in `<union>`
+				- id:: 660d9603-1e90-4257-b290-06cf292f915a
+				  ```nix
+				  sourceFiles =
+				  	fs.difference
+				  	./.
+				  	(fs.unions [
+				  		(fs.maybeMissing ./result)
+				      	./default.nix
+				  		./build.nix
+				  		./nix
+				  	]);
+				  ```
+				- From now, updating excluded files (e.g. `./default.nix` and `./build.nix`) will not trigger a rebuild
+			- #### Set unions for explicit inclusion
+				- ```nix
+				  { stdenv, lib }:
+				  let
+				    fs = lib.fileset;
+				    sourceFiles = fs.unions [
+				      ./hello.txt
+				      ./world.txt
+				      ./build.sh
+				      (fs.fileFilter
+				        (file: file.hasExt "c" || file.hasExt "h")
+				        ./src
+				      )
+				    ];
+				  in
+				  
+				  fs.trace sourceFiles
+				  
+				  stdenv.mkDerivation {
+				    name = "fileset";
+				    src = fs.toSource {
+				      root = ./.;
+				      fileset = sourceFiles;
+				    };
+				    postInstall = ''
+				      cp -vr . $out
+				    '';
+				  }
+				  ```
+				- Here, only files specified in the union are included:
+				- ```sh
+				  $ nix-build
+				  trace: /home/user/fileset
+				  trace: - build.sh (regular)
+				  trace: - hello.txt (regular)
+				  trace: - src (all files in directory)
+				  trace: - world.txt (regular)
+				  this derivation will be built:
+				    /nix/store/sjzkn07d6a4qfp60p6dc64pzvmmdafff-fileset.drv
+				  ...
+				  '.' -> '/nix/store/zl4n1g6is4cmsqf02dci5b2h5zd0ia4r-fileset'
+				  './build.sh' -> '/nix/store/zl4n1g6is4cmsqf02dci5b2h5zd0ia4r-fileset/build.sh'
+				  './hello.txt' -> '/nix/store/zl4n1g6is4cmsqf02dci5b2h5zd0ia4r-fileset/hello.txt'
+				  './world.txt' -> '/nix/store/zl4n1g6is4cmsqf02dci5b2h5zd0ia4r-fileset/world.txt'
+				  './src' -> '/nix/store/zl4n1g6is4cmsqf02dci5b2h5zd0ia4r-fileset/src'
+				  './src/select.c' -> '/nix/store/zl4n1g6is4cmsqf02dci5b2h5zd0ia4r-fileset/src/select.c'
+				  './src/select.h' -> '/nix/store/zl4n1g6is4cmsqf02dci5b2h5zd0ia4r-fileset/src/select.h'
+				  ...
+				  /nix/store/zl4n1g6is4cmsqf02dci5b2h5zd0ia4r-fileset
+				  ```
+				- This greatly simplifies our `postInstall` hook, because a derivation only reads from `sourceFiles`, and so the `.` in `postInstall` is a working dir with only explicitly included files
+			- #### Filters
+				- Use [`fileFilter`](https://nixos.org/manual/nixpkgs/stable/#function-library-lib.fileset.fileFilter) to check file conditions
+				- The snippet below is equivalent to [previous example](((660d9603-1e90-4257-b290-06cf292f915a))) if the local files are the same
+				- ```nix
+				  sourceFiles =
+				  	fs.difference
+				  	./.
+				  	(fs.unions [
+				  		(fs.maybeMissing ./result)
+				      	(fs.fileFilter (file: file.hasExt "nix") ./.)
+				  		./nix
+				  	]);
+				  ```
+			- `gitTracked` for only including files tracked in a Git repo
 - # Nix profiles
 	- `nix-env` is used to manage profiles and generations
 	- Each user has their own profile, stored in `$HOME/.nix-profile` dir
@@ -1138,9 +1246,7 @@
 	- Each user profile has their own "home Nix store", which is `$HOME/.nix_profile/bin`
 		- e.g. the [installation of drv `hello-2.10`](((660c4eff-edb4-4cc2-952b-decace41fe13)))
 		- The drv will first be installed to global Nix store, at `/nix/store/0vqw0ssmh6y5zj48yg34gc6macr883xk-user-environment.drv`
-		- Nix then links
-		- ```sh
-		  ```
+		- Nix then links the environment back from the Nix store to our home directory
 	- We can list all generations of user profile with `nix-env --list-generations`
 		- ```sh
 		  $ nix-env --list-generations
