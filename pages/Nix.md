@@ -133,12 +133,70 @@
 			- Normally, we pick Nixpkgs from the following sources:
 				- Stable Nixpkgs, e.g. `nixos-21.05`, `nixos-23.11`, etc.
 				- `nixos-unstable`
+- # Nix profiles
+	- `nix-env` is used to manage profiles and generations
+	- Each user has their own profile, stored in `$HOME/.nix-profile` dir
+	- Like `go.mod` or `package.json`, Nix profiles also have declarative *manifest* at `$HOME/.nix-profile/manifest.nix`
+	- We can install a new *drv* to the user's profile by running `nix-env` as the user:
+		- id:: 660c4eff-edb4-4cc2-952b-decace41fe13
+		  ```sh
+		  $ nix-env -i hello
+		  installing 'hello-2.10'
+		  building '/nix/store/0vqw0ssmh6y5zj48yg34gc6macr883xk-user-environment.drv'...
+		  created 36 symlinks in user environment
+		  ```
+		- This generates a new *generation* of our user profile
+	- Each user profile has their own "home Nix store", which is `$HOME/.nix_profile/bin`
+		- e.g. the [installation of drv `hello-2.10`](((660c4eff-edb4-4cc2-952b-decace41fe13)))
+		- The drv will first be installed to global Nix store, at `/nix/store/0vqw0ssmh6y5zj48yg34gc6macr883xk-user-environment.drv`
+		- Nix then links the environment back from the Nix store to our home directory
+	- We can list all generations of user profile with `nix-env --list-generations`
+		- ```sh
+		  $ nix-env --list-generations
+		  1   2014-07-24 09:23:30
+		  2   2014-07-25 08:45:01   (current)
+		  ```
+	- And we can see (query) what derivations are enabled in the profile with `nix-env -q`:
+		- ```sh
+		  $ nix-env -q
+		  nix-2.1.3
+		  hello-2.10
+		  ```
+		- Each of these drvs can be found in `$HOME/.nix_profile`
+		- They all point to some where in Nix store
+			- To list the drv store path, use `nix-env -q --out-path`
+	- Usually, user profile drvs have greater priority than system drvs, that is the user profile drv of a *name* (like `man-db` or `firefox`) will be used, and not the system drv with the same name
+	- Profile generations can be rolled back with `nix-env --rollback`
+		- ```sh
+		  $ nix-env --rollback
+		  switching from generation 3 to 2
+		  ```
+		- Or we can use `-G` to specify target rollback generation:
+		- ```sh
+		  $ nix-env --rollback -G 3
+		  switching from generation 2 to 3
+		  ```
 - # [[Nix language]]
 	- > The Nix language is a domain-specific functional programming language created to compose [[Nix derivation]] , which is precise describing how contents of existing files are used to derive new files. Nix is also dynamically-typed, lazily-evaluated.
 	- Since Nix is a functional language, there're *no statements*, only **expression**
 	- The Nix language is used to describe derivations.
 	- Nix runs derivations to produce *build results*.
 	- Build results can in turn be used as *build inputs* for other derivations.
+	- ## Nix files
+	  id:: 660ada16-e454-4f18-bf6f-b5a231487f15
+		- Each `.nix` file evaluates to a single Nix expression
+		- ```sh
+		  # Populate the file with expression `1+2`
+		  echo 1 + 2 > foo.nix
+		  
+		  # Evaluate the file expression
+		  # Note that --eval instructs nix-instantiate
+		  # to only evaluate the expression and do nothing else
+		  nix-instantiate --eval foo.nix
+		  ```
+		- If `--eval` is omitted, `nix-instantiate` will evaluate the expression to a [[Nix derivation]]
+		- By default, `nix-instantiate` looks for `default.nix`
+		- Pass `--strict` to `nix-instantiate` [if lazy evaluation messes up with our eval output](((660adc30-a264-4f5e-8d4a-0c6fec093f97)))
 	- ## Nix expressions
 		- Evaluating a Nix expression produces a Nix value
 		- e.g. evaluating `1+2` expression yields a value `3`, which itself is also an expression
@@ -162,21 +220,8 @@
 			  nix-repl> :p { a.b.c = 1; }
 			  { a = { b = { c = 1; }; }; }
 			  ```
-	- ## Nix files
-		- Each `.nix` file evaluates to a single Nix expression
-		- ```sh
-		  # Populate the file with expression `1+2`
-		  echo 1 + 2 > foo.nix
-		  
-		  # Evaluate the file expression
-		  # Note that --eval instructs nix-instantiate
-		  # to only evaluate the expression and do nothing else
-		  nix-instantiate --eval foo.nix
-		  ```
-		- If `--eval` is omitted, `nix-instantiate` will evaluate the expression to a [[Nix derivation]]
-		- By default, `nix-instantiate` looks for `default.nix`
-		- Pass `--strict` to `nix-instantiate` [if lazy evaluation messes up with our eval output](((660adc30-a264-4f5e-8d4a-0c6fec093f97)))
 	- ## Nix attribute set
+	  id:: 660add7d-d05c-4ec6-b533-5c39f6014708
 		- A Nix attrset is like a dictionary or JSON: it's an expression in key-value pair structure
 			- JSON and Nix equivalent example:
 				- ```json
@@ -527,6 +572,7 @@
 		- Most Nix expressions are pure
 		- Examples of impurities are *build inputs*, which may be read from files on the system
 		- ### Nix side effects
+		  id:: 660c39e1-3de2-417a-8d00-04f98f4d17f5
 			- **Paths**: **Whenever a path is used in string interpolation, its content is copied to Nix store**, and the string interpolation expression evals to the absolute path to that file/directory in the Nix store
 				- Why copy to Nix store? To make it more reproducible and robust. With hash-enforced access, content file changes will have less detrimental effects on our builds
 				- ```sh
@@ -661,6 +707,169 @@
 		  id:: 660d1a12-4c9b-4bbb-a1ea-de865fd5c4f8
 			- [`callPackage`](https://github.com/nixos/nixpkgs/commit/d17f0f9cbca38fabb71624f069cd4c0d6feace92) emerges as a convention in Nix community
 			- It helps reduce code size by automatically supplying attrs in attrset arguments
+- # [[Nix modules]]
+	- > Nix module system could be included in [[Nix language]] section, but I found it deserving a page of their own
+	- A Nix module is a [Nix file]((660ada16-e454-4f18-bf6f-b5a231487f15))
+		- Nix modules are treated a bit differently than other non-module Nix files in Nix ecosystem
+	- Nix modules are *standardized Nix files*
+	- ## Introduction
+		- Like most Nix files, a Nix module evaluates to a single expr:
+		- But Nix modules expr will need 2 special attrs in its expr: `options` and `config`
+		- ### Basic option
+			- Module options are created using function call `lib.mkOption {..}`
+			- This attr is used to tell Nix that this module provides an option that can be set
+			- We can use arbitrary names and attr paths in module option definition
+			- ```nix
+			   { lib, ... }: {
+			  	options = {
+			  		scripts.output = lib.mkOption {
+			  			type = lib.types.lines;
+			  		};
+			  	};
+			   }
+			  ```
+			- Here we define option `scripts.output`, of [type `lines`](https://nixos.org/manual/nixos/stable/#sec-option-types-basic)
+				- Nix will throw errors if the value set in `config` conflicts with the one defined in `options`
+				- ```nix
+				  # default.nix
+				  
+				  { lib, ... }: {
+				  	options = {
+				  		scripts.output = lib.mkOption {
+				  		type = lib.types.lines;
+				  	};
+				  
+				  	config = {
+				  		scripts.output = 42;
+				  	};    
+				  }
+				  ```
+				- Try [evaluating this module](((66103169-7817-4639-8a1a-63ae69f2bcda)))
+				- ```sh
+				  $ nix-instantiate --eval eval.nix -A config.scripts.output
+				  error:
+				  ...
+				         error: A definition for option `scripts.output' is not of type `strings concatenated with "\n"'. Definition values:
+				         - In `/home/nix-user/default.nix': 42
+				  ```
+				- Instead, we must pass `lines` value to `config.scripts.output`:
+				- ```nix
+				  # default.nix
+				  
+				  { lib, ... }: {
+				  	options = {
+				  		scripts.output = lib.mkOption {
+				  		type = lib.types.lines;
+				  	};
+				  
+				  	config = {
+				  		scripts.output = ''
+				          	Some Random Output String
+				          '';
+				  	};    
+				  }
+				  ```
+	- ## Evaluating Nix modules
+	  id:: 66103169-7817-4639-8a1a-63ae69f2bcda
+		- Let's say we have a module, `default.nix`, and another file `eval.nix` which uses the module and set some options
+		- `evalModules` evaluates modules, checks type errors, and merge the module options
+		- We can use `evalModules` in `eval.nix`:
+		- ```nix
+		  # eval.nix
+		  
+		  let
+		    nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-22.11";
+		    pkgs = import nixpkgs { config = {}; overlays = []; };
+		    
+		  in
+		  pkgs.lib.evalModules {
+		    modules = [
+		      ./default.nix
+		    ];
+		  }
+		  ```
+		- ```sh
+		  # Will error because we had not yet
+		  # set config.foo.bar in eval.nix
+		  
+		  $ nix-instantiate --eval eval.nix -A config.foo.bar
+		  ```
+	- ## Tip: reproducible shell script module
+		- Let's say we have a `map` shell script that calls `curl` and `feh`
+		- And our module was like this, using string as script
+		- ```nix
+		  # DO NOT DO THIS
+		  # mod.nix
+		  
+		  { lib, ... }: {
+		  	options = {
+		  		scripts.output = lib.mkOption {
+		  		type = lib.types.lines;
+		  	};
+		  
+		  	config = {
+		      	# Original script command
+		  		scripts.output = ''
+		          	./map size=640x640 scale=2 | feh -
+		          '';
+		  	};    
+		  }
+		  ```
+		- Since Nix only sees `./map ...` (and as string too!)
+		- Nix has no way to know that `map` internally uses `curl`, and that package `feh` is also required
+		- Which means that this script will fail on systems without `curl` and `feh`
+		- To fix this, simply package `map` as a script with `mkShellApplication`, with Nixpkgs constraints:
+		- ```nix
+		  # mod.nix
+		  
+		  { pkgs, lib, ... }: {
+		  
+		  	options = {
+		  		scripts.output = lib.mkOption {
+		          
+		          	# Notice how type is now package
+		  			type = lib.types.package;
+		  		};
+		  	};
+		  
+		  	config = {
+		  		scripts.output = pkgs.writeShellApplication {
+		  			name = "map";
+		        
+		  			# Tell Nix that this expr requires pkgs.{curl,feh}
+		  			runtimeInputs = with pkgs; [ curl feh ];
+		        
+		  			# Note how we now use ${./map}
+		              text = ''
+		  				${./map} size=640x640 scale=2 | feh -
+		  			'';
+		       	};
+		  	};
+		  }
+		  ```
+		- Here, this module now also takes `pkgs`.
+		- Thanks to `mkShellApplication`, the output is now a shell script saved in Nix store and linked to `./result`
+			- ```sh
+			  $ nix-build eval.nix -A config.scripts.output
+			  $ ./result/bin/map
+			  ```
+		- Dependency packages `curl` and `feh` will then come from this `pkgs`
+		- We also change text output with string interpolation on path `${./map}`, [which has side effects of copying the file `./map` to Nix store](((660c39e1-3de2-417a-8d00-04f98f4d17f5)))
+		- Let's say we have another file, `eval.nix`, which [evaluates this module](((66103169-7817-4639-8a1a-63ae69f2bcda)))
+		- Because of `evalModules` in `eval.nix`, then we can't just pass pkgs to `mod.nix` as with normal function calls.
+		- We instead have to modify `config._module.args` to use `pkgs` from `eval.nix`, which we do so via a dummy module loaded before `mod.nix`
+		- ```nix
+		  pkgs.lib.evalModules {
+		  	modules = [
+		      
+		      	# A dummy module that rewrites
+		  		({ config, ... }: { config._module.args = { inherit pkgs; }; })
+		          
+		          # Now mod.nix will get the same pkgs
+		          ./mod.nix
+		      ];
+		  }
+		  ```
 - # Packaging with Nix
 	- Packages in this sense can be either:
 		- A collection of files (like with other package managers)
@@ -671,7 +880,7 @@
 		- Let's start with a skeleton code which produces nothing:
 		- ```nix
 		  { stdenv }:
-		  stdenv.mkDerivation {	};
+		  stdenv.mkDerivation { };
 		  ```
 		- To make it build anything, we must assign attrs in the argument to `stdenv.mkDerivation`:
 			- We need `pname` and `version` at minimum
@@ -1230,46 +1439,3 @@
 				  	]);
 				  ```
 			- `gitTracked` for only including files tracked in a Git repo
-- # Nix profiles
-	- `nix-env` is used to manage profiles and generations
-	- Each user has their own profile, stored in `$HOME/.nix-profile` dir
-	- Like `go.mod` or `package.json`, Nix profiles also have declarative *manifest* at `$HOME/.nix-profile/manifest.nix`
-	- We can install a new *drv* to the user's profile by running `nix-env` as the user:
-		- id:: 660c4eff-edb4-4cc2-952b-decace41fe13
-		  ```sh
-		  $ nix-env -i hello
-		  installing 'hello-2.10'
-		  building '/nix/store/0vqw0ssmh6y5zj48yg34gc6macr883xk-user-environment.drv'...
-		  created 36 symlinks in user environment
-		  ```
-		- This generates a new *generation* of our user profile
-	- Each user profile has their own "home Nix store", which is `$HOME/.nix_profile/bin`
-		- e.g. the [installation of drv `hello-2.10`](((660c4eff-edb4-4cc2-952b-decace41fe13)))
-		- The drv will first be installed to global Nix store, at `/nix/store/0vqw0ssmh6y5zj48yg34gc6macr883xk-user-environment.drv`
-		- Nix then links the environment back from the Nix store to our home directory
-	- We can list all generations of user profile with `nix-env --list-generations`
-		- ```sh
-		  $ nix-env --list-generations
-		     1   2014-07-24 09:23:30
-		     2   2014-07-25 08:45:01   (current)
-		  ```
-	- And we can see (query) what derivations are enabled in the profile with `nix-env -q`:
-		- ```sh
-		  $ nix-env -q
-		  nix-2.1.3
-		  hello-2.10
-		  ```
-		- Each of these drvs can be found in `$HOME/.nix_profile`
-		- They all point to some where in Nix store
-			- To list the drv store path, use `nix-env -q --out-path`
-	- Usually, user profile drvs have greater priority than system drvs, that is the user profile drv of a *name* (like `man-db` or `firefox`) will be used, and not the system drv with the same name
-	- Profile generations can be rolled back with `nix-env --rollback`
-		- ```sh
-		  $ nix-env --rollback
-		  switching from generation 3 to 2
-		  ```
-		- Or we can use `-G` to specify target rollback generation:
-		- ```sh
-		  $ nix-env --rollback -G 3
-		  switching from generation 2 to 3
-		  ```
