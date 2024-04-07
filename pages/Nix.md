@@ -1,4 +1,12 @@
 - > [Nix Pills](https://nixos.org/guides/nix-pills/)
+- # Cheat sheet
+	- **Find absolutely every dependency, recursively** to use that derivation:
+		- ```sh
+		  # See dependency list of whichever `man` is in PATH
+		  $ nix-store -qR `which man`
+		  $ nix-store -q --tree `which man`
+		  $ nix-store -q --tree ~/.nix-profile
+		  ```
 - # [[Nix language]]
 - # [[nix-shell]]
 	- At the core of Nix is nix-shell, which wraps other shell (e.g. bash) with reproducible Nix environment

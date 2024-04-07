@@ -2,16 +2,37 @@
 - A Nix module is a [Nix file]((660ada16-e454-4f18-bf6f-b5a231487f15))
 	- Nix modules are treated a bit differently than other non-module Nix files in Nix ecosystem
 - Like most Nix files, a Nix module evaluates to a single expr:
-- Nix modules are *standardized Nix files*:
-	- But Nix modules expr will need 2 special attrs in its expr: `options` and `config`
+- Nix modules are [standardized Nix files (Nix module schema)](https://nixos.org/manual/nixos/stable/#sec-writing-modules):
+	- Options must conform to Nix module schema in order to be used by the Nix module system
+	- The schema requires that a module must have `options` and `config` attrs, and may have `imports` attr to import other modules
+	- ```nix
+	  { config, pkgs, ... }:
+	  
+	  {
+	  	imports = [
+	          # Paths of other modules
+	  	];
+	      
+	      options = {
+	  		# Option declarations
+	      };
+	  
+	  	config = {
+	  		# Option definition
+	      };
+	  }
+	  ```
 	- `options` (attrset) defines exposed module options
-	- `config` (attrset) defines how the option is going to be configured.
+	- `config` (attrset) defines how the option is going to be configured, and is different from `config` arg which was passed to this module
 		- ```nix
 		  { lib, config, ... }: # config here is module arg
 		  
 		  {
-		  	options = {..};
-		      config = {..}; # config here is module configuration
+		  	imports = [...];
+		  	options = {...};
+		      
+		       # config here is module configuration
+		      config = {...};
 		  }
 		  ```
 - # Evaluating Nix modules
@@ -31,6 +52,10 @@
 	  in
 	  pkgs.lib.evalModules {
 	    modules = [
+	    	# Enable config rewrites
+	  	({ config, ... }: { config._module.args = { inherit pkgs; }; })
+	      
+	      # Our target module
 	      ./default.nix
 	    ];
 	  }
@@ -41,7 +66,7 @@
 	  
 	  $ nix-instantiate --eval eval.nix -A config.foo.bar
 	  ```
-- # Module system
+- # Examples
 	- ## Basic option
 		- Module options are created using function call `lib.mkOption {..}`
 		- This attr is used to tell Nix that this module provides an option that can be set
@@ -99,6 +124,56 @@
 	- ## Complex options
 		- Sometimes, our module might expose more than 1 option
 		- And these options may depend on other option values
+		- Let's create a module that will provide a shell script to curl a specific URL, and ping to different hosts:
+		- ```nix
+		  # default.nix
+		  
+		  { config, lib, pkgs, ... }:
+		  
+		  {
+		  	options = {
+		      	url = lib.mkOption {
+		          	type = lib.types.str;
+		              default = "1.1.1.1";
+		          };
+		          
+		          httpHosts = lib.mkOption {
+		          	type = lib.types.listOf lib.types.str;
+		              default = [ "nixos.org" "openbsd.org" ];
+		          };
+		          
+		          myScript = lib.mkOption {
+		          	type = lib.types.package;
+		          }
+		      };
+		      
+		  	config = {                
+		      	myScript = pkgs.writeShellApplication {
+		          	name = "my-script";
+		          	runtimeInputs = if (config.httpHosts == null) then [ ]
+		              	else [ pkgs.curl ];
+		          	
+		              text = ''
+		              ping -c 1 ${config.url};
+		              
+		              ${
+		              	if (config.httpHosts == null) then ""
+		                  else rec {
+		                  	hosts = lib.strings.concatStrings
+		                      	(lib.strings.intersperse " " config.httpHosts);
+		                      
+		                      cmd = ''
+		                      for h in ${hosts}; do
+		                      	echo "$h";
+		                      done;
+		                      ''
+		                  }.cmd
+		              }
+		           	'';
+		          };
+		  	};
+		  }
+		  ```
 - # Tip: reproducible shell script module
 	- Let's say we have a `map` shell script that calls `curl` and `feh`
 	- And our module was like this, using string as script

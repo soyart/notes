@@ -190,39 +190,41 @@
 		  in
 		  [x y]
 		  ```
-- # Nix strings
-	- Nix strings are values of type `lib.types.str`
-	- ## Interpolation with `${...}`
-		- `$` without `{...}` is not string interpolation. **Usually it's shell variables**
+- # Nix data types
+	-
+	- ## Nix strings
+		- Nix strings are values of type `lib.types.str`
+		- ## Interpolation with `${...}`
+			- `$` without `{...}` is not string interpolation. **Usually it's shell variables**
+				- ```nix
+				  let
+				    out = "Nix";
+				  in
+				  "echo ${out} > $out"
+				  ```
+				- Evaluates to `echo Nix > $out`, where `$out` is a shell variable `out`
+			- The expression
 			- ```nix
 			  let
-			    out = "Nix";
+			    name = "World";
 			  in
-			  "echo ${out} > $out"
+			  "Hello ${name}!"
 			  ```
-			- Evaluates to `echo Nix > $out`, where `$out` is a shell variable `out`
-		- The expression
-		- ```nix
-		  let
-		    name = "World";
-		  in
-		  "Hello ${name}!"
-		  ```
-		- evaluates to `hello World!`
-		- **Sometimes, [string interpolation evaluation may have  *side effects*](((660c39e1-3de2-417a-8d00-04f98f4d17f5))), usually with paths**
-	- ## Multiline/indented strings `''...''`
-		- Use double single quotes to wrap a multiline string
-		- ```nix
-		  ''
-		    one
-		     two
-		      three
-		  ''
-		  ```
-		- Will evaluate to string
-		- ```json
-		  "one\n two\n  three\n"
-		  ```
+			- evaluates to `hello World!`
+			- **Sometimes, [string interpolation evaluation may have  *side effects*](((660c39e1-3de2-417a-8d00-04f98f4d17f5))), usually with paths**
+		- ## Multiline/indented strings `''...''`
+			- Use double single quotes to wrap a multiline string
+			- ```nix
+			  ''
+			    one
+			     two
+			      three
+			  ''
+			  ```
+			- Will evaluate to string
+			- ```json
+			  "one\n two\n  three\n"
+			  ```
 - # Nix filesystem paths
 	- FS paths have 1st-class support in Nix
 	- Absolute paths start with `/`
