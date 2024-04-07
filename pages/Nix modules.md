@@ -1,5 +1,5 @@
 - > Nix module system could be included in [[Nix language]] section, but I found it deserving a page of their own
-- A Nix module is a [Nix file]((660ada16-e454-4f18-bf6f-b5a231487f15))
+- A [[Nix]] module is a [Nix file]((660ada16-e454-4f18-bf6f-b5a231487f15))
 	- Nix modules are treated a bit differently than other non-module Nix files in Nix ecosystem
 - Like most Nix files, a Nix module evaluates to a single expr:
 - Nix modules are [standardized Nix files (Nix module schema)](https://nixos.org/manual/nixos/stable/#sec-writing-modules):

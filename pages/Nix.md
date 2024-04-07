@@ -189,6 +189,40 @@
 		- A collection of files (like with other package managers)
 		- A Nix expression that evaluates to such a collection of files
 	- Nixpkgs Standard Environment (`stdenv`) provides functions to create derivations (or *packages*)
+	- ## Derivations
+		- > Nix provides a primitive impure function `derivation`, but since this is impure and advised against, we rarely see the function in practice
+		- Nix derivations are in practice the results of `mkDerivation`
+		- ## Build results
+			- The return value of `mkDerivation`, aka *build results*, is what Nix will eventually build
+			- The build results are an attrset, with particular structure
+			- This build results attrset can be used in string interpolation, and like files and fetchers, a build result attrset will evaluates to a Nix store path string:
+				- ```nix
+				  let
+				    pkgs = import <nixpkgs> {};
+				  in "${pkgs.nix}"
+				  ```
+				- ```txt
+				  "/nix/store/sv2srrjddrp2isghmrla8s6lazbzmikd-nix-2.11.0"
+				  ```
+				- The resulting string is the file system path where the build result of that derivation will end up.
+				- A derivation’s output path is fully determined by its inputs, which in this case come from *some* version of `<nixpkgs>` (hence `-nix-2.11.0` suffix of the filename)
+		- ## Built derivations
+			- When built, a derivation is saved to Nix store and referenced by its hashy path
+			- > Everything inside the Nix store is immutable
+			- Let's use a derivation of `bash` as example:
+			- ```nix
+			   /nix/store/s4zia7hhqkin1di0f187b79sa2srhv6k-bash-4.2-p45
+			  ```
+			- The Nix store path above contains `/bin/bash`.
+			- When this drv is enabled, **Nix will arrange the environment such that the `/bin/bash` points to some `bash` binary in `/nix/store/s4zia7hhqkin1di0f187b79sa2srhv6k-bash-4.2-p45`**.
+			- The drv does not contains all dependencies, for example, `libc`
+			- This is because these other drvs are also built and stored in Nix store
+			- ```sh
+			  $ ldd  `which bash`
+			  libc.so.6 => /nix/store/94n64qy99ja0vgbkf675nyk39g9b978n-glibc-2.19/lib/libc.so.6 
+			  ```
+			- We can see that our *current* `bash` finds libc from another drv: `/nix/store/94n64qy99ja0vgbkf675nyk39g9b978n-glibc-2.19/lib/libc.so.6 `
+			- This is because when we built the bash drv, it was built against this libc drv.
 	- ## Simple GNU hello from FTP
 	  id:: 660d068e-e0b8-48a4-977f-0b0ed5a3641b
 		- Let's start with a skeleton code which produces nothing:
