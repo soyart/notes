@@ -15,7 +15,18 @@
 	- If `--eval` is omitted, `nix-instantiate` will evaluate the expression to a [[Nix derivation]]
 	- By default, `nix-instantiate` looks for `default.nix`
 	- Pass `--strict` to `nix-instantiate` [if lazy evaluation messes up with our eval output](((660adc30-a264-4f5e-8d4a-0c6fec093f97)))
+	  <<<<<<< Updated upstream
 	- And because whitespaces are most of the times insignificant in Nix, we can write the expression above in this form instead:
+	  =======
+- # Nix expressions
+	- Evaluating a Nix expression produces a Nix value
+	- e.g. evaluating `1+2` expression yields a value `3`, which itself is also an expression
+		- Other expression that evaluate to `3`
+		- ```nix
+		  let x=1;y=2;in x+y
+		  ```
+		- And because whitespaces are most of the times insignificant in Nix, we can write the expression above in this form instead:
+		  >>>>>>> Stashed changes
 		- ```nix
 		  let
 		   x = 1;
@@ -102,7 +113,159 @@
 	  with a; [ x y z ]
 	  ```
 	- `with` attributes are scoped to the expression after `;`, in this case, only `[x y z]` can access `x`, `y`, `z` as `a.x`, `a.y`, `a.z`.
+	  <<<<<<< Updated upstream
+	  =======
+- # Nix attribute set
+	- A Nix attrset is like a dictionary or JSON: it's an expression in key-value pair structure
+		- JSON and Nix equivalent example:
+			- ```json
+			  {
+			    "string": "hello",
+			    "integer": 1,
+			    "float": 3.141,
+			    "bool": true,
+			    "null": null,
+			    "list": [1, "two", false],
+			    "object": {
+			      "a": "hello",
+			      "b": 1,
+			      "c": 2.718,
+			      "d": false
+			    }
+			  }
+			  ```
+			- ```nix
+			  {
+			    string = "hello";
+			    integer = 1;
+			    float = 3.141;
+			    bool = true;
+			    null = null;
+			    list = [ 1 "two" false ];
+			    attribute-set = {
+			      a = "hello";
+			      b = 2;
+			      c = 2.718;
+			      d = false;
+			    }; # comments are supported
+			  }
+			  ```
+	- We can set each attr with dot notation
+	- ```nix
+	  { a.b.c = 1; }
+	  
+	  # Evaluates to
+	  # { a = { b = { c = 1; }; }; }
+	  ```
+	- Each attr is also accessed via dot notation
+	- ```nix
+	  let
+	  	attrset = { x = 1; };
+	  in
+	  attrset.x # 1
+	  ```
+	- ```nix
+	  let
+	  	attrset = { a = { b = { c = 1; }; }; };
+	  in
+	  attrset.a.b.c # 1
+	  ```
+	- We can also use string variables to access an attr with key matching the string value:
+	- ```nix
+	  let
+	  	attrset = { name = "foo"; year = 2032; x = 1; y = 2 };
+	      y = "year";
+	  in
+	  attrset.${y} # 2032
+	  ```
+	- ## Recursive attribute set (`rec {...}`)
+		- A recursive attrset is declared with `rec` keyword
+		- It allows attribute access within the same attrset
+		- ```nix
+		  rec {
+		  	one = 1;
+		      two = one + 1;
+		      three = two + 1;
+		  }
+		  ```
+		- Which evaluates to
+		- ```nix
+		  { one = 1; two = 2; three = 3; }
+		  ```
+	- ## Inherit attributes with `inherit ...` and `inherit (...) ...`
+	  id:: 66117c4f-6003-4cdf-adeb-e0aa5fccd1de
+		- `inherit` brings values of attributes from previous scope into the expression:
+			- ```nix
+			  let
+			    x = 1;
+			    y = 2;
+			  in
+			  {
+			    inherit x y;
+			  }
+			  
+			  ```
+			- Here, `inherit x y` is equivalent to `x = x; y = y;`
+			- Both exprs evaluate to attrset `{ x = 1; y = 2; }`
+		- `inherit (foo) ...` will do `inherit` from attrset `foo`
+			- ```nix
+			  let
+			    a = { x = 1; y = 2; };
+			  in
+			  {
+			    inherit (a) x y;
+			  }
+			  ```
+			- Here, `inherit (a) x y` is like `x = a.x; y = a.y`
+			- Both exprs evaluate to attrset `{ x = 2;  y = 2; }`
+		- We can use `inherit` inside a [`let ... in ...` expression](((660adebd-b7a3-42aa-a5b9-30fed6538548)))
+			- ```nix
+			  let
+			    inherit ({ x = 1; y = 2; }) x y;
+			  in
+			  [ x y ]
+			  ```
+			- Here, `inherit({...}) x y` expands to `{ x = 1; y = 2 }`
+			- So the whole expr evals to `[1 2]`
+			- So the example expression above is verbatim-equivalent to:
+			- ```nix
+			  let
+			    x = { x = 1; y = 2; }.x;
+			    y = { x = 1; y = 2; }.y;
+			  in
+			  [x y]
+			  ```
+	- ## Helper functions
+		- ### `builtins` (C++)
+			- `builtins` provides low-level, primitive attrset operations like `isAttrs`,  `hasAttrs`, `getAttr`, `attrNames` `attrValues`, as well as some higher-level but frequently performed operations like `mapAttrs`, `removeAttrs`, and `listToAttrs`
+		- ### `<nixpkgs>.lib.attrsets`
+			- [Nixpkgs also provide their own attrset utilities](https://nixos.org/manual/nixpkgs/stable/#sec-functions-library-attrsets)
+			- The library also [inherits](((66117c4f-6003-4cdf-adeb-e0aa5fccd1de))) some names from `builtins` [See source](https://github.com/NixOS/nixpkgs/blob/master/lib/attrsets.nix).
+				- The library sometimes also just wraps `builtins` function transparently (like with `attrValues`), so if we see identical names, we can infer that they will lead back to `builtins`
+			- Higher-level functions are defined here, e.g. `attrVals`, which lets us choose attrs to be evaluaed
+	- ## Examples
+		- ```nix
+		  with import <nixpkgs> { };
+		  let
+		    attr = {a="a"; b = 1; c = true;};
+		    s = "b";
+		  in
+		  {
+		    # Everything should evaluate to true
+		    
+		    ex0 = builtins.isAttrs attr;
+		    ex1 = attr.a == "a";
+		    ex2 = attr.${s} == 1;
+		    ex3 = lib.attrsets.attrVals ["c" "b" ] attr == [ true 1 ];
+		    ex4 = builtins.attrValues attr == [ "a" 1 true ];
+		    ex5 = builtins.intersectAttrs attr {a = "b"; d = 234; c = "";} == { a="b" ; c=""; };
+		    ex6 = lib.attrsets.removeAttrs attr ["b" "c"] == { a="a"; };
+		    ex7 = ! attr ? a == false;
+		  }
+		  ```
+		  >>>>>>> Stashed changes
 - # Nix data types
+  id:: 66117c4f-2d14-46d5-b3e1-c20b539d9e0d
 	- Nix supports many data types, from primitives like numbers, strings, booleans, to more complex ones like first-class functions and attribute sets
 	- ## Nix strings
 		- Nix strings are values of type `lib.types.str`
@@ -137,9 +300,16 @@
 			- ```json
 			  "one\n two\n  three\n"
 			  ```
+			  <<<<<<< Updated upstream
 			- #### Leading whitespaces quirks
 				- Unlike Go strings with with backticks, Nix performs strings interpolation pretty frequently, so Nix tries to be smart when working with multi-line strings
 				- Nix treats the 1st line inside the double-single quotes as a pivot, with some simple rules: *Treats left-most lines as starting column*
+				  =======
+			- #### Leading whitespaces
+				- Unlike Go strings with with backticks, Nix users use strings interpolation pretty frequently, so language tries to be make the Nix source readable by some indenting rule
+				- *Nix respects the line with the earliest start column*, and maps that column to left-most character  in the output string
+				- In the example below, line 2 (`bar`) is respected by Nix
+				  >>>>>>> Stashed changes
 				- ```nix
 				  ''
 				  	foo
@@ -148,11 +318,11 @@
 				  ''
 				  
 				  ========> "foo\n\bar\n   baz\n"
-				  
 				  foo
 				  bar
 				  	baz
 				  ```
+				- Here, line 3 (`bar`) is respected by Nix
 				- ```nix
 				  ''
 				  	  foo
@@ -161,12 +331,38 @@
 				  ''
 				  
 				  ========> "	foo\nbar\nbaz\n"
-				  
 				    foo
 				  bar
 				  baz
 				  ```
-				- The positions of the double-single-quote should not matter:
+				- Blank lines before the first actual lines are included as empty line:
+				- ```nix
+				  ''
+				  
+				  
+				  	  foo
+				  	bar
+				      baz
+				  ''
+				  
+				  ========> "\n\n	foo\nbar\nbaz\n"
+				    foo
+				  bar
+				  baz
+				  ```
+				- So below, line 6 with `baz` is respected as the left border:
+				- ```nix
+				  ''
+				          
+				          
+				       foo
+				      bar
+				    baz 
+				  			''
+				              
+				  ========> "\n\n  foo\n  \bar\nbaz\n"
+				  ```
+				- The positions of the starting double-single-quote should not matter:
 				- ```nix
 				  		''
 				  	foo
@@ -176,16 +372,7 @@
 				  
 				  ========> "foo\n\bar\n    baz\n"
 				  ```
-				- But the closing double-single-quote do matter *only it on the same line as the last line of the string*, as they determine the trailing `\n`:
-				- ```nix
-				  		''
-				  	foo
-				  	bar
-				      	baz 
-				  						''
-				  
-				  ========> "foo\n\bar\n    baz\n"
-				  ```
+				- But the closing double-single-quote do matter *if it's on the same line as the last line of the string*, as they determine the trailing `\n`
 				- ```nix
 				  		''
 				  	foo
@@ -264,7 +451,35 @@
 		  
 		  # Evaluates to attrset: { a = { b = { c = 1; }; }; }
 		  ```
+		  <<<<<<< Updated upstream
 		- Each attr is also accessed via dot notation
+		  =======
+		- We can also assign default values to function arguments:
+		- ```nix
+		  { x, y ? 7 }: x + y
+		  ```
+		- If the callers pass large attrset as arg (e.g. the arg has extra attrs `foo`, `bar`), then we need to use spread notation to safely ignore other attrs, otherwise Nix will err:
+		- ```nix
+		  { a, b, ... }: a + b
+		  ```
+		- We can also capture/bind other unnamed arguments with `@` pattern:
+		- ```nix
+		  { a, b, ... }@args: a + b + args.foo
+		  ```
+			- We are free to choose where to put `@` pattern around the attrset
+			- ```nix
+			  @args{ a, b, ... }: a + b + args.foo
+			  ```
+		- Will evaluate to `1+10+1000`
+	- Functions are anonymous, i.e. *lamda* (may be printed as `<LAMDA>` Nix console)
+	- ## Calling functions
+		- We can call a lambda function like so:
+		- ```nix
+		  (x: x + 1) 3
+		  ```
+		- This evaluates to `4`
+		- We can also bind a function to a name with `let` and call it
+		  >>>>>>> Stashed changes
 		- ```nix
 		  let
 		  	attrset = { x = 1; };
@@ -289,6 +504,46 @@
 			- A recursive attrset is declared with `rec` keyword
 			- It allows attribute access within the same attrset
 			- ```nix
+			  <<<<<<< Updated upstream
+			  =======
+			  let
+			   f = x: x + 1;
+			   a = 1;
+			  in [ (f a) ]
+			  ```
+			- This evaluates to `[ 2 ]`
+			- While this expression
+			- ```nix
+			  let
+			   f = x: x + 1;
+			   a = 1;
+			  in [ f a ]
+			  ```
+			- Evaluates to `[ <LAMBDA> 1 ]`
+	- ## Multiple arguments
+		- In Nix, a function can actually accepts only 1 arguments
+		- To do multiple arguments, Nix returns a closure as another function
+			- Consider this function, which accepts `a` and `b` and returns `a+b`:
+			- ```nix
+			  a: b: a + b
+			  ```
+			- We are supposed to call this function with `<fname> a b`, which we *might* think it works like `fname(1, 2)`
+			- But what Nix actually does is this: `fname(1)(2)`
+			- So when Nix evaluates `fname(1)`, it gets this function back: `b: 1 + b`
+			- So `fname(1)(2)` will call that function with `b = 2`, and gives us `3`
+			- And so, the example function above is equivalent to:
+			- ```Nix
+			  a: (b: a + b)
+			  ```
+		- ### Examples
+			- ```nix
+			  let
+			    b = 1;
+			    fu0 = (x: x);
+			    fu1 = (x: y: x + y) 4;
+			    fu2 = (x: y: (2 * x) + y);
+			  in
+			  >>>>>>> Stashed changes
 			  rec {
 			  	one = 1;
 			      two = one + 1;
@@ -300,7 +555,6 @@
 			  { one = 1; two = 2; three = 3; }
 			  ```
 		- ## Inherit attributes with `inherit ...` and `inherit (...) ...`
-		  id:: 66117c4f-6003-4cdf-adeb-e0aa5fccd1de
 			- `inherit` brings values of attributes from previous scope into the expression:
 				- ```nix
 				  let
@@ -372,7 +626,6 @@
 			  }
 			  ```
 	- ## Nix functions
-	  id:: 66117c4f-2d14-46d5-b3e1-c20b539d9e0d
 		- Functions are denoted by colon `:`
 		- Arguments come before the `:`, and the body comes after
 			- `a: a + 1` is like `fn (i: isize) { i + 1 }` in Rust
