@@ -37,77 +37,6 @@
 		  nix-repl> :p { a.b.c = 1; }
 		  { a = { b = { c = 1; }; }; }
 		  ```
-- # Nix attribute set
-	- A Nix attrset is like a dictionary or JSON: it's an expression in key-value pair structure
-		- JSON and Nix equivalent example:
-			- ```json
-			  {
-			    "string": "hello",
-			    "integer": 1,
-			    "float": 3.141,
-			    "bool": true,
-			    "null": null,
-			    "list": [1, "two", false],
-			    "object": {
-			      "a": "hello",
-			      "b": 1,
-			      "c": 2.718,
-			      "d": false
-			    }
-			  }
-			  ```
-			- ```nix
-			  {
-			    string = "hello";
-			    integer = 1;
-			    float = 3.141;
-			    bool = true;
-			    null = null;
-			    list = [ 1 "two" false ];
-			    attribute-set = {
-			      a = "hello";
-			      b = 2;
-			      c = 2.718;
-			      d = false;
-			    }; # comments are supported
-			  }
-			  ```
-	- ## Nix recursive attribute set (`rec`)
-		- A recursive attrset is declared with `rec` keyword
-		- It allows attribute access within the same attrset
-		- ```nix
-		  rec {
-		  	one = 1;
-		      two = one + 1;
-		      three = two + 1;
-		  }
-		  ```
-		- Which evaluates to
-		- ```nix
-		  { one = 1; two = 2; three = 3; }
-		  ```
-	- ## Attribute access with dot notation
-		- > The examples use [`let` expression](((660adebd-b7a3-42aa-a5b9-30fed6538548)))
-		- ```nix
-		  let
-		    attrset = { x = 1; };
-		  in
-		  attrset.x # evals to 1
-		  ```
-		- ```nix
-		  let
-		    attrset = { a = { b = { c = 1; }; }; };
-		  in
-		  attrset.a.b.c # evals to 1
-		  ```
-	- ## Set attribute with dot notation
-		- ```nix
-		  { a.b.c = 1; }
-		  ```
-		- This will evaluate to
-		- ```nix
-		  { a = { b = { c = 1; }; }; }
-		  ```
 - # `let ... in ...`
 	- `let` expression allows assigning names to values, and the names be used later
 		- The expression below evals to `2`
@@ -148,72 +77,176 @@
 	  with a; [ x y z ]
 	  ```
 	- `with` attributes are scoped to the expression after `;`, in this case, only `[x y z]` can access `x`, `y`, `z` as `a.x`, `a.y`, `a.z`.
-- # `inherit ...` and `inherit (...) ...`
-	- `inherit` brings values of attributes from previous scope into the expression:
+- # Nix attribute set
+	- A Nix attrset is like a dictionary or JSON: it's an expression in key-value pair structure
+		- JSON and Nix equivalent example:
+			- ```json
+			  {
+			    "string": "hello",
+			    "integer": 1,
+			    "float": 3.141,
+			    "bool": true,
+			    "null": null,
+			    "list": [1, "two", false],
+			    "object": {
+			      "a": "hello",
+			      "b": 1,
+			      "c": 2.718,
+			      "d": false
+			    }
+			  }
+			  ```
+			- ```nix
+			  {
+			    string = "hello";
+			    integer = 1;
+			    float = 3.141;
+			    bool = true;
+			    null = null;
+			    list = [ 1 "two" false ];
+			    attribute-set = {
+			      a = "hello";
+			      b = 2;
+			      c = 2.718;
+			      d = false;
+			    }; # comments are supported
+			  }
+			  ```
+	- We can set each attr with dot notation
+	- ```nix
+	  { a.b.c = 1; }
+	  
+	  # Evaluates to
+	  # { a = { b = { c = 1; }; }; }
+	  ```
+	- Each attr is also accessed via dot notation
+	- ```nix
+	  let
+	  	attrset = { x = 1; };
+	  in
+	  attrset.x # 1
+	  ```
+	- ```nix
+	  let
+	  	attrset = { a = { b = { c = 1; }; }; };
+	  in
+	  attrset.a.b.c # 1
+	  ```
+	- We can also use string variables to access an attr with key matching the string value:
+	- ```nix
+	  let
+	  	attrset = { name = "foo"; year = 2032; x = 1; y = 2 };
+	      y = "year";
+	  in
+	  attrset.${y} # 2032
+	  ```
+	- ## Recursive attribute set (`rec {...}`)
+		- A recursive attrset is declared with `rec` keyword
+		- It allows attribute access within the same attrset
 		- ```nix
+		  rec {
+		  	one = 1;
+		      two = one + 1;
+		      three = two + 1;
+		  }
+		  ```
+		- Which evaluates to
+		- ```nix
+		  { one = 1; two = 2; three = 3; }
+		  ```
+	- ## Inherit attributes with `inherit ...` and `inherit (...) ...`
+	  id:: 66117c4f-6003-4cdf-adeb-e0aa5fccd1de
+		- `inherit` brings values of attributes from previous scope into the expression:
+			- ```nix
+			  let
+			    x = 1;
+			    y = 2;
+			  in
+			  {
+			    inherit x y;
+			  }
+			  
+			  ```
+			- Here, `inherit x y` is equivalent to `x = x; y = y;`
+			- Both exprs evaluate to attrset `{ x = 1; y = 2; }`
+		- `inherit (foo) ...` will do `inherit` from attrset `foo`
+			- ```nix
+			  let
+			    a = { x = 1; y = 2; };
+			  in
+			  {
+			    inherit (a) x y;
+			  }
+			  ```
+			- Here, `inherit (a) x y` is like `x = a.x; y = a.y`
+			- Both exprs evaluate to attrset `{ x = 2;  y = 2; }`
+		- We can use `inherit` inside a [`let ... in ...` expression](((660adebd-b7a3-42aa-a5b9-30fed6538548)))
+			- ```nix
+			  let
+			    inherit ({ x = 1; y = 2; }) x y;
+			  in
+			  [ x y ]
+			  ```
+			- Here, `inherit({...}) x y` expands to `{ x = 1; y = 2 }`
+			- So the whole expr evals to `[1 2]`
+			- So the example expression above is verbatim-equivalent to:
+			- ```nix
+			  let
+			    x = { x = 1; y = 2; }.x;
+			    y = { x = 1; y = 2; }.y;
+			  in
+			  [x y]
+			  ```
+	- ## Helper functions
+		- ### `builtins` (C++)
+			- `builtins` provides low-level, primitive attrset operations like `isAttrs`,  `hasAttrs`, `getAttr`, `attrNames` `attrValues`, as well as some higher-level but frequently performed operations like `mapAttrs`, `removeAttrs`, and `listToAttrs`
+		- ### `<nixpkgs>.lib.attrsets`
+			- [Nixpkgs also provide their own attrset utilities](https://nixos.org/manual/nixpkgs/stable/#sec-functions-library-attrsets)
+			- The library also [inherits](((66117c4f-6003-4cdf-adeb-e0aa5fccd1de))) some names from `builtins` [See source](https://github.com/NixOS/nixpkgs/blob/master/lib/attrsets.nix).
+				- The library sometimes also just wraps `builtins` function transparently (like with `attrValues`), so if we see identical names, we can infer that they will lead back to `builtins`
+			- Higher-level functions are defined here, e.g. `attrVals`, which lets us choose attrs to be evaluaed
+	- ## Examples
+		- ```nix
+		  with import <nixpkgs> { };
 		  let
-		    x = 1;
-		    y = 2;
+		    attr = {a="a"; b = 1; c = true;};
+		    s = "b";
 		  in
 		  {
-		    inherit x y;
+		    # Everything should evaluate to true
+		    
+		    ex0 = builtins.isAttrs attr;
+		    ex1 = attr.a == "a";
+		    ex2 = attr.${s} == 1;
+		    ex3 = lib.attrsets.attrVals ["c" "b" ] attr == [ true 1 ];
+		    ex4 = builtins.attrValues attr == [ "a" 1 true ];
+		    ex5 = builtins.intersectAttrs attr {a = "b"; d = 234; c = "";} == { a="b" ; c=""; };
+		    ex6 = lib.attrsets.removeAttrs attr ["b" "c"] == { a="a"; };
+		    ex7 = ! attr ? a == false;
 		  }
-		  
-		  ```
-		- Here, `inherit x y` is equivalent to `x = x; y = y;`
-		- Both exprs evaluate to attrset `{ x = 1; y = 2; }`
-	- `inherit (foo) ...` will do `inherit` from attrset `foo`
-		- ```nix
-		  let
-		    a = { x = 1; y = 2; };
-		  in
-		  {
-		    inherit (a) x y;
-		  }
-		  ```
-		- Here, `inherit (a) x y` is like `x = a.x; y = a.y`
-		- Both exprs evaluate to attrset `{ x = 2;  y = 2; }`
-	- We can use `inherit` inside a [`let ... in ...` expression](((660adebd-b7a3-42aa-a5b9-30fed6538548)))
-		- ```nix
-		  let
-		    inherit ({ x = 1; y = 2; }) x y;
-		  in
-		  [ x y ]
-		  ```
-		- Here, `inherit({...}) x y` expands to `{ x = 1; y = 2 }`
-		- So the whole expr evals to `[1 2]`
-		- So the example expression above is verbatim-equivalent to:
-		- ```nix
-		  let
-		    x = { x = 1; y = 2; }.x;
-		    y = { x = 1; y = 2; }.y;
-		  in
-		  [x y]
 		  ```
 - # Nix data types
-	-
-	- ## Nix strings
+	- ## Strings
 		- Nix strings are values of type `lib.types.str`
-		- ## Interpolation with `${...}`
-			- `$` without `{...}` is not string interpolation. **Usually it's shell variables**
-				- ```nix
-				  let
-				    out = "Nix";
-				  in
-				  "echo ${out} > $out"
-				  ```
-				- Evaluates to `echo Nix > $out`, where `$out` is a shell variable `out`
-			- The expression
+		- ### Interpolation with `${...}`
+			- > Sometimes, [string interpolation evaluation may have  *side effects*](((660c39e1-3de2-417a-8d00-04f98f4d17f5))), usually with paths
 			- ```nix
 			  let
 			    name = "World";
 			  in
 			  "Hello ${name}!"
 			  ```
-			- evaluates to `hello World!`
-			- **Sometimes, [string interpolation evaluation may have  *side effects*](((660c39e1-3de2-417a-8d00-04f98f4d17f5))), usually with paths**
-		- ## Multiline/indented strings `''...''`
-			- Use double single quotes to wrap a multiline string
+			- The expr above evaluates to `hello World!`
+			- `$` without `{...}` is not string interpolation
+			- ```nix
+			  let
+			    out = "Nix";
+			  in
+			  "echo ${out} > $out"
+			  ```
+			- Evaluates to string `echo Nix > $out`
+		- ### Multiline/indented strings `''...''`
+			- Use double-single quotes to wrap a multiline string
 			- ```nix
 			  ''
 			    one
@@ -225,6 +258,80 @@
 			- ```json
 			  "one\n two\n  three\n"
 			  ```
+			- #### Leading whitespaces
+				- Unlike Go strings with with backticks, Nix performs strings interpolation pretty frequently, so Nix tries to be smart when working with multi-line strings
+				- Nix treats the 1st line inside the double-single quotes as a pivot, with some simple rules: *Treats left-most lines as starting column*
+				- ```nix
+				  ''
+				  	foo
+				  	bar
+				      	baz
+				  ''
+				  
+				  ========> "foo\n\bar\n   baz\n"
+				  
+				  foo
+				  bar
+				  	baz
+				  ```
+				- ```nix
+				  ''
+				  	  foo
+				  	bar
+				      baz
+				  ''
+				  
+				  ========> "	foo\nbar\nbaz\n"
+				  
+				    foo
+				  bar
+				  baz
+				  ```
+				- The positions of the double-single-quote should not matter:
+				- ```nix
+				  		''
+				  	foo
+				  	bar
+				      	baz 
+				  	''
+				  
+				  ========> "foo\n\bar\n    baz\n"
+				  ```
+				- But the closing double-single-quote do matter *only it on the same line as the last line of the string*, as they determine the trailing `\n`:
+				- ```nix
+				  		''
+				  	foo
+				  	bar
+				      	baz 
+				  						''
+				  
+				  ========> "foo\n\bar\n    baz\n"
+				  ```
+				- ```nix
+				  		''
+				  	foo
+				  	bar
+				      	baz 
+				  	''
+				  
+				  ========> "foo\n\bar\n    baz\n"
+				  ```
+				- ```nix
+				  		''
+				  	foo
+				  	bar
+				      	baz  ''
+				  
+				  ========> "foo\n\bar\n    baz  "
+				  ```
+				- ```nix
+				  		''
+				  	foo
+				  	bar
+				      	baz''
+				  
+				  ========> "foo\n\bar\n    baz"
+				  ```
 - # Nix filesystem paths
 	- FS paths have 1st-class support in Nix
 	- Absolute paths start with `/`
@@ -319,6 +426,34 @@
 			- And so, the example function above is equivalent to:
 			- ```Nix
 			  a: (b: a + b)
+			  ```
+		- ### Examples
+			- ```nix
+			  let
+			    b = 1;
+			    fu0 = (x: x);
+			    fu1 = (x: y: x + y) 4;
+			    fu2 = (x: y: (2 * x) + y);
+			  in
+			  rec {
+			    ex00 = fu0 4;                 # 4
+			    ex01 = (fu1) 1;               # 5
+			    ex02 = (fu2 3 ) 1;            # 7
+			    ex03 = (fu2 3 );              # <LAMBDA>s
+			    ex04 = ex03 1;                # 7
+			    ex05 = (n: x: (fu2 x n)) 1 3; # 7
+			  }
+			  ```
+			- The same principle applies for functions that take attrset:
+			- ```nix
+			  let
+			    arguments = {a="Happy"; b="Awesome";};
+			    func = {a, b}: {d, b, c}: a+b+c+d;
+			  in
+			  {
+			    # Evaluates to string "HappyFunctionsAreCalled"
+			    A = func arguments {b = "Functions"; c="Are"; d="Called";};
+			  }
 			  ```
 - # Library functions
 	- ## `builtins` (sometimes call *primitive operations* or *primops*)
