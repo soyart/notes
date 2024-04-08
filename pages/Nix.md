@@ -189,10 +189,23 @@
 		- A collection of files (like with other package managers)
 		- A Nix expression that evaluates to such a collection of files
 	- Nixpkgs Standard Environment (`stdenv`) provides functions to create derivations (or *packages*)
-	- ## Derivations
+	- ## [[Nix derivation]]
+		- Nix derivations describe a specification to produce some output attrs using some input attrs
+		- Once evaluated, [a store derivation will be created in Nix store (a `drv` file)](https://nixos.org/manual/nix/stable/glossary#gloss-store-derivation) as a side effect
 		- > Nix provides a primitive impure function `derivation`, but since this is impure and advised against, we rarely see the function in practice
-		- Nix derivations are in practice the results of `mkDerivation`
-		- ## Build results
+		  >
+		  > Nix derivations are in practice defined with `lib.mkDerivation`
+		- ### Input attributes
+			- `name` (string, **required**)
+			- `system` (string, **required**)
+				- e.g. `"x86_64-linux"`, `builtins.currentSystem`
+			- `builder` (path | string, **required**)
+				- e.g. `"/bin/bash"`, `./builder.sh`
+			- `outputs` (list of strings, **optional**)
+				- Defaults to `[ out ]`, which points to the root of the output location
+				- Packages can provide >1 outputs, e.g. `outputs = [ "headers" "lib" "doc" ]`
+				-
+		- ### Build results
 			- The return value of `mkDerivation`, aka *build results*, is what Nix will eventually build
 			- The build results are an attrset, with particular structure
 			- This build results attrset can be used in string interpolation, and like files and fetchers, a build result attrset will evaluates to a Nix store path string:
@@ -206,23 +219,23 @@
 				  ```
 				- The resulting string is the file system path where the build result of that derivation will end up.
 				- A derivation’s output path is fully determined by its inputs, which in this case come from *some* version of `<nixpkgs>` (hence `-nix-2.11.0` suffix of the filename)
-		- ## Built derivations
-			- When built, a derivation is saved to Nix store and referenced by its hashy path
+		- ### Build result content
+			- When called, a derivation output is saved to Nix store and referenced by its hashy path
 			- > Everything inside the Nix store is immutable
-			- Let's use a derivation of `bash` as example:
+			- Let's use an output from a `bash` derivation of as example:
 			- ```nix
 			   /nix/store/s4zia7hhqkin1di0f187b79sa2srhv6k-bash-4.2-p45
 			  ```
 			- The Nix store path above contains `/bin/bash`.
-			- When this drv is enabled, **Nix will arrange the environment such that the `/bin/bash` points to some `bash` binary in `/nix/store/s4zia7hhqkin1di0f187b79sa2srhv6k-bash-4.2-p45`**.
-			- The drv does not contains all dependencies, for example, `libc`
-			- This is because these other drvs are also built and stored in Nix store
+			- When used, **Nix will arrange the environment such that the `/bin/bash` points to some `bash` binary in `/nix/store/s4zia7hhqkin1di0f187b79sa2srhv6k-bash-4.2-p45`**.
+			- The output does not contains all dependencies, for example, `libc`
+			- This is because these other dependencies live elsewhere in the Nix store
 			- ```sh
 			  $ ldd  `which bash`
 			  libc.so.6 => /nix/store/94n64qy99ja0vgbkf675nyk39g9b978n-glibc-2.19/lib/libc.so.6 
 			  ```
-			- We can see that our *current* `bash` finds libc from another drv: `/nix/store/94n64qy99ja0vgbkf675nyk39g9b978n-glibc-2.19/lib/libc.so.6 `
-			- This is because when we built the bash drv, it was built against this libc drv.
+			- We can see that our *current* `bash` finds libc from another package: `/nix/store/94n64qy99ja0vgbkf675nyk39g9b978n-glibc-2.19/lib/libc.so.6 `
+			- This is because when we built the bash drv, it was linked against some libc drv that produced the above libc output.
 	- ## Simple GNU hello from FTP
 	  id:: 660d068e-e0b8-48a4-977f-0b0ed5a3641b
 		- Let's start with a skeleton code which produces nothing:
@@ -787,3 +800,44 @@
 				  	]);
 				  ```
 			- `gitTracked` for only including files tracked in a Git repo
+	- ## Ship with `shell.nix` for development env
+		- [`inputsFrom` attr arg to `lib.mkShellNoCC`](https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-mkShell-attributes) can be used to include all dependencies of a package
+		- Let's assume we build using `build.nix`, which gets called by `default.nix`:
+		- ```nix
+		  # build.nix
+		  { cowsay, runCommand }:
+		  runCommand "cowsay-output" { buildInputs = [ cowsay ]; } ''
+		    cowsay Hello, Nix! > $out
+		  ''
+		  ```
+		- ```nix
+		  # default.nix
+		  let
+		    nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-23.11";
+		    pkgs = import nixpkgs { config = {}; overlays = []; };
+		  in
+		  {
+		    build = pkgs.callPackage ./build.nix {};
+		  }
+		  ```
+		- We can modify `default.nix` so that it returns a new attribute, `shell`:
+		- ```nix
+		  # default.nix
+		  let
+		    nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-23.11";
+		    pkgs = import nixpkgs { config = {}; overlays = []; };
+		    build = pkgs.callPackage ./build.nix {};
+		  in
+		  {
+		    inherit build;
+		    
+		    shell = pkgs.mkShellNoCC {
+		    	inputsFrom = [ build ];
+		    }
+		  }
+		  ```
+		- Then we can write our `shell.nix`, which evaluates to `shell` attr from `default.nix above`:
+		- ```nix
+		  # shell.nix
+		  (import ./.).shell
+		  ```
