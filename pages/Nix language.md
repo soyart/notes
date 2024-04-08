@@ -138,8 +138,9 @@
 			  "one\n two\n  three\n"
 			  ```
 			- #### Leading whitespaces quirks
-				- Unlike Go strings with with backticks, Nix performs strings interpolation pretty frequently, so Nix tries to be smart when working with multi-line strings
-				- Nix treats the 1st line inside the double-single quotes as a pivot, with some simple rules: *Treats left-most lines as starting column*
+				- > Nix respects the first character column of the left-most lines as the output starting column
+				- Unlike Go strings with with backticks, Nix users perform string interpolations pretty frequently, so Nix strings are designed to be readable in code
+				- In the following example, `foo` is respected as the starting column:
 				- ```nix
 				  ''
 				  	foo
@@ -153,6 +154,7 @@
 				  bar
 				  	baz
 				  ```
+				- In the following example, `bar` is respected:
 				- ```nix
 				  ''
 				  	  foo
@@ -166,17 +168,38 @@
 				  bar
 				  baz
 				  ```
-				- The positions of the double-single-quote should not matter:
+				- The horizontal positions of the starting double-single-quote should not matter:
 				- ```nix
-				  		''
+				  ''
 				  	foo
 				  	bar
-				      	baz 
+				      	baz
 				  	''
 				  
 				  ========> "foo\n\bar\n    baz\n"
 				  ```
-				- But the closing double-single-quote do matter *only it on the same line as the last line of the string*, as they determine the trailing `\n`:
+				- ```nix
+				  			''
+				  	foo
+				  	bar
+				      	baz
+				  	''
+				  
+				  ========> "foo\n\bar\n    baz\n"
+				  ```
+				- Although the blank lines until the line with chars matter:
+				- ```nix
+				  	''
+				  
+				  
+				      foo
+				  bar
+				  baz
+				      ''
+				  
+				  ========> "\n\n    foo\n\bar\nbaz\n"
+				  ```
+				- The closing double-single-quote do matter *only if it's on the same line as the last non-blank line*, as they determine the trailing `\n`:
 				- ```nix
 				  		''
 				  	foo
@@ -190,7 +213,7 @@
 				  		''
 				  	foo
 				  	bar
-				      	baz 
+				      	baz
 				  	''
 				  
 				  ========> "foo\n\bar\n    baz\n"
@@ -226,38 +249,38 @@
 	  id:: 66117c4f-000e-4be3-b016-43257b40bc48
 		- A Nix attrset is like a dictionary or JSON: it's an expression in key-value pair structure
 			- JSON and Nix equivalent example:
-				- ```json
-				  {
-				    "string": "hello",
-				    "integer": 1,
-				    "float": 3.141,
-				    "bool": true,
-				    "null": null,
-				    "list": [1, "two", false],
-				    "object": {
-				      "a": "hello",
-				      "b": 1,
-				      "c": 2.718,
-				      "d": false
-				    }
-				  }
-				  ```
-				- ```nix
-				  {
-				    string = "hello";
-				    integer = 1;
-				    float = 3.141;
-				    bool = true;
-				    null = null;
-				    list = [ 1 "two" false ];
-				    attribute-set = {
-				      a = "hello";
-				      b = 2;
-				      c = 2.718;
-				      d = false;
-				    }; # comments are supported
-				  }
-				  ```
+			- ```json
+			  {
+			    "string": "hello",
+			    "integer": 1,
+			    "float": 3.141,
+			    "bool": true,
+			    "null": null,
+			    "list": [1, "two", false],
+			    "object": {
+			      "a": "hello",
+			      "b": 1,
+			      "c": 2.718,
+			      "d": false
+			    }
+			  }
+			  ```
+			- ```nix
+			  {
+			    string = "hello";
+			    integer = 1;
+			    float = 3.141;
+			    bool = true;
+			    null = null;
+			    list = [ 1 "two" false ];
+			    attribute-set = {
+			      a = "hello";
+			      b = 2;
+			      c = 2.718;
+			      d = false;
+			    }; # comments are supported
+			  }
+			  ```
 		- We can set each attr with dot notation
 		- ```nix
 		  { a.b.c = 1; }
@@ -299,7 +322,7 @@
 			- ```nix
 			  { one = 1; two = 2; three = 3; }
 			  ```
-		- ## Inherit attributes with `inherit ...` and `inherit (...) ...`
+		- ## Inherit attributes with `inherit`
 		  id:: 66117c4f-6003-4cdf-adeb-e0aa5fccd1de
 			- `inherit` brings values of attributes from previous scope into the expression:
 				- ```nix
@@ -377,7 +400,7 @@
 		- Arguments come before the `:`, and the body comes after
 			- `a: a + 1` is like `fn (i: isize) { i + 1 }` in Rust
 			- We can see here that function is another place in Nix that we can bind values to names (in this case we bind `a` with whatever value passed to this function when called)
-		- ## Attrset as argument
+		- ### Attrset as argument
 			- > Note the use of comma in attrset argument
 			- ```nix
 			  { x, y }: x + y
@@ -576,40 +599,6 @@
 			- ```txt
 			  "/nix/store/d59llm96vgis5fy231x6m7nrijs0ww36-source"
 			  ```
-- # Derivations
-	- > Nix provides a primitive impure function `derivation`, but since this is impure and advised against, we rarely see the function in practice
-	- Nix derivations are in practice the results of `mkDerivation`
-	- ## Build results
-		- The return value of `mkDerivation`, aka *build results*, is what Nix will eventually build
-		- The build results are an attrset, with particular structure
-		- This build results attrset can be used in string interpolation, and like files and fetchers, a build result attrset will evaluates to a Nix store path string:
-			- ```nix
-			  let
-			    pkgs = import <nixpkgs> {};
-			  in "${pkgs.nix}"
-			  ```
-			- ```txt
-			  "/nix/store/sv2srrjddrp2isghmrla8s6lazbzmikd-nix-2.11.0"
-			  ```
-			- The resulting string is the file system path where the build result of that derivation will end up.
-			- A derivation’s output path is fully determined by its inputs, which in this case come from *some* version of `<nixpkgs>` (hence `-nix-2.11.0` suffix of the filename)
-	- ## Built derivations
-		- When built, a derivation is saved to Nix store and referenced by its hashy path
-		- > Everything inside the Nix store is immutable
-		- Let's use a derivation of `bash` as example:
-		- ```nix
-		   /nix/store/s4zia7hhqkin1di0f187b79sa2srhv6k-bash-4.2-p45
-		  ```
-		- The Nix store path above contains `/bin/bash`.
-		- When this drv is enabled, **Nix will arrange the environment such that the `/bin/bash` points to some `bash` binary in `/nix/store/s4zia7hhqkin1di0f187b79sa2srhv6k-bash-4.2-p45`**.
-		- The drv does not contains all dependencies, for example, `libc`
-		- This is because these other drvs are also built and stored in Nix store
-		- ```sh
-		  $ ldd  `which bash`
-		  libc.so.6 => /nix/store/94n64qy99ja0vgbkf675nyk39g9b978n-glibc-2.19/lib/libc.so.6 
-		  ```
-		- We can see that our *current* `bash` finds libc from another drv: `/nix/store/94n64qy99ja0vgbkf675nyk39g9b978n-glibc-2.19/lib/libc.so.6 `
-		- This is because when we built the bash drv, it was built against this libc drv.
 - # Simple examples
 	- ## Declarative shell
 		- ```nix
