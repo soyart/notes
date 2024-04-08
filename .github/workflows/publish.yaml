@@ -1,0 +1,28 @@
+name: publish
+
+on:
+    push:
+    workflow_dispatch:
+
+jobs:
+  build:
+    name: build and write site spa files to www
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: touch www/.nojekyll # to make sure asset paths are correctly identified
+        run: touch $GITHUB_WORKSPACE/www/.nojekyll
+
+      - name: build spa
+        uses: logseq/publish-spa@v0.3.0
+        with:
+          theme_mode: dark
+
+      - name: publish
+        uses: JamesIves/github-pages-deploy-action@4
+        with:
+          branch: publish
+          folder: www
+          clean: true
