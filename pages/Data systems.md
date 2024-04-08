@@ -19,7 +19,7 @@
 				- Fact tables usually have very large number of columns - in the hundreds
 				- OTAP dimension tables allow analysts to normalize fact tables and to join multiple fact tables, and
 				- When dimension tables also get broken down, we call it *snowflake schema*
-			- Fact table storage: [[column-oriented storage]]
+			- Fact table storage: [[Column-oriented storage]]
 				- Because fact tables usually have hundreds of columns, and millions of rows, we'll have bad performance if we simply query it all
 				- Most of the times we only need a few columns for a particular *analytics*, and so most other columns are ignored
 				- Even if we use indexes on interesting columns, the indexed data is still a full row

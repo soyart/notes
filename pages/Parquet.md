@@ -1,0 +1,9 @@
+- A file format for columnar storage ([[Column-oriented storage]]), with Apache [[Hadoop]] integration
+- Concepts
+	- Block - a [[hdfs]] block
+	- [[Parquet file]] - a [[hdfs]] file with metadata (data is not required, only metadata)
+	- [[Parquet row group]] - a *logical* horizontal partitioning of data into rows
+	- [[Parquet Column Chunk]] - a chunk of columnar data
+	- [[Parquet page]] - a column chuck divided - conceptually indivisble
+		- There may be different page types in a column chunk
+	- A file consists of row groups. A row group contains exactly one column chunk per column. A column chunk contains >1 pages
