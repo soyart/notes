@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: touch www/.nojekyll # to make sure asset paths are correctly identified
-        run: touch $GITHUB_WORKSPACE/www/.nojekyll
+        run: "mkdir -p $GITHUB_WORKSPACE/www && touch $GITHUB_WORKSPACE/www/.nojekyll"
 
       - name: build spa
         uses: logseq/publish-spa@v0.3.0
