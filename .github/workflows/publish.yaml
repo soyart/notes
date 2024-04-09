@@ -19,8 +19,8 @@ jobs:
 
       - name: build spa
         uses: logseq/publish-spa@v0.3.0
-        with:
-          theme_mode: dark
+        # with:
+        #   theme_mode: dark
 
       - name: publish
         uses: JamesIves/github-pages-deploy-action@v4
