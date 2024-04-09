@@ -20,7 +20,7 @@ jobs:
         run: "mkdir -p $GITHUB_WORKSPACE/www && touch $GITHUB_WORKSPACE/www/.nojekyll"
 
       - name: build spa
-        uses: logseq/publish-spa@v0.3.0
+        uses: logseq/publish-spa@v0.3.1
         # with:
         #   theme_mode: dark
 
