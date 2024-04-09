@@ -21,7 +21,7 @@ jobs:
           theme_mode: dark
 
       - name: publish
-        uses: JamesIves/github-pages-deploy-action@4
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: publish
           folder: www
