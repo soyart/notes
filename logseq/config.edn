@@ -59,6 +59,8 @@
  ;; Example:
  ;; :publishing/all-pages-public? true
 
+ :publishing/all-pages-public? true
+
  ;; Specify default home page and sidebar status for Logseq
  ;; If not specified, Logseq default opens journals page on startup
  ;; value for `:page` is name of page
