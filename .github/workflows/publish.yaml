@@ -5,8 +5,8 @@ permissions:
 on:
     workflow_dispatch:
     push:
-      # branches:
-      #   - master
+      branches:
+        - master
 
 jobs:
   build:
