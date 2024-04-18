@@ -177,8 +177,10 @@
 	- ## Submodules
 		- Nix submodules are a Nix type
 		- Submodules allow nested Nix options
-		- ### Ramdisk module (list)
-			- ```nix
+		- ### Ramdisk module (`listOf submodule`)
+			- This module exposes 1 option: `ramDisks`
+			- The option `ramDisks` are of type `listOf submodule {...}`
+			  ```nix
 			  # modules/ramdisk.nix
 			  
 			  { lib, config, ... }:
@@ -216,22 +218,74 @@
 			      };
 			  }
 			  ```
-			- This module exposes 1 option: `ramDisks`
-			- The option `ramDisks` are of type `listOf submodule {...}`
+			- In line 34, `fileSystems = ....` will assign our module values to global `config.fileSystems`
+			- Nix module system will merge these `fileSystems` options across different modules for us.
 			- So when we use this option, we must give `ramDisks` as a list of submodule:
-			- ```nix
+			  ```nix
 			  # configuration.nix
 			  {...}:
 			  
 			  {
 			  	imports = [
 			      	./modules/ramdisk.nix
-			      ]
+			      ];
 			      
 			  	ramDisks = [
 			  		{ mnt = "/tmp"; perm = "755"; }
 			          { mnt = "/rd"; size = "2G"; perm = "755"; }
 			      ];
+			  }
+			  ```
+		- ### Ramdisk module (`attrsOf submodule`)
+			- This is an equivalent ramdisk module, with option being of type `attrsOf submodule`
+			  ```nix
+			  { lib, config, ... }:
+			  
+			  with lib;
+			  with lib.types;
+			  
+			  {
+			    options.ramDisks = mkOption {
+			      type = attrsOf (submodule {
+			        options = {
+			          perm = mkOption { type = str; default = "755"; };
+			          size = mkOption { type = nullOr str; default = null; };
+			        };
+			      });
+			    };
+			  
+			    config = let
+			      cfg = config.ramDisks;
+			  
+			      mapFn = key: value: let
+			        mntOpts = ["defaults" "mode=${value.perm}"];
+			      in
+			      {
+			        device = "none";
+			        fsType = "tmpfs";
+			        options = if value.size == null then mntOpts else mntOpts ++ ["size=${value.size}"];
+			      };
+			  
+			      in {
+			        # Nix module system will merge this to global config.fileSystems
+			        fileSystems = mapAttrs mapFn cfg;
+			      };
+			  }
+			  ```
+			- This allows us to consume the module as attrset:
+			  ```nix
+			  # configuration.nix
+			  {...}:
+			  
+			  {
+			  	imports = [
+			      	./modules/ramdisk.nix
+			      ];
+			      
+			    	ramDisks = {
+			      	"/tmp" = {};
+			      	"/rd".size = "2G";
+			    	};
 			  }
 			  ```
 - # Tip: reproducible shell script module
