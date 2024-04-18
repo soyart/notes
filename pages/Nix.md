@@ -1,8 +1,14 @@
 - > [Nix Pills](https://nixos.org/guides/nix-pills/)
 - # Cheat sheet
-	- **Find absolutely every dependency, recursively** to use that derivation:
+	- ## Find dependencies
 		- ```sh
-		  # See dependency list of whichever `man` is in PATH
+		  # See man's direct dependencies
+		  $ nix-store -q --references `which man`
+		  
+		  # See main's direct dependents
+		  $ $ nix-store -q --referrers `which hello`
+		  
+		  # See full, recursive dependency list of whichever `man` is in PATH
 		  $ nix-store -qR `which man`
 		  $ nix-store -q --tree `which man`
 		  $ nix-store -q --tree ~/.nix-profile
@@ -174,12 +180,12 @@
 			- To list the drv store path, use `nix-env -q --out-path`
 	- Usually, user profile drvs have greater priority than system drvs, that is the user profile drv of a *name* (like `man-db` or `firefox`) will be used, and not the system drv with the same name
 	- Profile generations can be rolled back with `nix-env --rollback`
-		- ```sh
-		  $ nix-env --rollback
-		  switching from generation 3 to 2
-		  ```
+	  ```sh
+	  $ nix-env --rollback
+	  switching from generation 3 to 2
+	  ```
 		- Or we can use `-G` to specify target rollback generation:
-		- ```sh
+		  ```sh
 		  $ nix-env --rollback -G 3
 		  switching from generation 2 to 3
 		  ```
@@ -195,6 +201,61 @@
 		- > Nix provides a primitive impure function `derivation`, but since this is impure and advised against, we rarely see the function in practice
 		  >
 		  > Nix derivations are in practice defined with `lib.mkDerivation`
+		- ### `.drv` files
+			- When evaluating a drv (e.g. via `derivation` function call), Nix would create a `.drv` file in the Nix store:
+			  ```nix
+			  nix-repl> d = derivation { name = "myname"; builder = "mybuilder"; system = "mysystem"; }
+			  nix-repl> d
+			  «derivation /nix/store/z3hhlxbckx4g3n9sw91nnvlkjvyw754p-myname.drv»
+			  ```
+			- The content of the `.drv` file contains instructions describing how to build this package
+				- > Note that Nix already knows the path of this drv output. although we haven't built our `myname` package yet.
+				  >
+				  > **This is because the hash of the output is computed solely from the drv information**, not the actual hash of the package.
+				  >
+				  > Nix can also do enable content-addressable path hash, as it does with tarballs.
+				- ```sh
+				  $ nix derivation show /nix/store/z3hhlxbckx4g3n9sw91nnvlkjvyw754p-myname.drv
+				  {
+				    "/nix/store/z3hhlxbckx4g3n9sw91nnvlkjvyw754p-myname.drv": {
+				      "outputs": {
+				        "out": {
+				          "path": "/nix/store/40s0qmrfb45vlh6610rk29ym318dswdr-myname"
+				        }
+				      },
+				      "inputSrcs": [],
+				      "inputDrvs": {},
+				      "platform": "mysystem",
+				      "builder": "mybuilder",
+				      "args": [],
+				      "env": {
+				        "builder": "mybuilder",
+				        "name": "myname",
+				        "out": "/nix/store/40s0qmrfb45vlh6610rk29ym318dswdr-myname",
+				        "system": "mysystem"
+				      }
+				    }
+				  }
+				  
+				  ```
+			- But the drv was not built - we have to tell Nix to do that explicitly
+				- We usually build packages with `nix-build`
+				- or `:b` in Nix REPL
+				- We can even use `nix-store` to build drv: 
+				  ```sh
+				  $ nix-store -r /nix/store/z3hhlxbckx4g3n9sw91nnvlkjvyw754p-myname.drv
+				  ```
+			- So we don't have the build output in out Nix store *yet*, until we explicitly build it from our evaluated `.drv` file
+			- Let's build our fake drv from the REPL:
+			  ```nix
+			  nix-repl> d = derivation { name = "myname"; builder = "mybuilder"; system = "mysystem"; }
+			  nix-repl> :b d
+			  [...]
+			  these derivations will be built:
+			    /nix/store/z3hhlxbckx4g3n9sw91nnvlkjvyw754p-myname.drv
+			  building path(s) `/nix/store/40s0qmrfb45vlh6610rk29ym318dswdr-myname'
+			  error: a `mysystem' is required to build `/nix/store/z3hhlxbckx4g3n9sw91nnvlkjvyw754p-myname.drv', but I am a `x86_64-linux'
+			  ```
 		- ### Input attributes
 			- `name` (string, **required**)
 			- `system` (string, **required**)
@@ -208,14 +269,18 @@
 		- ### Build results
 			- The return value of `mkDerivation`, aka *build results*, is what Nix will eventually build
 			- The build results are an attrset, with particular structure
-			- This build results attrset can be used in string interpolation, and like files and fetchers, a build result attrset will evaluates to a Nix store path string:
-				- ```nix
+			- This build results attrset can be used in string interpolation
+				- Like files and fetchers, a build result attrset will evaluates to a Nix store path string:
+				  ```nix
 				  let
 				    pkgs = import <nixpkgs> {};
 				  in "${pkgs.nix}"
 				  ```
-				- ```txt
-				  "/nix/store/sv2srrjddrp2isghmrla8s6lazbzmikd-nix-2.11.0"
+				  Which will evaluates to:
+				  ```txt
+				  let
+				    pkgs = import <nixpkgs> {};
+				  in "${pkgs.nix}"
 				  ```
 				- The resulting string is the file system path where the build result of that derivation will end up.
 				- A derivation’s output path is fully determined by its inputs, which in this case come from *some* version of `<nixpkgs>` (hence `-nix-2.11.0` suffix of the filename)

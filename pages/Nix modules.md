@@ -174,6 +174,66 @@
 		  	};
 		  }
 		  ```
+	- ## Submodules
+		- Nix submodules are a Nix type
+		- Submodules allow nested Nix options
+		- ### Ramdisk module (list)
+			- ```nix
+			  # modules/ramdisk.nix
+			  
+			  { lib, config, ... }:
+			  
+			  with lib;
+			  with lib.types;
+			  
+			  {
+			    options.ramDisks = mkOption {
+			      type = listOf (submodule {
+			        options = {
+			          mnt = mkOption { type = str; };
+			          perm = mkOption { type = str; default = "755"; };
+			          size = mkOption { type = nullOr str; };
+			        };
+			      });
+			    };
+			  
+			    config = let
+			      cfg = config.ramDisks;
+			  
+			      mapFn = c: {
+			        "${c.mnt}" = {
+			          device = "none";
+			          fsType = "tmpfs";
+			          options = let
+			            mntOpts = [ "defaults"  "mode=${c.perm}" ];
+			          in
+			          mntOpts;
+			        };
+			      };
+			      
+			      in {
+			        fileSystems = attrsets.mergeAttrsList (builtins.map mapFn cfg);
+			      };
+			  }
+			  ```
+			- This module exposes 1 option: `ramDisks`
+			- The option `ramDisks` are of type `listOf submodule {...}`
+			- So when we use this option, we must give `ramDisks` as a list of submodule:
+			- ```nix
+			  # configuration.nix
+			  {...}:
+			  
+			  {
+			  	imports = [
+			      	./modules/ramdisk.nix
+			      ]
+			      
+			  	ramDisks = [
+			  		{ mnt = "/tmp"; perm = "755"; }
+			          { mnt = "/rd"; size = "2G"; perm = "755"; }
+			      ];
+			  }
+			  ```
 - # Tip: reproducible shell script module
 	- Let's say we have a `map` shell script that calls `curl` and `feh`
 	- And our module was like this, using string as script

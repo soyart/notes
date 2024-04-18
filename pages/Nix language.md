@@ -2,7 +2,7 @@
 - The Nix language is at the core of [[Nix]]
 - Since Nix is a functional language, there're *no statements*, only **expression**
 - # Nix files
-	- Each `.nix` file evaluates to a single Nix expression
+	- > Each `.nix` file evaluates to a single Nix expression
 	- ```sh
 	  # Populate the file with expression `1+2`
 	  $ echo 1 + 2 > 'foo.nix';
@@ -16,31 +16,31 @@
 	- By default, `nix-instantiate` looks for `default.nix`
 	- Pass `--strict` to `nix-instantiate` [if lazy evaluation messes up with our eval output](((660adc30-a264-4f5e-8d4a-0c6fec093f97)))
 	- And because whitespaces are most of the times insignificant in Nix, we can write the expression above in this form instead:
-		- ```nix
-		  let
-		   x = 1;
-		   y = 2;
-		  in x + y
-		  ```
+	  ```nix
+	  let
+	   x = 1;
+	   y = 2;
+	  in x + y
+	  ```
 - # Nix expressions
 	- Evaluating a Nix expression produces a Nix value
 	- Everything is an expression
 	- Evaluating an expression produces a value
 		- Let's try evaluating Nix expressions with the REPL built into the interpreter:
-		- ```sh
+		  ```sh
 		  $ nix-repl
 		  nix-repl>
 		  ```
-		- Simple arithmetic ops are expressions
-		- ```
+		- Simple arithmetic ops are expressions:
+		  ```nix
 		  nix-repl> 3*1
 		  3
 		  
 		  nix-repl> 100+100
 		  200
 		  ```
-		- And so are strings and booleans
-		- ```
+		- And so are strings and booleans:
+		  ```nix
 		  nix-repl> "Hello, World!"
 		  "Hello, World!"
 		  
@@ -64,15 +64,15 @@
 		  ```
 - # `let ... in ...`
 	- `let` expression allows assigning names to values, and the names be used later
-		- The expression below evals to `2`
-		- ```nix
+		- The expression below evals to `2`:
+		  ```nix
 		  let
 		  	a = 1;
 		  in
 		  a + a
 		  ```
-		- And this expression to `3`
-		- ```nix
+		- And this expression to `3`:
+		  ```nix
 		  let
 		  	b = a + 1;
 		      a = 1;
@@ -82,16 +82,16 @@
 	- We can generally say that we do the name bindings ("assignments") between `let` and `in`, and use the values in the expression after `in`
 	- `let` expression name bindings are scoped to the `let .. in ..` block
 - # `with foo; ...`
-	- `with` allows us to directly access attributes in `foo`
-	- ```nix
+	- `with` allows us to directly access attributes in `foo`:
+	  ```nix
 	  with a; [ x y z ]
 	  ```
-	- Is equivalent to
-	- ```nix
+	- Is equivalent to:
+	  ```nix
 	  [a.x a.y a.z]
 	  ```
-	- So the expression below evals to `[1 2 3]`
-	- ```nix
+	- So the expression below evals to `[1 2 3]`:
+	  ```nix
 	  let
 	    a = {
 	      x = 1;
@@ -109,15 +109,15 @@
 		- Utilities are built-in as well as implemented as Nixpkgs library `lib.strings`
 		- ### Interpolation with `${...}`
 			- > Sometimes, [string interpolation evaluation may have  *side effects*](((660c39e1-3de2-417a-8d00-04f98f4d17f5))), usually with paths
-			- ```nix
+			- The following expr evaluates to string `Hello World!`
+			  ```nix
 			  let
 			    name = "World";
 			  in
 			  "Hello ${name}!"
 			  ```
-			- The expr above evaluates to `hello World!`
-			- `$` without `{...}` is not string interpolation
-			- ```nix
+			- `$` without `{...}` is not string interpolation:
+			  ```nix
 			  let
 			    out = "Nix";
 			  in
@@ -125,8 +125,8 @@
 			  ```
 			- Evaluates to string `echo Nix > $out`
 		- ### Multiline/indented strings `''...''`
-			- Use double-single quotes to wrap a multiline string
-			- ```nix
+			- Use double-single quotes to wrap a multiline string:
+			  ```nix
 			  ''
 			    one
 			     two
@@ -134,14 +134,14 @@
 			  ''
 			  ```
 			- Will evaluate to string
-			- ```json
+			  ```txt
 			  "one\n two\n  three\n"
 			  ```
 			- #### Leading whitespaces quirks
 				- > Nix respects the first character column of the left-most lines as the output starting column
 				- Unlike Go strings with with backticks, Nix users perform string interpolations pretty frequently, so Nix strings are designed to be readable in code
 				- In the following example, `foo` is respected as the starting column:
-				- ```nix
+				  ```nix
 				  ''
 				  	foo
 				  	bar
@@ -155,7 +155,7 @@
 				  	baz
 				  ```
 				- In the following example, `bar` is respected:
-				- ```nix
+				  ```nix
 				  ''
 				  	  foo
 				  	bar
@@ -169,7 +169,7 @@
 				  baz
 				  ```
 				- The horizontal positions of the starting double-single-quote should not matter:
-				- ```nix
+				  ```nix
 				  ''
 				  	foo
 				  	bar
@@ -178,7 +178,7 @@
 				  
 				  ========> "foo\n\bar\n    baz\n"
 				  ```
-				- ```nix
+				  ```nix
 				  			''
 				  	foo
 				  	bar
@@ -188,7 +188,7 @@
 				  ========> "foo\n\bar\n    baz\n"
 				  ```
 				- Although the blank lines until the line with chars matter:
-				- ```nix
+				  ```nix
 				  	''
 				  
 				  
@@ -200,7 +200,7 @@
 				  ========> "\n\n    foo\n\bar\nbaz\n"
 				  ```
 				- The closing double-single-quote do matter *only if it's on the same line as the last non-blank line*, as they determine the trailing `\n`:
-				- ```nix
+				  ```nix
 				  		''
 				  	foo
 				  	bar
@@ -209,31 +209,31 @@
 				  
 				  ========> "foo\n\bar\n    baz\n"
 				  ```
-				- ```nix
-				  		''
-				  	foo
-				  	bar
-				      	baz
-				  	''
-				  
-				  ========> "foo\n\bar\n    baz\n"
-				  ```
-				- ```nix
-				  		''
-				  	foo
-				  	bar
-				      	baz  ''
-				  
-				  ========> "foo\n\bar\n    baz  "
-				  ```
-				- ```nix
-				  		''
-				  	foo
-				  	bar
-				      	baz''
-				  
-				  ========> "foo\n\bar\n    baz"
-				  ```
+					- ```nix
+					  		''
+					  	foo
+					  	bar
+					      	baz
+					  	''
+					  
+					  ========> "foo\n\bar\n    baz\n"
+					  ```
+					- ```nix
+					  		''
+					  	foo
+					  	bar
+					      	baz  ''
+					  
+					  ========> "foo\n\bar\n    baz  "
+					  ```
+					- ```nix
+					  		''
+					  	foo
+					  	bar
+					      	baz''
+					  
+					  ========> "foo\n\bar\n    baz"
+					  ```
 	- ## Nix paths
 		- FS paths have 1st-class support in Nix
 		- Absolute paths start with `/`
@@ -248,7 +248,6 @@
 	- ## Nix attribute sets
 	  id:: 66117c4f-000e-4be3-b016-43257b40bc48
 		- A Nix attrset is like a dictionary or JSON: it's an expression in key-value pair structure
-			- JSON and Nix equivalent example:
 			- ```json
 			  {
 			    "string": "hello",
@@ -281,27 +280,28 @@
 			    }; # comments are supported
 			  }
 			  ```
-		- We can set each attr with dot notation
-		- ```nix
+		- We can set each attr with dot notation:
+		  ```nix
 		  { a.b.c = 1; }
 		  
 		  # Evaluates to attrset: { a = { b = { c = 1; }; }; }
 		  ```
-		- Each attr is also accessed via dot notation
-		- ```nix
+		- Each attr is also accessed via dot notation:
+		  ```nix
 		  let
 		  	attrset = { x = 1; };
 		  in
 		  attrset.x # 1
 		  ```
-		- ```nix
+		  We can go deep:
+		  ```nix
 		  let
 		  	attrset = { a = { b = { c = 1; }; }; };
 		  in
 		  attrset.a.b.c # 1
 		  ```
 		- We can also use string variables to access an attr with key matching the string value:
-		- ```nix
+		  ```nix
 		  let
 		  	attrset = { name = "foo"; year = 2032; x = 1; y = 2 };
 		      y = "year";
@@ -310,8 +310,8 @@
 		  ```
 		- ## Recursive attribute sets (`rec {...}`)
 			- A recursive attrset is declared with `rec` keyword
-			- It allows attribute access within the same attrset
-			- ```nix
+			- It allows attribute access within the same attrset:
+			  ```nix
 			  rec {
 			  	one = 1;
 			      two = one + 1;
@@ -319,7 +319,7 @@
 			  }
 			  ```
 			- Which evaluates to
-			- ```nix
+			  ```nix
 			  { one = 1; two = 2; three = 3; }
 			  ```
 		- ## Inherit attributes with `inherit`
@@ -358,7 +358,7 @@
 				- Here, `inherit({...}) x y` expands to `{ x = 1; y = 2 }`
 				- So the whole expr evals to `[1 2]`
 				- So the example expression above is verbatim-equivalent to:
-				- ```nix
+				  ```nix
 				  let
 				    x = { x = 1; y = 2; }.x;
 				    y = { x = 1; y = 2; }.y;
@@ -401,36 +401,38 @@
 			- `a: a + 1` is like `fn (i: isize) { i + 1 }` in Rust
 			- We can see here that function is another place in Nix that we can bind values to names (in this case we bind `a` with whatever value passed to this function when called)
 		- ### Attrset as argument
-			- > Note the use of comma in attrset argument
-			- ```nix
+			- Here is a basic Nix function that takes attrset arg with attrs `x` and `y`, returning `x+y`:
+			  > Note the use of comma in attrset argument
+			  
+			  ```nix
 			  { x, y }: x + y
 			  ```
 			- We can also assign default values to function arguments:
-			- ```nix
+			  ```nix
 			  { x, y ? 7 }: x + y
 			  ```
 			- If the callers pass large attrset as arg (e.g. the arg has extra attrs `foo`, `bar`), then we need to use spread notation to safely ignore other attrs, otherwise Nix will err:
-			- ```nix
+			  ```nix
 			  { a, b, ... }: a + b
 			  ```
 			- We can also capture/bind other unnamed arguments with `@` pattern:
-			- ```nix
+			  ```nix
 			  { a, b, ... }@args: a + b + args.foo
 			  ```
-				- We are free to choose where to put `@` pattern around the attrset
-				- ```nix
-				  @args{ a, b, ... }: a + b + args.foo
-				  ```
+			  > We can place `@args` on whichever side
+			  > ```nix
+			  > @args{ a, b, ... }: a + b + args.foo
+			  > ```
 			- Will evaluate to `1+10+1000`
 		- Functions are anonymous, i.e. *lamda* (may be printed as `<LAMDA>` Nix console)
 		- ## Calling functions
 			- We can call a lambda function like so:
-			- ```nix
+			  ```nix
 			  (x: x + 1) 3
 			  ```
 			- This evaluates to `4`
-			- We can also bind a function to a name with `let` and call it
-			- ```nix
+			- We can also bind a function to a name with `let` and call it:
+			  ```nix
 			  let
 			  	compute = { a, b, ... }@args: a + b + args.foo;
 			  in
@@ -438,7 +440,7 @@
 			  ```
 			- Will evaluate to `1011` from `1 + 10 + 1000`
 			- We can also use the function right after bound to a name:
-			- ```nix
+			  ```nix
 			  let
 			      f = x: x + 10;
 			      n = f 7;
@@ -449,15 +451,15 @@
 			- ### Caveats: whitespaces
 				- Functions are delimited by whitespaces (hence the parenthesis when calling lambda func), and so are lists
 				- So the following 2 expressions are different:
-				- ```nix
+				  ```nix
 				  let
 				   f = x: x + 1;
 				   a = 1;
 				  in [ (f a) ]
 				  ```
 				- This evaluates to `[ 2 ]`
-				- While this expression
-				- ```nix
+				- While this expression:
+				  ```nix
 				  let
 				   f = x: x + 1;
 				   a = 1;
@@ -468,7 +470,7 @@
 			- In Nix, a function can actually accepts only 1 arguments
 			- To do multiple arguments, Nix returns a closure as another function
 				- Consider this function, which accepts `a` and `b` and returns `a+b`:
-				- ```nix
+				  ```nix
 				  a: b: a + b
 				  ```
 				- We are supposed to call this function with `<fname> a b`, which we *might* think it works like `fname(1, 2)`
@@ -476,7 +478,7 @@
 				- So when Nix evaluates `fname(1)`, it gets this function back: `b: 1 + b`
 				- So `fname(1)(2)` will call that function with `b = 2`, and gives us `3`
 				- And so, the example function above is equivalent to:
-				- ```Nix
+				  ```nix
 				  a: (b: a + b)
 				  ```
 			- ### Examples
@@ -497,7 +499,7 @@
 				  }
 				  ```
 				- The same principle applies for functions that take attrset:
-				- ```nix
+				  ```nix
 				  let
 				    arguments = {a="Happy"; b="Awesome";};
 				    func = {a, b}: {d, b, c}: a+b+c+d;
@@ -512,7 +514,7 @@
 		- Built-in functions implemented in Nix interpreter (C++)
 		- See [Nix manual](https://nix.dev/manual/nix/2.18/language/builtins)
 		- They are evaluated as `PRIMOPS`:
-		- ```nix
+		  ```nix
 		  builtins.toString
 		  <PRIMOPS>
 		  ```
@@ -521,7 +523,7 @@
 		- `import` takes a path to a Nix file, and reads the file to evaluate its expression, returning the evaluated value.
 		- If the path points to a directory, `import` reads `default.nix` in that directory
 		- If the file evaluates to a function, we can immediately call the imported function:
-		- ```sh
+		  ```sh
 		  echo "x: x + 1" > ./foo/default.nix
 		  
 		  nix repl
@@ -539,7 +541,7 @@
 			- Due to this naming to `pkgs` convention, we usually see something like this on the internet:
 			- By convention, we assign name `pkgs` to expression returned by `import <nixpkgs> {..}`
 			- If we want to avoid [lookup path](((660ae72f-2260-4d68-a778-e7a5aad8db86))) `<nixpkgs>`, we can do:
-			- ```Nix
+			  ```nix
 			  let
 			    nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/archive/06278c77b5d162e62df170fec307e83f1812d94b.tar.gz";
 			    pkgs = import nixpkgs {};
@@ -547,19 +549,19 @@
 			  pkgs.lib.strings.toUpper "always pin your sources"
 			  ```
 			- We might come across other people's code that looks like this:
-			- ```nix
+			  ```nix
 			  { pkgs, ... }:
 			  pkgs.lib.strings.removePrefix "no " "no true scotsman"
 			  ```
 			- In cases like these, we can assume that `pkgs` will refer to `nixpkgs` attrset, and will contain `lib` attribute:
-			- ```Nix
+			  ```nix
 			  let
 			    pkgs = import <nixpkgs> {};
 			  in
 			  pkgs.lib.strings.toUpper "lookup paths considered harmful"
 			  ```
 			- And sometimes, we may see other people's code importing attribute `lib`:
-			- ```nix
+			  ```nix
 			  { lib, ... }:
 			  
 			  let
@@ -578,31 +580,38 @@
 	- Examples of impurities are *build inputs*, which may be read from files on the system
 	- ## Nix side effects
 		- **Paths**: **Whenever a path is used in string interpolation, its content is copied to Nix store**, and the string interpolation expression evals to the absolute path to that file/directory in the Nix store
-			- Why copy to Nix store? To make it more reproducible and robust. With hash-enforced access, content file changes will have less detrimental effects on our builds
-			- ```sh
+			- Why copy to Nix store? To make it more reproducible and robust.
+			- With hash-enforced access, content file changes will have less detrimental effects on our builds:
+			  ```sh
 			  # File content is "123"
-			  echo 123 > data
+			  $ echo 123 > data
 			  ```
-			- ```nix
+			- We can use the evaluate path to file `data` in some Nix program:
+			  ```nix
 			  "${./data}" # Path inside string interpolation
 			  ```
 			- The expression above will evaluate to:
-			- ```txt
+			  ```txt
 			  "/nix/store/h1qj5h5n05b5dl5q4nldrqq8mdg7dhqk-data"
 			  ```
-		- **Fetches**: fetchers are used to get build inputs from non-FS locations (e.g. `builtins.fetchGit`). These fetchers will download the resources to Nix store, and so the fetcher expressions evaluate to Nix store path strings.
-			- ```nix
+		- **Fetches**: fetchers are used to get build inputs from non-FS locations (e.g. `builtins.fetchGit`).
+			- These fetchers will download the resources to Nix store, and so the fetcher expressions evaluate to Nix store path strings:
+			  ```nix
 			  builtins.fetchTarball "https://github.com/NixOS/nix/archive/7c3ab5751568a0bc63430b33a5169c5e4784a0ff.tar.gz"
 			  ```
-			- The fetcher expression will save the files to Nix store
-			- Which means that the expression above evaluates to
-			- ```txt
+			- The fetcher expression will save the files to Nix store. Which means that the expression above evaluates to path string:
+			  id:: 66117c4f-535c-43cc-827e-95304192ca79
+			  ```txt
 			  "/nix/store/d59llm96vgis5fy231x6m7nrijs0ww36-source"
 			  ```
 - # Simple examples
 	- ## Declarative shell
-		- ```nix
+		- We can use `mkShell` function, or, preferably `mkShellNoCC` to describe a shell environment
+			- Unlike `mkShell` which uses Nixpkgs `stdenv`, `mkShellNoCC` will build a Nix env against `stdenvNoCC`
+		- We can specify programs in that environment with `buildInputs` attr arg, so we can write a Nix file that takes Nixpkgs `pkgs` and consumes our packages from that Nixpkgs:
+		  ```nix
 		  { pkgs ? import <nixpkgs> {} }:
+		  
 		  let
 		    message = "hello world";
 		  in
@@ -613,7 +622,7 @@
 		    '';
 		  }
 		  ```
-		- The  expression (a Nix function) takes 1 attrset argument with `pkgs` attr. If `pkgs` is not in the caller's argument, it defaults to importing Nixpkgs using [lookup paths `<nixpkgs>`](((660ae72f-2260-4d68-a778-e7a5aad8db86))) with empty attrset argument: `import <nixpkgs> {}`
+		- If `pkgs` is not in the caller's argument, this Nix file defaults to importing Nixpkgs using [lookup paths `<nixpkgs>`](((660ae72f-2260-4d68-a778-e7a5aad8db86))) with empty attrset argument: `import <nixpkgs> {}`
 	- ## System configuration
 		- ```nix
 		  { config, pkgs, ... }: {
