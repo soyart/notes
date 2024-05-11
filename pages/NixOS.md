@@ -5,6 +5,15 @@
 	- We can generate both of these files with: `nixos-generate-config`
 		- This command can detect mountpoints, and add them accordingly to `hardware-configuration.nix`
 		- This command can also detect CPU and other hardware, generating config with required kernel modules
+	- ## Inspecting NixOS config
+		- We can use `nix` cli tool to evaluate the system config:
+		  ```sh
+		  $ nix repl --file '<nixpkgs/nixos>'
+		  Welcome to Nix 2.13.3. Type :? for help.
+		  Loading installable ''...
+		  Added 6 variables.
+		  nix-repl>
+		  ```
 - # NixOS virtual machine
 	- On any systems with Nix installed, we can create a VM with `nix-build` command
 	- ```sh
