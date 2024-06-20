@@ -19,6 +19,9 @@ jobs:
       - name: touch www/.nojekyll # to make sure asset paths are correctly identified
         run: "mkdir -p $GITHUB_WORKSPACE/www && touch $GITHUB_WORKSPACE/www/.nojekyll"
 
+      - name: cname
+        run: echo "notes.artnoi.com" > "$GITHUB_WORKSPACE/www/CNAME"
+
       - name: build spa
         uses: logseq/publish-spa@v0.3.1
         # with:
