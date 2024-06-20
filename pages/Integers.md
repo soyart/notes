@@ -1,4 +1,4 @@
-## [[Unsigned integers]]
+# [[Unsigned integers]]
 	- The simplest integers are unsigned integers. Because it is unsigned, all the bits can be used to store the numeric value for that int.
 		- ```
 		  # unsigned
@@ -23,9 +23,10 @@
 			  =   10110 = 22
 			  wrap 0110 = 6
 			  ```
-- ## [[Signed integers]]
+- # [[Signed integers]]
+	- > TLDR: Use 2's complements if you want the int system to be simple, and without +0/-0
 	- There are 4 methods for representing signed ints
-	- ### Signed magnitude
+	- ## Signed magnitude
 	  id:: 66535f02-198f-4a35-9ae9-3a69721729ad
 		- A single bit is sacrificed for storing signs, usually the left-most bit (a *sign bit*). The other bits are called *magnitude bits*.
 		- Signed magnitude implementation is hard
@@ -71,7 +72,8 @@
 		  0001 = +1
 		  1001 = -1
 		  ```
-	- ### [[1's and 2's complement]]
+	- ## [[1's and 2's complement]]
+	  id:: 66535ebd-48d1-4565-9ed8-19ae50d50647
 		- A *1's complement* is a bitwise `NOT` applied to an unsigned int
 			- > 1's complement can also be obtained from signed-magnitude values by applying `NOT` only to the magnitude bits.
 			- So If we have 8-bit $1_{10}$:
@@ -121,7 +123,7 @@
 			  +1        1
 			  2's   10100 = -12 (signed 2's)
 			  ```
-		- ### Using 2's complement for subtraction
+		- ## Using 2's complement for subtraction
 			- We can perform normal (non 2's) subtraction of ${39_{10}-25_{10}}$:
 			  ```
 			     0100111 = +39
@@ -148,3 +150,53 @@
 			  +  10111001 = -71 (2's)
 			     11100100 = -28
 			  ```
+- # [[Bit shifts]]
+	- ## Logical left shift and arithmetic left shift
+		- Each bit is moved one left
+		- The most significant (leftmost) bit is discarded
+		- A zero fills the vacant space to the right
+		- For example, a left shift of 2:
+		  ```
+		  10000111 << 2
+		  00011100
+		  ```
+	- ## Logical shift right
+		- Each bit is moved one right
+		- The least significant (rightmost) bit is discarded
+		- A zero fills in the vacant space to the left
+		- So it's like an opposite of left shifts
+		- For example, a *logical* right shift of 2:
+		  ```
+		    10000111 >> 2
+		  = 00100001
+		  ```
+	- ## Arithmetic shift right
+		- Each bit is moved one right
+		- The least significant (rightmost) bit is discarded
+		- **The most significant (leftmost) bit is copied to its position**
+		- For example, an *arithmetic* right shift of 2:
+		  ```
+		    10000111 >> 2
+		  = 10100001
+		  ```
+		  The leftmost bit `1` is copied from the original value to the new, shifted value
+		- Another example:
+		  ```
+		    01011010 >> 4
+		  = 00000101
+		  ```
+	- ## Cyclic shift (rotation?)
+		- Each bit is moved along (left or right)
+		- The bit dropped off at one end is moved to another end
+		- No bits are lost
+		- Examples:
+		  ```
+		    10110101 >> 1
+		  = 11011010
+		  
+		    10110101 >> 2
+		  = 01101101
+		  
+		    01011010 << 4
+		  = 10100101
+		  ```
