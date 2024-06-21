@@ -179,6 +179,206 @@
 		  sqrt((double) f)
 		  ```
 		  Note that we might not have to do this if we have function prototype for `sqrt`, since function prototypes will coerce C to convert argument values to proper types as defined in the function's prototype.
+- # [[C declarations and definitions]]
+  id:: 6675b7f5-0dff-411f-84ee-f5a247849ac5
+	- **Declaration** announces property of a name
+	- **Definition** also sets aside the storage.
+	- ## External variables
+		- > **There must be only 1 definition of an external variable throughout the files being compiled**. Other files will have to use `extern` to access it
+		- If these 2 lines **are outside of a function**:
+		  ```c
+		  int sp; // If external, is initialized to 0
+		  double s[16]; // This sets aside storage of 16 double, and fill it with 0.00
+		  ```**
+		  Then they define `sp` and `s`**
+			- > Note: for local variables, use before definition will get garbage value:
+			  
+			  ```c
+			  #include <stdio.h>
+			  
+			  int i = 'i';
+			  int ext;
+			  double f;
+			  
+			  int main(void)
+			  {
+			      int local;
+			      extern int j;
+			  
+			      printf("i: %c\n", i);
+			      printf("j: %c\n", j);
+			  
+			      printf("f: %f\n", f);
+			      printf("ext: %d\n", ext);
+			      printf("local: %d\n", local);
+			  }
+			  
+			  int j = 'j';
+			  ```
+			  ```
+			  i: i
+			  j: j
+			  f: 0.000000
+			  ext: 0
+			  local: 1
+			  ```
+		- However, this:
+		  ```c
+		  extern int sp;
+		  extern double s[];
+		  ```
+		  **only declares the properties of `sp` and `s` to the rest of the source file**.  The last line only declares that `s` will be an array of `double`, whose size is determined/defined elsewhere
+		- #### Visibility
+			- Functions can see external variables if their declarations appear before the function definition.
+			- In this example, `main` does not see `c`, but `f` does:
+			  ```c
+			  char f();
+			  
+			  int main(void)
+			  {
+			      int i = f();
+			    	int c_int = c; // Compile error! no such variable c!
+			  }
+			  
+			  char c = 'c';
+			  char f()
+			  {
+			      return c;
+			  }
+			  
+			  ```
+			- Even if we put declaration of `char c;` in `main`, that `c` is not the same as external variable c:
+			  ```c
+			  #include <stdio.h>
+			  
+			  char f();
+			  
+			  int main(void)
+			  {
+			      char c;
+			      int i = f();
+			  
+			      printf("main.c: %d\n", c);
+			      printf("main.i: %d\n", i);
+			      printf("i == c: %s\n", i == c ? "true" : "false");
+			  }
+			  
+			  char c = 'c';
+			  
+			  char f()
+			  {
+			      return c;
+			  }
+			  ```
+			  ```
+			  main.c: 0
+			  main.i: 99
+			  i == c: false
+			  ```
+			- #### Basic scope rules
+				- > Due to complexity of compiling C programs (i.e. may be compiled separately), there're many questions regarding scopes of external variables
+				- The *scope* of a *name* is the part of the program from which the name can be referenced
+				- Scopes of an local variable, like automatic variables and function parameters, are local to the function
+				- Scopes of external a variable last from the line at which it's [declared](((6675b7f5-0dff-411f-84ee-f5a247849ac5))), *down until the end of the file being compiled*. In the snippet below, only functions `push` and `getsp` can see external variables`sp` and `v`:
+				  ```c
+				  #define MAXSP 100
+				  int main() {}
+				  
+				  int sp = 0;
+				  double v[MAXSP]
+				  
+				  void push(double v) {}
+				  double getsp() { return sp; }
+				  ```
+		- #### `extern` declarations
+			- [Declarations with `extern`](((6675b7f5-0dff-411f-84ee-f5a247849ac5))) can be used to refer to variables before their definition, or if it's [defined](((6675b7f5-0dff-411f-84ee-f5a247849ac5))) in a different file
+			- This allows `main` to see `j`
+			  ```c
+			  #include <stdio.h>
+			  int i = 'i';
+			  int main(void)
+			  {
+			      extern int j;
+			      printf("i: %c\n", i); // 'c'
+			      printf("j: %c\n", j); // 'j'
+			  }
+			  
+			  int j = 'j';
+			  ```
+			- Here, we have 2 functions `pop` and `push` that work on external variables `sp` and `s`. They are spread across 2 files:
+			  ```c
+			  // file1.c
+			  // Here, sp and s from file2.c are available to all functions
+			  extern int sp;
+			  extern double s[];
+			  
+			  void push(double f) {}
+			  double pop(void) {..}
+			  ```
+			  ```c
+			  // file2.c
+			  #define MAXSZ 10
+			  int sp = 0;
+			  double s[MAXSZ]
+			  ```
+	- ## Register variables
+		- `register` keyword can be applied to declarations to suggest the C compiler that this variable will be heavily used.
+		- Compilers may ignore `register` keyword
+		- Register declarations *can only be applied to automatic variables* (i.e. non-external)
+		- *Getting address of register variables is impossible*, even if the variables are not placed on real registers
+	- ## Block structures
+		- > Automatic variables declared inside a block is initialized each time the execution reaches this block
+		- Variable declarations can follow any left curly brace that introduces compound statements
+		- Here, the scope of `i` is the `true` branch of the `if` statement. This `i` is not related to any other i declared outside of this `if (true)` block:
+		  ```c
+		  if (n > 0) {
+		  	int i; // new i
+		    	for (i = 0; i < n; i++) {
+		        // ...
+		      }
+		  }
+		  ```
+		  Or we can say that this block declaration *hides `i`* from the outside code
+		- Formal function parameters *also hides* their names from outside code:
+		  ```c
+		  int x;
+		  int y;
+		  
+		  void f(double x) {
+		    double y;
+		    // ...
+		  }
+		  ```
+		  Like all sane languages, here, in function `f`, `x` refers to the function argument which is a `double`, while outside of `x` they refer to the external integer `x`
+	- ## Initializations
+		- If there's no explicit initialization, then
+			- External and static variables get zero initial values, much like Go default values
+			- Automatic and register variables get garbage initial values
+		- We can initialize *scalar* variables right during definitions:
+		  > For external and static variables, the initializer must be constant expression
+		  
+		  ```c
+		  int x = 1;
+		  char squote = '\'';
+		  long day = 60 * 60 * 24;
+		  ```
+		- ### Initializing arrays
+			- > There's no way to initialize an array in the middle without providing preceding values
+			- We can also initialize arrays with this syntax:
+			  ```c
+			  int days[] = {31, 28, 26}; // initialize days with length 3 containing the 3 ints
+			  int months[4] = {10, 20, 30, 40}; // initialize months with length 4 containing the 4 ints
+			  ```
+			  Omitting the length in initialization makes the compiler counts the length from the assignment value and initializing the array to that length
+			- Under-filled arrays will have zeroes initialized to their vacant spaces:
+			  ```c
+			  int arr[4] = {10, 20, 30}; // [10, 20, 30, 0]
+			  ```
+			- Character arrays have some special syntactic sugar: the initializer can be string literals:
+			  ```c
+			  char pattern1[] = "foo";
+			  char pattern2[] = {'f', 'o', 'o'}; // equivalent
+			  ```
 - # C functions
 	- > All C functions are *external* (like external variables)
 	- ## Caveat
@@ -242,56 +442,238 @@
 		  ```c
 		  sum += atof("21.8")
 		  ```
-	- ## Functions defined in other files
-		- Let's say our `main.c` program uses functions defined in `1.c` and `2.c`, then, if we run:
-		  ```sh
-		  cc 'main.c' '1.c' '2.c'
-		  ```
-		  The C compiler will produce 3 *object code* files: `main.o`, `1.o`, and `2.o`, and then it would load them all into a single executable `a.out`
-	- ## Visibility of external variables
-		- Functions can see external variables if their declarations appear before the function definition.
-		- In this example, `main` does not see `c`, but `f` does:
+- # Multi-file C programs
+	- > See also: [[C declarations and definitions]]
+	- Let's say our `main.c` program uses functions defined in `1.c` and `2.c`, then, if we run:
+	  ```sh
+	  cc 'main.c' '1.c' '2.c'
+	  ```
+	  The C compiler will produce 3 *object code* files: `main.o`, `1.o`, and `2.o`, and then it would load them all into a single executable `a.out`
+	- ## [[C headers]]
+		- C headers come in handy when we have to work with multiple files
+		- ### Example
+			- we will be refactoring this basic stack machine calculator in `main.c` into several separated files:
+			- #### Original program, in 1 file:
+				- ```c
+				  #include <ctype.h>
+				  #include <stdio.h>
+				  #include <stdlib.h>
+				  
+				  #define NUMBER '0'
+				  #define MAXOPS 100
+				  #define SZ_STACK 5
+				  #define SZ_BUF 100
+				  
+				  int getop(char[]);
+				  void push(double);
+				  double pop(void);
+				  
+				  int main(void)
+				  {
+				      int type;
+				      double top; // Top of stack - to ensure order of function calls in pop() / pop()
+				      char s[MAXOPS];
+				  
+				      while ((type = getop(s)) != EOF) {
+				          switch (type) {
+				          case NUMBER:
+				              push(atof(s));
+				              continue;
+				  
+				          case '+':
+				              push(pop() + pop());
+				              continue;
+				  
+				          case '*':
+				              push(pop() * pop());
+				              continue;
+				  
+				          case '-':
+				              top = pop();
+				              push(pop() - top);
+				              continue;
+				  
+				          case '/':
+				              top = pop();
+				              push(pop() - top);
+				              continue;
+				  
+				          case '\n':
+				              printf("\t%.8g\n", pop());
+				              return 0;
+				          }
+				      }
+				  }
+				  
+				  void test_stack(void)
+				  {
+				      int n = SZ_STACK + 2;
+				  
+				      for (int i = 0; i < n; i++) {
+				          push((double)i);
+				      }
+				      for (int i = 0; i < n; i++) {
+				          double f = pop();
+				      }
+				  }
+				  
+				  int sp = 0; // Stack pointer
+				  double stack[SZ_STACK];
+				  
+				  void push(double f)
+				  {
+				      if (sp >= SZ_STACK) {
+				          return;
+				      }
+				  
+				      stack[sp++] = f;
+				  }
+				  
+				  double pop(void)
+				  {
+				      if (sp < 1) {
+				          return 0.0;
+				      }
+				  
+				      // sp is like count/len: a len of 1 means that the value is in array[0]
+				      return stack[--sp];
+				  }
+				  
+				  int getch(void);
+				  void ungetch(int);
+				  
+				  int getop(char s[])
+				  {
+				      int i, c;
+				  
+				      // Skip whitespaces
+				      while ((s[0] = c = getch()) == ' ' || c == '\t')
+				          ;
+				  
+				      // Terminate s (construct a valid string)
+				      s[1] = '\0';
+				  
+				      // Return operator
+				      if (!isdigit(c) && c != '.') {
+				          return c;
+				      }
+				  
+				      // Reset s and collect integer part
+				      i = 0;
+				      if (isdigit(c)) {
+				          while (isdigit((s[++i] = c = getch())))
+				              ;
+				      }
+				  
+				      // Collect fractional part
+				      if (c == '.') {
+				          while (isdigit((s[++i] = c = getch())))
+				              ;
+				      }
+				  
+				      s[i] = '\0';
+				  
+				      if (c != EOF) {
+				          ungetch(c);
+				      }
+				  
+				      return NUMBER;
+				  }
+				  
+				  char buf[SZ_BUF];
+				  int bufp = 0;
+				  
+				  int getch(void)
+				  {
+				      if (bufp > 0) {
+				          return buf[--bufp];
+				      }
+				  
+				      char c = getchar();
+				      return c;
+				  }
+				  
+				  void ungetch(int c)
+				  {
+				      if (bufp >= SZ_BUF) {
+				          return;
+				      }
+				    
+				      buf[bufp++] = c;
+				  }
+				  ```
+			- We want separate them into multiple files, to mock real use cases where these functions would probably come from different libraries
+				- `main.c` will has the main function
+				- `stack.c` will provide stack machines (`pop`, `push`, and their variables)
+				- `getop.c` will provide part for getting the next `double` or calculator operator char
+			- With so many files involved, we'd probably want to centralize definitions and declarations
+			- We'll centralize as much as we could, in one place, so that our program evolves more cleanly
+			- To do that, let's create a C header file for that, `calc.h`
+			- #### Resulting program
+			  id:: 6675c375-477f-4243-8b3d-f1c986cfcfb5
+				- The header `calc.h` defines external names for all other files:
+				  ```c
+				  // calc.h
+				  
+				  #define NUMBER '0'
+				  void push(double);
+				  double pop(void);
+				  int getop(char []);
+				  int getch(void);
+				  void ungetch(int);
+				  ```
+				- `main.c` instead defines only stuff it needs:
+				  ```c
+				  // main.c
+				  #include <stdio.h>
+				  #include <stdlib.h>
+				  #include "calc.h" // << our header!
+				  
+				  #define MAXOP 100
+				  
+				  int main(void) { .. }
+				  ```
+				- `getop.c` are similar to `main.c`:
+				  ```c
+				  // getop.c
+				  #include <stdio.h>
+				  #include <ctype.h>
+				  #include "calc.h" // << our header!
+				  
+				  // Recall that if not explicitly set to concrete types or void,
+				  // function return type is inferred to be int
+				  getop() {}
+				  ```
+				- `stack.c` defines its own internal external variables:
+				  ```c
+				  // stack.c
+				  // main.c
+				  #include <stdio.h>
+				  #include "calc.h" // << our header!
+				  
+				  #define SZ_STACK 5
+				  
+				  int sp = 0;
+				  int s[SZ_BUF];
+				  ```
+				- `getch.c` also looks more simpler:
+				  ```c
+				  #include <stdio.h>
+				  
+				  #define SZ_BUF 100
+				  
+				  char buf[SZ_BUF];
+				  int bufp = 0;
+				  
+				  int getch(void) {..}
+				  void ungetch(int c) {..}
+				  ```
+	- ## Static variables
+		- Applying [`static` on external variable declarations]([[C declarations and definitions]]) limits the scope of the variable to the rest of the source file only
+		- For example, if we change `stack.c` to:
 		  ```c
-		  char f();
-		  
-		  int main(void)
-		  {
-		      int i = f();
-		    	int c_int = c; // Compile error! no such variable c!
-		  }
-		  
-		  char c = 'c';
-		  char f()
-		  {
-		      return c;
-		  }
-		  
+		  static char buf[SZ_BUF];
+		  static int bufp = 0'
 		  ```
-		- Even if we put declaration of `char c;` in `main`, that `c` is not the same as external variable c:
-		  ```c
-		  #include <stdio.h>
-		  
-		  char f();
-		  
-		  int main(void)
-		  {
-		      char c;
-		      int i = f();
-		  
-		      printf("main.c: %d\n", c);
-		      printf("main.i: %d\n", i);
-		      printf("i == c: %s\n", i == c ? "true" : "false");
-		  }
-		  
-		  char c = 'c';
-		  
-		  char f()
-		  {
-		      return c;
-		  }
-		  ```
-		  ```
-		  main.c: 0
-		  main.i: 99
-		  i == c: false
-		  ```
+		  Then those names will not conflict with other identical names from other files
+		- We can also apply `static` declarations on functions as well, which will cause the static functions to be invisible outside of the file
