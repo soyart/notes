@@ -321,6 +321,8 @@
 			  int sp = 0;
 			  double s[MAXSZ]
 			  ```
+	- ## `static` variables
+		- [Static variables](((6675c6a9-2d38-4502-9429-575ff7ada745))) are scoped only in the file they are declared, avoiding name conflicts
 	- ## Register variables
 		- `register` keyword can be applied to declarations to suggest the C compiler that this variable will be heavily used.
 		- Compilers may ignore `register` keyword
@@ -351,17 +353,21 @@
 		  ```
 		  Like all sane languages, here, in function `f`, `x` refers to the function argument which is a `double`, while outside of `x` they refer to the external integer `x`
 	- ## Initializations
+		- Initializations are expressions that give names some values
+			- Expressions could be constant, or variable
 		- If there's no explicit initialization, then
-			- External and static variables get zero initial values, much like Go default values
 			- Automatic and register variables get garbage initial values
+			- External and static variables get zero initial values, much like Go default values
 		- We can initialize *scalar* variables right during definitions:
 		  > For external and static variables, the initializer must be constant expression
 		  
 		  ```c
-		  int x = 1;
-		  char squote = '\'';
-		  long day = 60 * 60 * 24;
+		  int x = 1; // constant expr: int 1
+		  char squote = '\''; // also constant expr: char '\'
+		  long day = 60 * 60 * 24; // also constant expr: int constant * int constant * int constant
 		  ```
+		- For external variables, initializations are done once, before the programs start
+		- For automatic variables, initializations are done every time execution enters the block scope, including in recursive functions
 		- ### Initializing arrays
 			- > There's no way to initialize an array in the middle without providing preceding values
 			- We can also initialize arrays with this syntax:
@@ -380,7 +386,7 @@
 			  char pattern2[] = {'f', 'o', 'o'}; // equivalent
 			  ```
 - # C functions
-	- > All C functions are *external* (like external variables)
+	- > All C functions are *external* (like external variables) and can be recursive
 	- ## Caveat
 		- If more than 1 functions are called in an expression, the order of these calls is undefined
 		- So in this snippet:
@@ -669,6 +675,7 @@
 				  void ungetch(int c) {..}
 				  ```
 	- ## Static variables
+	  id:: 6675c6a9-2d38-4502-9429-575ff7ada745
 		- Applying [`static` on external variable declarations]([[C declarations and definitions]]) limits the scope of the variable to the rest of the source file only
 		- For example, if we change `stack.c` to:
 		  ```c
@@ -677,3 +684,92 @@
 		  ```
 		  Then those names will not conflict with other identical names from other files
 		- We can also apply `static` declarations on functions as well, which will cause the static functions to be invisible outside of the file
+- # [[C preprocessors]]
+	- C implementations provide their preprocessor
+	- C preprocessors evaluates the source files *before* actual compilation
+	- ## C macro substitution
+		- `#define`
+			- `#define` macros are used to do text substitution, and are usually in the form:
+			  ```c
+			  #define TEXT1 this is the replacement text
+			  #define TEXT2 this is \
+			  the replacement \
+			  text
+			  ```
+			- To make `#define` substitute multi-line text, append `\` at the end of the line
+			- `#define` can also mimic function calls, like Rust macros:
+			  ```c
+			  #define max(a, b) ((a > b) ? a : b);
+			  ```
+			  > Note: we call names `a` and `b` as *macro parameters*
+				- Now, `int i = max(1, 2)` is going to be in-lined to `int i = ((1 > 2) ? 1 : 2)`
+				- This is commonly done, to reduce costs of actual function call stacks
+				- Be careful with the expression to give to macros, expressions with side effects may lead to bugs, like with: `max(++i, ++j)`
+			- ### String substitutions in `#define` with `#`
+				- ```c
+				  // The define parameter '2+1' will be enclosed in double quotes
+				  // in place of #expr
+				  #define dprint(expr) printf(#expr " = %g\n", expr);
+				  
+				  // Double ## can be used for actual concatenation
+				  // If the parameter in the replacement are adjacent to ##,
+				  // then their values will be substituted, and the 4 bytes ` "" `
+				  // will be removed
+				  #define paste(front, back) front ## back
+				  
+				  int x = 1;
+				  int y = x+2;
+				  
+				  int main(void) {
+				    dprint(2+1); // printf("2+1" "= %g\n", 2+1)
+				                 //=printf("2+1 = %g\n", 2+1)
+				    dprint(x/y); // printf("x/y" "= %g\n", x/y)
+				                 //=printf("x/y = %g\n", x/y)
+				    
+				    char name[] = "foobar";
+				    paste(name, 1) // Produces name1
+				  }
+				  ```
+		- `#undef`
+			- `#undef` can be used to un-define names:
+			- ```c
+			  #include <stdio.h>
+			  #unset getchar
+			  
+			  // All occurences of getchar will use this declaration
+			  // instead of the ones in stdio.h
+			  unsigned char getchar(void);
+			  ```
+		- `#include`
+			- `#include` adds a directive for the preprocessor to include source files, with 2 standard forms:
+			  ```c
+			  #include "filename"
+			  #include <filename>
+			  ```
+			- If the filename is enclosed in quotes, then the preprocessor would try to find it in the same directory
+			- If the filename is enclosed in the pair `<>`, then the it's up to the implementation to decide how to search for the file
+		- `#if` and other conditionals
+			- C preprocessor can also handle conditionals, by testing non-0 expression against `#if`. There're also `#elif`, `#else`
+			- So we can actually implement conditional definitions:
+			  ```c
+			  #if SYSTEM == SYSV
+			  	#define FOOHEADER "sysv.h"
+			  #elif SYSTEM == BSD
+			  	#define FOOHEADER "bsd.h"
+			  #else
+			  	#define FOOHEADER "generic.h"
+			  #endif
+			  ```
+			- We can also implement conditional inclusions:
+			  ```c
+			  #if !defined(BAR)
+			  	#include <bar.h>
+			  #endif
+			  ```
+			  > Note: the expression `defined(foo)` returns 1 if `foo` is defined
+			- Or we can use the shorthand syntax with `#ifdef` and `#ifndef`:
+			  ```c
+			  #ifndef(BAR)
+			  	#include <bar.h>
+			  #endif
+			  ```
