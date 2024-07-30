@@ -906,3 +906,4 @@
 		  # shell.nix
 		  (import ./.).shell
 		  ```
+- # [[Nix flakes]]

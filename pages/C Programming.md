@@ -773,3 +773,4 @@
 			  	#include <bar.h>
 			  #endif
 			  ```
+- # [[C pointers and arrays]]
