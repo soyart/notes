@@ -4,7 +4,7 @@
 	- **A flake is a directory tree**, with a `flake.nix`
 	- Flakes can be referenced by other flakes
 - # Caveats
-	- If a flake is defined in a Git repository, then it can only referenced the files within that Git repository
+	- If a flake is defined in a [[Git]] repository, then it can only referenced the files within that Git repository
 	- All files referenced by any flakes are copied over to [[Nix store]], which is world-readable
 - # Anatomy of `flake.nix`
 	- `description` -> string description

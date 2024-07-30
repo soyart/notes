@@ -1,7 +1,8 @@
 - Git repositories are self-hosting, distributed repos
 	- Each local repo is a repo in its own right
 - Git internals feel like filesystems
-	- Files are organized into objects, analogous to blocks in filesystems
+	- Files are organized into *Git objects*, analogous to blocks in filesystems
+		- Git objects are stored under `.git/objects`
 		- > We can inspect these objects with `git show` or `git show <object>`
 		- Blobs are organized into *trees*
 			- We can do `git ls-tree` to list all trees
@@ -303,7 +304,7 @@
 			  newfile
 			  ```
 - # Git branches
-	- Git branches are fat pointers (references)
+	- Git branches are simple pointers (references), stored as text files under `.git/refs`
 	- A Git branch points to a commit
 	- For example, the `master` branch is just a pointer to some commit, accessible at `./refs/heads/master`:
 	  ```sh
@@ -323,6 +324,18 @@
 	  So commit `ba5aa1291afce4029795d64c519a53a5c03de6e7` is currently the *tip* of branch `master`
 	- *"Being in a branch"* just means that the next change is going to update the committed the branch pointer is pointing to.
 		- People think of branches as some kind of divergent mechanisms, a forking point kind of thing. But there's no divergence: everything is still there together in `.git/objects`
+- # Under the hood of everyday commands
+	- > Git might have some OS-specific optimizations (i.e. hard links?) to boost performance of these operations
+	- `git add <FILENAME>`
+		- Copies the content of target files as blob objects
+	- `git commit -m <MESSAGE>`
+		- Creates a new tree object and a new commit object
+	- `git checkout <BRANCH|COMMIT_HASH>` and `git switch <BRANCH|COMMIT_HASH>`
+		- Git will go to the commit hash, get the tree for the commit, and syncs the local filesystem with the Git file tree (or subtree)
+		- So it deletes everything not committed forever
+	- `git rm <FILENAME>`
+		- Git will remove the file from disk (working area)
+		- Git will then *add* the remove operation to staging area
 - # Cheat sheet
 	- Reset to some branch/ref:
 	  ```sh
