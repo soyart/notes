@@ -68,3 +68,9 @@
 	  printf("%d\n", *(p+1)); // 200 (a[1])
 	  ```
 	- However, pointers and non-0 ints are not interchangeable, except for 0. C allows pointer assignment of 0, and comparison with 0
+	- ## Example: basic salloc
+		- We'll implement basic memory management
+		- Unlike `malloc`, memory will be statically initialized to a char array `char *sbuf`
+		- `sbuf` states are tracked via `sbufp`, which points to the *next free location*
+		- We will allocate memory with `char *salloc(int)`
+		- And we'll free memory with `int sfree(char *p)`

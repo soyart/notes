@@ -1,10 +1,10 @@
-- Nix flakes allow users to *pin versions* of the builds, via lock files like `go.mod` and `go.sum` in Go
+- [[Nix]] flakes allow users to *pin versions* of the builds, via lock files like `go.mod` and `go.sum` in Go
 - NIx flakes are defined in a specific way, in `flakes.nix`
 - # A Nix flake
 	- **A flake is a directory tree**, with a `flake.nix`
 	- Flakes can be referenced by other flakes
 - # Caveats
-	- If a flake is defined in a [[Git]] repository, then it can only referenced the files within that Git repository
+	- If a flake is defined in a [[Git]] repository, then it can only referenced the files from the Git tree
 	- All files referenced by any flakes are copied over to [[Nix store]], which is world-readable
 - # Anatomy of `flake.nix`
 	- `description` -> string description

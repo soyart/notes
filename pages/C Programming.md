@@ -7,14 +7,14 @@
 			- We can omit `int` when used with these 2 modifiers, i.e. `short int i = 7;` statement is identical to `short i = 7;`
 			- On modern 64-bit architectures, `short` is 16-bit, `int` 32-bit, and `long` is 64-bit
 		- 2 [sign](((66535f02-198f-4a35-9ae9-3a69721729ad))) modifiers `signed` and `unsigned` are also available for `int`, and plain `int` is always `signed int`.
-		- The standard allows C compiler to choose **sizes** for `short`, `int`, and `long` for their hardware however they want, but with 3 rules:
+		- The standard only specifies the following rules:
 			- `int` must be at least 16-bit
 			- `long` must be at least 32-bit
 			- `short` <= `int` <= `long`
 		- If we want to set/mask bits in a portable way, we can take advantage of [C type conversion](((6659e12f-ed51-4b62-ac5a-f34008127a90)))
 			- For example, if we want to set in `x` the leftmost 6 bits to zero, we can do:
 			  ```c
-			  x & ~077 // 077 is:  000111111
+			  x & ~077 // 077  is: 000111111
 			           // ~077 is: 111000000
 			           // So the code always sets the 6 leftmost bits to 0, regardless of x's length
 			  ```
@@ -27,7 +27,7 @@
 		- `char` can be operated with arithmetics with other ints
 		- The standard defines 3 separate types for `char`, namely `unsigned char`, `signed char`, and `char`.
 		  id:: 6658bc6b-ee7c-4d11-8c97-15b80f0c8220
-			- On gcc, `char` is by default signed. This allows us to use non-ASCII values to encode something else, like (stdio EOF) `-1` which is i32 on Apple M3. This behavior is unlike `int` - an `int` declaration without anything equivalent to `signed int`
+			- On gcc, `char` is by default signed. This allows us to use non-ASCII values to encode something else, like (stdio EOF) `-1` which is i32 on Apple M3.
 			- To find out whether a plain `char` is signed or unsigned in an implementation, use `limits.h`:
 			  ```c
 			  #include <limits.h>
@@ -190,7 +190,7 @@
 		  int sp; // If external, is initialized to 0
 		  double s[16]; // This sets aside storage of 16 double, and fill it with 0.00
 		  ```**
-		  Then they define `sp` and `s`**
+		  Then they define `sp` and `s`
 			- > Note: for local variables, use before definition will get garbage value:
 			  
 			  ```c
