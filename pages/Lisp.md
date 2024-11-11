@@ -106,21 +106,125 @@
 		  NIL
 		  [3]>
 		  ```
-- # A practical example: a simple CD database
-	- > See also: https://gigamonkeys.com/book/practical-a-simple-database
-	- We want to rip a CD and track the ripping progress
-	- We want to create a database of a CD, storing information such as track name, artist, album name
-	- Because we'll need to track rip status, we'll also need another field, a flag indicating whether the track is ripped
+		- Argument list is specified as the 2nd argument to `DEFUN`:
+		  ```lisp
+		  (defun greet (name) (
+		  	format t "Welcome, ~A~%" name))
+		  
+		  (greet "Prem") ;; Welcome, Prem
+		  
+		  (defun myadd (a b) (
+		   	+ a b))
+		  
+		  (print (myadd 10 20)) ;; 30
+		  ```
 	- ## Data structures
 		- Simple lists with `LIST`
 			- We can implement a track with a four-item list
-			- ```
+			  ```
 			  [1]> (list 1 2 3 4)
 			  (1 2 3 4)
 			  ```
-			- ```
-			  [1]> (defvar *mylist* (list 10 20 30))
-			  *MYLIST*
-			  [2]> *mylist*
-			  (10 20 30)
+				- ```
+				  [1]> (defvar *mylist* (list 10 20 30))
+				  *MYLIST*
+				  [2]> *mylist*
+				  (10 20 30)
+				  ```
+			- We can add elements to `LIST` with macro `PUSH`:
+			  ```lisp
+			  (defvar mylist (list 1 2 3))
+			  (push 500 mylist)
+			  (FORMAT t "~A~%" mylist) ;; (500 1 2 3)
+			  (push 600 mylist)
+			  (FORMAT t "~A~%" mylist) ;; (600 500 1 2 3)
 			  ```
+		- Property lists, i.e. plist, with `LIST`
+			- A plist seems like simple list, except that its elements alternate between *key* and *value*. The keys are prepended with colon `:`
+			- ```
+			  [1]> (list :a 10 :b 20 :c 30)
+			  (:A 10 :B 20 :C 30)
+			  ```
+			- Because the operator used to create lists and plists are the same (`LIST`), we can say that it's the content that designates whether a list is simple or plist
+			- One advantage plists have over simple lists is how we can access their properties with function `GETF`:
+			  ```lisp
+			  (DEFVAR *myplist* (LIST :a 10 :b 20 :c 30))
+			  (FORMAT t "My plist is: ~A~%" *myplist*)
+			  (FORMAT t "Property :a is: ~A~%" (GETF *myplist* :a))
+			  (FORMAT t "Property :b is: ~A~%" (GETF *myplist* :b))
+			  (FORMAT t "Property :c is: ~A~%" (GETF *myplist* :c))
+			  
+			  #|| Output
+			  My plist is: (A 10 B 20 C 30)
+			  Property :a is: 10
+			  Property :b is: 20
+			  Property :c is: 30
+			  ||#
+			  ```
+		- Iterating over lists with `DOLIST`
+			- `DOLIST` iterates over a list, binding each element to a new variable available inside its scope
+			- ```lisp
+			  (defvar mylist (list 10 20 30))
+			  (dolist (elem mylist)
+			    (format t "elem is ~A~%" elem))
+			  
+			  (defun println (l)
+			    (dolist (elem l)
+			      (format t "elem is ~A~%" elem)))
+			  
+			  (println (list 500 400 300))
+			  ```
+- # A practical example: a simple CD database
+	- > See also: https://gigamonkeys.com/book/practical-a-simple-database
+	- We want to rip a CD and track the ripping progress with some simple database
+	- This means we'll want to use plist to store a CD
+	- We can write a function `make-cd(title artist rating ripped)`, which will return a plist containing the disc information
+	  ```lisp
+	  (defun make-cd (title artist rating ripped)
+	    (list :title title :artist artist :rating rating :ripped ripped))
+	  ```
+	- Because we're building a db, a single record is not enough. We need structures to hold multiple CDs. We can use a global variable `*db*` as storage objects:
+	  ```lisp
+	  (defvar *db* nil) ;; Declare a global variable and set its initial value to nil
+	  ```
+	- And we can `PUSH` entry to global variable `*db*` with our own function:
+	  ```lisp
+	  (defun add-record (cd)
+	    (push cd *db*))
+	  ```
+		- `add-record` returns the value of the list expression, which is `PUSH cd *db*`. We know that `PUSH` itself returns the new value of the variable it modified
+		- Now, let's try our functions by adding some albums using REPL:
+		  ```
+		  [1]> (defun make-cd (title artist rating ripped)
+		    (list :title title :artist artist :rating rating :ripped ripped))
+		  MAKE-CD
+		  [2]> (defvar *db* nil)
+		  *DB*
+		  [3]> (defun add-record (cd) (
+		                      push cd *db*))
+		  ADD-RECORD
+		  [4]> (add-record (make-cd "Album1" "Artist1" 5 t))
+		  ((:TITLE "Album1" :ARTIST "Artist1" :RATING 5 :RIPPED T))
+		  [5]> (add-record (make-cd "Album2" "Artist1" 4 t))
+		  ((:TITLE "Album2" :ARTIST "Artist1" :RATING 4 :RIPPED T)
+		   (:TITLE "Album1" :ARTIST "Artist1" :RATING 5 :RIPPED T))
+		  [6]> (add-record (make-cd "Album3" "Artist2" 4 t))
+		  ((:TITLE "Album3" :ARTIST "Artist2" :RATING 4 :RIPPED T)
+		   (:TITLE "Album2" :ARTIST "Artist1" :RATING 4 :RIPPED T)
+		   (:TITLE "Album1" :ARTIST "Artist1" :RATING 5 :RIPPED T))
+		  ```
+	- Now that we're able to create and add to the database, let's try to pretty-print it using `DOLIST`:
+	  ```lisp
+	  (defun dump-db ()
+	    (dolist (cd *db*)
+	      (format t "~{~a:~10t~a~%~}~%" cd)))
+	  ```
+		- `~a` directive means "aesthetic". It'll consume 1 variable, and outputs it in human-readable format. For strings, double quotes will be omitted, for symbol `:foo`, the colon is omitted and outputed as `FOO`
+		- `~t` is for tabulating, `~10t` means that the following directive will be formatted at the 10th column of the line
+		- `~{....~}` will cause `FORMAT` to loop through its arguments, for example, `~{~a ~a~%~}` means that `FORMAT` will consume 2 symbols, with a newline at the end of each iteration:
+		  ```lisp
+		  (format t "~{[~a] [~a]~}~%" (list 10 20)) 
+		  (format t "Values: ~{a:~a b:~a~}~%" (list 10 (list 100 200))) ;; 
+		  ;; "[10] [20]\n"
+		  ;; "Values: a:10 b:(100 200)\n"
+		  ```
