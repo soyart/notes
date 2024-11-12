@@ -22,6 +22,7 @@
 	- GNU CLISP, an implementation of Common Lisp, ships with REPL
 	  > See also: [this chapter for clisp REPL](https://gigamonkeys.com/book/lather-rinse-repeat-a-tour-of-the-repl)
 	- A Lisp expression always evaluates to a result
+		- For example, `DEFVAR` returns the name of the new variable created
 		- Even `FORMAT` returns a value - `NIL`.
 		- If we try to evaluate `(format t "Hello, world!")`, we'll see 2 lines of outputs:
 		  ```
@@ -118,6 +119,20 @@
 		  
 		  (print (myadd 10 20)) ;; 30
 		  ```
+		- Functions can also contain more than 1 top-level expression. The final return value will be from the function's last expression:
+		  ```lisp
+		  (defun foofn (n)
+		    (format t "n is ~a~%" n)
+		    (format t "n+1 is ~a~%" (+ n 1))
+		    (defvar n_plus_ten (+ n 10))
+		    (format t "n+10 is ~a~%" n_plus_ten) ; Last expr is FORMAT which returns nil
+		  )
+		  
+		  (foofn 20)
+		  
+		  ; n_plus_ten is also available to code outside foofn after call to foofn
+		  (format t "n_plus_ten is ~a~%" n_plus_ten)
+		  ```
 	- ## Data structures
 		- Simple lists with `LIST`
 			- We can implement a track with a four-item list
@@ -174,6 +189,134 @@
 			  
 			  (println (list 500 400 300))
 			  ```
+	- ## `FORMAT`
+	  id:: 67338345-c2f7-4369-896a-0f2999062607
+		- `FORMAT` can be used to format strings and print to stdout, like Go `fmt.Fprintf`
+		- We can use `t` to tell `FORMAT` to write its output to terminal/stdout
+		- #### Format directives
+			- `~a` or *aesthetic*, consumes 1 variable, and outputs it in human-readable format.
+				- For string, double quotes will be omitted
+				- For symbol `:foo`, the colon is omitted and outputed as `FOO`
+				- ```lisp
+				  (defvar cd (list :track "idiot wind" :artist "bob dylan" :rating 69))
+				  (format t "~a~%" cd) ;; "(TRACK idiot wind ARTIST bob dylan RATING 69)\n"
+				  ```
+			- `~t` or *tabulating*, makes sure there's enough whitespaces before the next directive
+				- `~10t` means that the following directive will be formatted at the 10th column of the line
+				- ```lisp
+				  (defvar cd (list :track "idiot wind" :artist "bob dylan" :rating 69))
+				  (format t ">>~10t~a~%" cd) ;; ">>        (TRACK idiot wind ARTIST bob dylan RATING 69)\n"
+				  ```
+			- `~{...~}` will cause `FORMAT` to loop through its arguments
+				- For example, `~{~a ~a~%~}` means that `FORMAT` will consume 2 symbols, with a newline at the end of each iteration:
+				  ```lisp
+				  (defvar myvar (list :field1 "one" :field2 "two" :field3 "three"))
+				  #| Output:
+				  FIELD1: one
+				  FIELD2: two
+				  FIELD3: three
+				  |#
+				  
+				  (defvar song (list :track "idiot wind" :artist "bob dylan" :rating 69))
+				  (format t "~{~a:~10t~a~%~}~%" song)
+				  #| Output:
+				  TRACK:    idiot wind
+				  ARTIST:   bob dylan
+				  RATING:   69
+				  |#
+				  
+				  (format t "~{[~a] [~a]~}~%" (list 10 20)) 
+				  ;; "[10] [20]\n"
+				  
+				  (format t "Values: ~{a:~a b:~a~}~%" (list 10 (list 100 200))) ;; 
+				  ;; "Values: a:10 b:(100 200)\n"
+				  ```
+				- If the data being format is missing some variable, `~{...~}` throws an error:
+				  ```lisp
+				  (defvar myvar (list :field1 "one" :field2 "two" :field3 "three"))
+				  (format t "~{~a:~10t~a~%~}~%" myvar) ; ok
+				  
+				  (defvar myvar (list :field1 "one" :field2 "two" :field3 "three" :fieldmissingdata))
+				  (format t "~{~a:~10t~a~%~}~%" myvar)
+				  #|
+				  FIELD1: one
+				  FIELD2: two
+				  FIELD3: three
+				  FIELDMISSINGDATA:
+				  *** - There are not enough arguments left for this format directive.
+				        Current point in control string:
+				          "~{~a: ~a~%~}~%"
+				                 |
+				  |#
+				  ```
+		- ### Using `FORMAT` as input prompt
+			- ```lisp
+			  (defun prompt-read (prompt)
+			    (format *query-io* "~a: " prompt) ; Note how there's no ~%, so the input stays in the same line
+			    (force-output *query-io*) ; The call to FORCE-OUTPUT is necessary in some implementations to ensure that Lisp doesn't wait for a newline before it prints the prompt.
+			    (read-line *query-io*)) ; This last expr returns the line as string
+			  
+			  (format t "Input is: ~a~%" (prompt-read "Enter some input"))
+			  #|
+			  Enter some input: eiei
+			  Input is: eiei
+			  |#
+			  ```
+			- Builtin `READ-LINE` returns string, so to cast it to other type, we must wrap it inside some parser function, such as builtin `PARSE-INTEGER`:
+			  ```lisp
+			  (defun prompt-read (prompt)
+			    (format *query-io* "~a: " prompt) ; Note how there's no ~%, so the input stays in the same line
+			    (force-output *query-io*) ; The call to FORCE-OUTPUT is necessary in some implementations to ensure that Lisp doesn't wait for a newline before it prints the prompt.
+			    (read-line *query-io*)) ; This last expr returns the line as string
+			  
+			  (defun read-int 
+			    (parse-integer (prompt-read "Enter some int")))
+			  
+			  (format t "Int is: ~a~%" (read-int "Enter some int"))
+			  #|
+			  Enter some int: 40
+			  Int is: 40
+			  |#
+			  ```
+				- If the data entered is not int, then error will be thrown:
+				  ```
+				  Enter some int: s
+				  *** - PARSE-INTEGER: substring "s" does not have integer syntax at position 0
+				  ```
+				- To relax this, `PARSE-INTEGER` allows a keyword `:junk-allowed` to make it more lenient and return `NIL` instead:
+				  ```lisp
+				  (defun read-int (prompt)
+				    (parse-integer (prompt-read prompt) :junk-allowed t))
+				  
+				  (format t "Int is: ~a~%" (read-int "Enter some int"))
+				  #|
+				  Enter some int: s
+				  Int is: NIL
+				  |#
+				  ```
+				- To use default value (e.g. 0) in case of `NIL` input, we can use `OR` macro:
+				  ```lisp
+				  (defun read-int (prompt)
+				    (or (parse-integer (prompt-read prompt) :junk-allowed t) ))
+				  
+				  (format t "Int is: ~a~%" (read-int "Enter some int"))
+				  #|
+				  Enter some int: s
+				  Int is: 0
+				  |# 
+				  ```
+				- For boolean input values, we can use Common Lisp's `y-or-n-p` to keep prompting user until they enter either `y` or `n` (i.e. yes and no), returning `T` for true and `NIL` for false:
+				  ```lisp
+				  (format t "isGay: ~a~%" (y-or-n-p "U gay [y/n]: "))
+				  #|
+				  U gay [y/n]:  (y/n) 4
+				  Please answer with y or n : 2
+				  Please answer with y or n : 1
+				  Please answer with y or n : s
+				  Please answer with y or n : y
+				  isGay: T
+				  |#
+				  ```
 - # A practical example: a simple CD database
 	- > See also: https://gigamonkeys.com/book/practical-a-simple-database
 	- We want to rip a CD and track the ripping progress with some simple database
@@ -213,18 +356,14 @@
 		   (:TITLE "Album2" :ARTIST "Artist1" :RATING 4 :RIPPED T)
 		   (:TITLE "Album1" :ARTIST "Artist1" :RATING 5 :RIPPED T))
 		  ```
-	- Now that we're able to create and add to the database, let's try to pretty-print it using `DOLIST`:
+	- Now that we're able to create and add to the database, let's try to pretty-print it with [`FORMAT`](((67338345-c2f7-4369-896a-0f2999062607)))
 	  ```lisp
 	  (defun dump-db ()
 	    (dolist (cd *db*)
 	      (format t "~{~a:~10t~a~%~}~%" cd)))
 	  ```
-		- `~a` directive means "aesthetic". It'll consume 1 variable, and outputs it in human-readable format. For strings, double quotes will be omitted, for symbol `:foo`, the colon is omitted and outputed as `FOO`
-		- `~t` is for tabulating, `~10t` means that the following directive will be formatted at the 10th column of the line
-		- `~{....~}` will cause `FORMAT` to loop through its arguments, for example, `~{~a ~a~%~}` means that `FORMAT` will consume 2 symbols, with a newline at the end of each iteration:
+		- We can also use `FORMAT`'s `~{...~}` directive to loop over `*db*` all by itself by nesting `~{...~}`:
 		  ```lisp
-		  (format t "~{[~a] [~a]~}~%" (list 10 20)) 
-		  (format t "Values: ~{a:~a b:~a~}~%" (list 10 (list 100 200))) ;; 
-		  ;; "[10] [20]\n"
-		  ;; "Values: a:10 b:(100 200)\n"
+		  (defun dump-db ()
+		    (format t "~{~{~a:~10t~a~%~}~%~}" *db*))
 		  ```
