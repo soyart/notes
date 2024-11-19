@@ -2,10 +2,15 @@
   [Practical Common Lisp book](https://gigamonkeys.com/book)
   [lisp-lang.org/learn](https://lisp-lang.org/learn)
 - > Lisp here will be Common Lisp
-- Lisp is a programming with long history, and even longer list of dialects (Common Lisp, Scheme, etc.)
+- Lisp is a programming with long history, and even longer list of dialects (Common Lisp, Clojure, Scheme, etc). Each dialect also has its own implementations
+- Lisp also pioneered many features of high-level programming languages, like garbage collection, recursion, dynamic typing
+- In Lisp family, the underlying building blocks are implemented as linked lists, each node called a con:
+  ```
+  [CAR (data), CDR (next)-]->[CAR, CDR]->[CAR, CDR]
+  ```
 - # Lisp introduction
 	- Lisp stands for *list processing*, so most of Lisp is just lists. And this makes it perfect for AI
-	- Lists in Lisp are declared inside a pair of parenthesis, like:
+	- Lisp expressions are declared inside a pair of parenthesis, like:
 	  ```lisp
 	  (+ 5 4)
 	  ```
@@ -133,6 +138,16 @@
 		  ; n_plus_ten is also available to code outside foofn after call to foofn
 		  (format t "n_plus_ten is ~a~%" n_plus_ten)
 		  ```
+	- ## Lisp symbols (variables)
+		- Global variables are defined with `DEFVAR` and is globally scoped
+		- Local, lexically scoped variables with `LET`
+			- ```lisp
+			  (let ((msg "some msg"))
+			  	(print msg)
+			  )
+			  
+			  (print msg) ; *** - EVAL: variable MSG has no value
+			  ```
 	- ## Data structures
 		- Simple lists with `LIST`
 			- We can implement a track with a four-item list
@@ -367,3 +382,65 @@
 		  (defun dump-db ()
 		    (format t "~{~{~a:~10t~a~%~}~%~}" *db*))
 		  ```
+	- We also want to allow users to add new CD to the database via console prompt:
+	  ```lisp
+	  ; Reads string from stdin, with a prompt
+	  (defun prompt-read (prompt)
+	    (format *query-io* "~a: " prompt) ; Note how there's no ~%, so the input stays in the same line
+	    (force-output *query-io*) ; The call to FORCE-OUTPUT is necessary in some implementations to ensure that Lisp doesn't wait for a newline before it prints the prompt.
+	    (read-line *query-io*)) ; This last expr returns the line as string
+	  
+	  ; Wraps prompt-read with PARSE-INTEGER, and defaults to 0 if PARSE-INTEGER returns nil
+	  (defun read-int (prompt)
+	    (or (parse-integer (prompt-read prompt) :junk-allowed t) 0)) ; if parse-integer returns nil (i.e. invalid numeric strings), 0 will be used
+	  
+	  (defun prompt-new-cd ()
+	    (make-cd
+	     (prompt-read "Title")
+	     (prompt-read "Artist")
+	     (read-int "Rating")
+	     (y-or-n-p "Ripped"))) ; For booleans, we'll use Common Lisp Y-OR-N-P, which works like yn.sh
+	  ```
+	- We also want users to be able to add >1 CDs to the database:
+	  ```lisp
+	  (defun new-cds ()
+	    (format t "Let's add CDs!~%")
+	    (loop
+	      (add-record (prompt-new-cd))
+	      (if (not (y-or-n-p "Add more?")) (return))
+	    )
+	  )
+	  
+	  #|
+	  Let's add CDs!
+	  Title: t1
+	  Artist: a1
+	  Rating: 1
+	  Ripped (y/n) y
+	  Another? (y/n) y
+	  Title: t2
+	  Artist: a2
+	  Rating: 2
+	  Ripped (y/n) n
+	  Another? (y/n) y
+	  Title: t3
+	  Artist: a3
+	  Rating: 3
+	  Ripped (y/n) y
+	  Another? (y/n) n
+	  TITLE:    t3
+	  ARTIST:   a3
+	  RATING:   3
+	  RIPPED:   T
+	  
+	  TITLE:    t2
+	  ARTIST:   a2
+	  RATING:   2
+	  RIPPED:   NIL
+	  
+	  TITLE:    t1
+	  ARTIST:   a1
+	  RATING:   1
+	  RIPPED:   T
+	  |#
+	  ```
