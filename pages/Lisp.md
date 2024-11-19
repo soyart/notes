@@ -444,3 +444,31 @@
 	  RIPPED:   T
 	  |#
 	  ```
+	- Database rersistence
+		- We'll persist db data to files - i.e. save to files and load from files
+		- We'll have to be able to open files, "encode/marshal" the database into bytes and write to opened files.
+		- We would probably want to be able to load the bytes back from files into Lisp in-memory representation of our db
+		- Saving db to a file is straightforward:
+		  ```lisp
+		  (defun save-db (filename)
+		  	(with-open-file
+		  		(out filename
+		  			:direction :output ; open write
+		  			:if-exists :supersede ; overwrite if exists
+		  		)
+		  		(with-standard-io-syntax (print *db* out))
+		  	)
+		  )
+		  ```
+		- Note that `PRINT` marshals the data structure into bytes that Common Lisp can decode later, and `WITH-STANDARD-IO-SYNTAX` resets all symbols that affect how `PRINT` works to default values
+		- Loading db from a file is also straightforward:
+		  ```lisp
+		  (defun load-db (filename)
+		  	(with-open-file
+		  		(in filename)
+		  		; SETF used standard assignment,
+		  		; in this case it sets *db* to whatevery (read in) returns
+		  		(with-standard-io-syntax (setf *db* (read in)))
+		  	)
+		  )
+		  ```
