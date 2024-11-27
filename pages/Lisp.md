@@ -38,38 +38,10 @@
 		  ```
 			- The 1st line is the output of format, which is string `Hello, world!`
 			- The 2nd line is the return value of the expression, which is `NIL`
-	- ## Importing Lisp code
-		- `LOAD` works like sourcing in shell scripts
-		- We have a file `vars.lisp` here
-		  ```lisp
-		  ; vars.lisp
-		  ;; Defines a global variable varfoo
-		  (defvar *varfoo* "VarFoo")
-		  ```
-		- And also a file `foo.lisp`, which loads `vars.lisp`
-		  ```lisp
-		  ; foo.lisp
-		  ;; Use varfoo defined in vars.lisp
-		  (print *varfoo*)
-		  ```
-		- We can also load pre-compiled files (example in clisp REPL):
-		  ```
-		  [1]> (load (compile-file "vars.lisp"))
-		  ;; Compiling file /Users/prem.p/git/llisp/vars.lisp ...
-		  ;; Wrote file /Users/prem.p/learn-lisp/vars.fas
-		  0 errors, 0 warnings
-		  ;; Loading file /Users/prem.p/learn-lisp/vars.fas ...
-		  ;; Loaded file /Users/prem.p/learn-lisp/vars.fas
-		  #P"/Users/prem.p/git/llisp/vars.fas"
-		  [2]> (format t "~a~%" *varfoo*)
-		  VarFoo
-		  NIL
-		  ```
-		  `vars.fas` is the compiled version of `vars.lisp`, where `.fas` denotes FASL (fast-load file)
 	- ## Lisp operators
 		- Lisp has 3 kinds of operators, **functions**, **macros**, and **special operators**
 		- The operators are the first
-	- ## Lisp functions
+	- ## Defining Lisp functions
 		- Functions are defined with `DEFUN`:
 		  ```lisp
 		  ; Definition
@@ -138,16 +110,30 @@
 		  ; n_plus_ten is also available to code outside foofn after call to foofn
 		  (format t "n_plus_ten is ~a~%" n_plus_ten)
 		  ```
-	- ## Lisp symbols (variables)
-		- Global variables are defined with `DEFVAR` and is globally scoped
-		- Local, lexically scoped variables with `LET`
-			- ```lisp
-			  (let ((msg "some msg"))
-			  	(print msg)
-			  )
-			  
-			  (print msg) ; *** - EVAL: variable MSG has no value
-			  ```
+	- ## Lisp variables and symbols
+		- ### Declaration and definition
+			- Global variables are defined with `DEFVAR` and is globally scoped
+				- The convention is that global variable names are surrounded by asterisk `*`
+				- `DEFVAR` returns the name of the global variable:
+				  ```
+				  [1]> (defvar *l* (list 10 20 30))
+				  *L*
+				  ```
+			- Local, lexically scoped variables with `LET`
+				- ```lisp
+				  (let ((msg "some msg"))
+				  	(print msg)
+				  )
+				  
+				  (print msg) ; *** - EVAL: variable MSG has no value
+				  ```
+		- ### Assignment
+			- `SETF` is the standard assignment function in Common Lisp
+				- `SETF` returns the value assigned to the symbol:
+				  ```
+				  [1]> (setf l (list 10 20 30))
+				  (10 20 30)
+				  ```
 	- ## Data structures
 		- Simple lists with `LIST`
 			- We can implement a track with a four-item list
@@ -204,6 +190,34 @@
 			  
 			  (println (list 500 400 300))
 			  ```
+	- ## Importing Lisp code
+		- `LOAD` works like sourcing in shell scripts
+		- We have a file `vars.lisp` here
+		  ```lisp
+		  ; vars.lisp
+		  ;; Defines a global variable varfoo
+		  (defvar *varfoo* "VarFoo")
+		  ```
+		- And also a file `foo.lisp`, which loads `vars.lisp`
+		  ```lisp
+		  ; foo.lisp
+		  ;; Use varfoo defined in vars.lisp
+		  (print *varfoo*)
+		  ```
+		- We can also load pre-compiled files (example in clisp REPL):
+		  ```
+		  [1]> (load (compile-file "vars.lisp"))
+		  ;; Compiling file /Users/prem.p/git/llisp/vars.lisp ...
+		  ;; Wrote file /Users/prem.p/learn-lisp/vars.fas
+		  0 errors, 0 warnings
+		  ;; Loading file /Users/prem.p/learn-lisp/vars.fas ...
+		  ;; Loaded file /Users/prem.p/learn-lisp/vars.fas
+		  #P"/Users/prem.p/git/llisp/vars.fas"
+		  [2]> (format t "~a~%" *varfoo*)
+		  VarFoo
+		  NIL
+		  ```
+		  `vars.fas` is the compiled version of `vars.lisp`, where `.fas` denotes FASL (fast-load file)
 	- ## `FORMAT`
 	  id:: 67338345-c2f7-4369-896a-0f2999062607
 		- `FORMAT` can be used to format strings and print to stdout, like Go `fmt.Fprintf`
@@ -444,7 +458,7 @@
 	  RIPPED:   T
 	  |#
 	  ```
-	- Database rersistence
+	- ### Database resistence
 		- We'll persist db data to files - i.e. save to files and load from files
 		- We'll have to be able to open files, "encode/marshal" the database into bytes and write to opened files.
 		- We would probably want to be able to load the bytes back from files into Lisp in-memory representation of our db
@@ -456,7 +470,9 @@
 		  			:direction :output ; open write
 		  			:if-exists :supersede ; overwrite if exists
 		  		)
+		  		(format t "Saving db to ~a~%" filename)
 		  		(with-standard-io-syntax (print *db* out))
+		  		(format t "Saved db to ~a~%" filename)
 		  	)
 		  )
 		  ```
@@ -466,9 +482,154 @@
 		  (defun load-db (filename)
 		  	(with-open-file
 		  		(in filename)
-		  		; SETF used standard assignment,
-		  		; in this case it sets *db* to whatevery (read in) returns
+		  		(format t "Loading db from ~a~%" filename)
+		  		; SETF is used as standard assignment operator,
+		  		; in this case it sets *db* to whatever `(read in)` evaluates to
 		  		(with-standard-io-syntax (setf *db* (read in)))
+		  		(format t "Loaded db from ~a~%" filename)
 		  	)
 		  )
 		  ```
+		- See full example of persistence
+			- Full code in `cd.lisp`:
+				- ```lisp
+				  (defvar *db* nil) 
+				  
+				  (defun make-cd (title artist rating ripped)
+				    (list :title title :artist artist :rating rating :ripped ripped))
+				  
+				  (defun add-record (cd)
+				    (push cd *db*))
+				  
+				  (defun prompt-read (prompt)
+				    (format *query-io* "~a: " prompt) ; Note how there's no ~%, so the input stays in the same line
+				    (force-output *query-io*) ; The call to FORCE-OUTPUT is necessary in some implementations to ensure that Lisp doesn't wait for a newline before it prints the prompt.
+				    (read-line *query-io*)) ; This last expr returns the line as string
+				  
+				  (defun read-int (prompt)
+				    (or (parse-integer (prompt-read prompt) :junk-allowed t) 0)) ; if parse-integer returns nil (i.e. invalid numeric strings), 0 will be used
+				  
+				  (defun read-bool (prompt)
+				    (y-or-n-p prompt)) ; y-or-n-p will prompt for user until y|Y or n|N is entered
+				  
+				  (defun prompt-new-cd ()
+				    (make-cd
+				     (prompt-read "Title")
+				     (prompt-read "Artist")
+				     (read-int "Rating")
+				     (y-or-n-p "Ripped")
+				    )
+				  )
+				  
+				  (defun dump-db ()
+				    ; Prints 2 elements from a plist delimited by \n
+				    (format t "~{~{~a:~10t~a~%~}~%~}" *db*))
+				  
+				  (defun new-cds ()
+				    (format t "Let's add CDs!~%")
+				    (loop
+				      (add-record (prompt-new-cd))
+				      (if (not (y-or-n-p "Another?")) (return))
+				    )
+				  )
+				  
+				  (defun save-db (filename)
+				  	(with-open-file
+				  		(out filename
+				  			:direction :output ; open write
+				  			:if-exists :supersede ; overwrite if exists
+				  		)
+				  		(format t "Saving db to ~a~%" filename)
+				  		(with-standard-io-syntax (print *db* out))
+				  		(format t "Saved db to ~a~%" filename)
+				  	)
+				  )
+				  
+				  (defun load-db (filename)
+				  	(with-open-file
+				  		(in filename)
+				  		(format t "Loading db from ~a~%" filename)
+				  		; SETF is used as standard assignment operator,
+				  		; in this case it sets *db* to whatever `(read in)` evaluates to
+				  		(with-standard-io-syntax (setf *db* (read in)))
+				  		(format t "Loaded db from ~a~%" filename)
+				  	)
+				  )
+				  
+				  (new-cds)
+				  
+				  (format t "~%Preview db~%")
+				  (dump-db)
+				  (format t "~%Saving db~%")
+				  (save-db "cd.db")
+				  
+				  (format t "~%Add new track after db saved~%")
+				  (add-record (make-cd "late_title" "late_artist" 0 t))
+				  (dump-db)
+				  
+				  (load-db "cd.db")
+				  (dump-db)
+				  ```
+			- stdout running `cd.lisp`:
+				- ```
+				  Let's add CDs!
+				  Title: idiot wind
+				  Artist: bob dylan
+				  Rating: 5
+				  Ripped (y/n) y
+				  Another? (y/n) y
+				  Title: angie
+				  Artist: the rolling stones
+				  Rating: 4
+				  Ripped (y/n) n
+				  Another? (y/n) n
+				  
+				  Preview db
+				  TITLE:    angie
+				  ARTIST:   the rolling stones
+				  RATING:   4
+				  RIPPED:   NIL
+				  
+				  TITLE:    idiot wind
+				  ARTIST:   bob dylan
+				  RATING:   5
+				  RIPPED:   T
+				  
+				  
+				  Saving db
+				  Saving db to cd.db
+				  Saved db to cd.db
+				  
+				  Add new track after db saved
+				  TITLE:    late_title
+				  ARTIST:   late_artist
+				  RATING:   0
+				  RIPPED:   T
+				  
+				  TITLE:    angie
+				  ARTIST:   the rolling stones
+				  RATING:   4
+				  RIPPED:   NIL
+				  
+				  TITLE:    idiot wind
+				  ARTIST:   bob dylan
+				  RATING:   5
+				  RIPPED:   T
+				  
+				  Loading db from cd.db
+				  Loaded db from cd.db
+				  TITLE:    angie
+				  ARTIST:   the rolling stones
+				  RATING:   4
+				  RIPPED:   NIL
+				  
+				  TITLE:    idiot wind
+				  ARTIST:   bob dylan
+				  RATING:   5
+				  RIPPED:   T
+				  ```
+			- And this is how data formatted with `PRINT` written to `cd.db` looks like:
+			  ```
+			  ((:|TITLE| "angie" :|ARTIST| "the rolling stones" :|RATING| 4. :|RIPPED| |COMMON-LISP|::|NIL|) (:|TITLE| "idiot wind" :|ARTIST| "bob dylan" :|RATING| 5. :|RIPPED| |COMMON-LISP|::|T|))
+			  ```
+	- ### Basic queries
