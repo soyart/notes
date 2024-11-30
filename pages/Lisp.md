@@ -41,7 +41,7 @@
 	- ## Lisp operators
 		- Lisp has 3 kinds of operators, **functions**, **macros**, and **special operators**
 		- The operators are the first
-	- ## Defining Lisp functions
+	- ## Lisp functions
 		- Functions are defined with `DEFUN`:
 		  ```lisp
 		  ; Definition
@@ -110,6 +110,45 @@
 		  ; n_plus_ten is also available to code outside foofn after call to foofn
 		  (format t "n_plus_ten is ~a~%" n_plus_ten)
 		  ```
+		- ### Keyword parameters
+		  id:: 674b5477-dbed-449a-bfb1-0c654ce9914d
+			- Basic Lisp functions work like in any other languages (matching params on the order of function call argument):
+			  ```lisp
+			  (defun foo (a b c) (list a b c))
+			  (foo 10 20 30) ; (10 20 30)
+			  (foo 10 20)    ; Error! Missing argument
+			  ```
+			- However, we can do something like named parameters in Python, with default values `NIL`:
+			  ```lisp
+			  (defun foo (&key a b c) (list a b c))
+			  (foo :a 10 :c 30 :b 20) ; (10 20 30)
+			  (foo :a 10 :c 30)       ; (10 NIL 30)
+			  (foo)                   ; (NIL NIL NIL)
+			  (foo :a 10 :x 30 :b 20) ; Error! Unexpected keyword/value pair for :x
+			  ```
+			- Or we can give them non-`NIL` default values:
+			  ```lisp
+			  (defun foo (&key a (b 2) (c 3)) (list a b c))
+			  (foo :a 10 :c 30 :b 20) ; (10 20 30)
+			  (foo :a 10 :b 20)       ; (10 20 3)
+			  (foo :a 10)             ; (10 2 3)
+			  ```
+			- We can also check if a particular parameter was given with a *supplied-p* parameter:
+			  ```lisp
+			  (defun foo (&key a (b 2 b-p) (c 3 c-p)) (list a b b-p c c-p))
+			  ```
+			  Here, `c-p` will be `T` if `c` is given, and `NIL` if omitted:
+			  ```lisp
+			  (foo :a 10 :c 30 :b 20) ; (10 20 T 30 T)
+			  (foo :a 10 :b 20)       ; (10 20 T 3 NIL)
+			  (foo :a 10)             ; (10 2 NIL 3 NIL)
+			  ```
+			  We are free to name the *supplied-p* parameter:
+			  ```lisp
+			  (defun foo (&key (a 1 x-p) (b 2 b-p) (c 3 c-p)) (list a x-p b b-p c c-p))
+			  (foo :a 10 :c 30 :b 20) ; (10 T 20 T 30 T)
+			  (foo :b 20)             ; (1 NIL 20 T 3 NIL)
+			  ```
 	- ## Lisp variables and symbols
 		- ### Declaration and definition
 			- Global variables are defined with `DEFVAR` and is globally scoped
