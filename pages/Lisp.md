@@ -136,10 +136,10 @@
 				  ```
 	- ## Data structures
 		- Simple lists with `LIST`
-			- We can implement a track with a four-item list
+			- We can define a new simple list
 			  ```
-			  [1]> (list 1 2 3 4)
-			  (1 2 3 4)
+			  [1]> (list 1 2 3 "foo" 4)
+			  (1 2 3 "foo" 4)
 			  ```
 				- ```
 				  [1]> (defvar *mylist* (list 10 20 30))
@@ -147,14 +147,52 @@
 				  [2]> *mylist*
 				  (10 20 30)
 				  ```
+			- `(a b c)` vs `'(a b c)` vs  `(list a b c)`
+				- `(a b c)` is a normal Lisp expression, where `a` is expected to be an operator and `b` `c` its arguments
+				- `'(a b c)` is a bit weird: the `'` *quotes* the arguments and preserve them as written (i.e. not evaluating)
+					- The expression `'(10 20 30)` is like `(list 10 20 30)`
+					- The expression `'(foo bar zip)` creates a list containing the 3 symbols, meanwhile `(list foo bar zip)`
+				- `(list a b c)` creates a new list with values from symbol `a`, `b`, and `c`
 			- We can add elements to `LIST` with macro `PUSH`:
 			  ```lisp
 			  (defvar mylist (list 1 2 3))
 			  (push 500 mylist)
-			  (FORMAT t "~A~%" mylist) ;; (500 1 2 3)
+			  (format t "~A~%" mylist) ;; (500 1 2 3)
 			  (push 600 mylist)
-			  (FORMAT t "~A~%" mylist) ;; (600 500 1 2 3)
+			  (format t "~A~%" mylist) ;; (600 500 1 2 3)
 			  ```
+			- We can filter using `REMOVE-IF-NOT`:
+			  id:: 6748a839-342e-496e-925e-9ff3fca233f7
+				- `REMOVE-IF-NOT` predicate can be any function accepting a single argument returning anything but `NIL` as true
+				- > `REMOVE-IF-NOT` creates a *new list* with only elements that matched the predicate
+				  
+				  ```lisp
+				  (setf l (list 101 202 303 404)) ; Original list
+				  (format t "List: ~a~%" l)
+				  (format t "Filtered: ~a~%" (remove-if-not #'evenp l))
+				  (format t "Filtered: ~a~%" (remove-if-not #'evenp (list 1 2 3 4 5)))
+				  (format t "Filtered: ~a~%" (remove-if-not #'evenp '(1 2 3 4 5)))
+				  
+				  ;
+				  ;List: (101 202 303 404)
+				  ;Filtered: (202 404)
+				  ;Filtered: (2 4)
+				  ;Filtered: (2 4)
+				  ;
+				  ```
+				- In the above example, `EVENP` is the predicate
+				- The funny syntax `'#FOO` is just Lisp's way of telling the language to use a function named `FOO` instead of a variable
+				- Anonymous functions can also be passed as predicate:
+				  ```lisp
+				  (setf l (list 101 202 303 404)) ; Original list
+				  (format t "List: ~a~%" l)
+				  (format t "Filtered: ~a~%"
+				  	(remove-if-not #'(lambda (x) (= 0 (mod x 2))) l)
+				  )
+				  
+				  ; In this case, the predicate is:
+				  ; (lambda (x) (= 0 (mod x 2)))
+				  ```
 		- Property lists, i.e. plist, with `LIST`
 			- A plist seems like simple list, except that its elements alternate between *key* and *value*. The keys are prepended with colon `:`
 			- ```
@@ -164,17 +202,30 @@
 			- Because the operator used to create lists and plists are the same (`LIST`), we can say that it's the content that designates whether a list is simple or plist
 			- One advantage plists have over simple lists is how we can access their properties with function `GETF`:
 			  ```lisp
-			  (DEFVAR *myplist* (LIST :a 10 :b 20 :c 30))
-			  (FORMAT t "My plist is: ~A~%" *myplist*)
-			  (FORMAT t "Property :a is: ~A~%" (GETF *myplist* :a))
-			  (FORMAT t "Property :b is: ~A~%" (GETF *myplist* :b))
-			  (FORMAT t "Property :c is: ~A~%" (GETF *myplist* :c))
+			  (defvar *myplist* (LIST :a 10 :b 20 :c 30))
+			  (format t "My plist is: ~A~%" *myplist*)
+			  (format t "Property :a is: ~A~%" (GETF *myplist* :a))
+			  (format t "Property :b is: ~A~%" (GETF *myplist* :b))
+			  (format t "Property :c is: ~A~%" (GETF *myplist* :c))
 			  
 			  #|| Output
 			  My plist is: (A 10 B 20 C 30)
 			  Property :a is: 10
 			  Property :b is: 20
 			  Property :c is: 30
+			  ||#
+			  ```
+			  Note that `GETF` will not work if you enclose the field within quotes:
+			  ```lisp
+			  (defvar *myplist* (LIST :a 10 :b 20 :c 30))
+			  (format t "My plist is: ~A~%" *myplist*)
+			  (format t "NoBug: Property :a is: ~A~%" (GETF *myplist* :a))
+			  (format t "Bug:   Property :a is: ~A~%" (GETF *myplist* ":a"))
+			  
+			  #|| Output
+			  My plist is: (A 10 B 20 C 30)
+			  NoBug: Property :a is: 10
+			  Bug:   Property :a is: NIL
 			  ||#
 			  ```
 		- Iterating over lists with `DOLIST`
@@ -408,7 +459,7 @@
 	  (defun read-int (prompt)
 	    (or (parse-integer (prompt-read prompt) :junk-allowed t) 0)) ; if parse-integer returns nil (i.e. invalid numeric strings), 0 will be used
 	  
-	  (defun prompt-new-cd ()
+	  (defun prompt-for-cd ()
 	    (make-cd
 	     (prompt-read "Title")
 	     (prompt-read "Artist")
@@ -417,13 +468,15 @@
 	  ```
 	- We also want users to be able to add >1 CDs to the database:
 	  ```lisp
-	  (defun new-cds ()
+	  (defun prompt-for-cds ()
 	    (format t "Let's add CDs!~%")
 	    (loop
 	      (add-record (prompt-new-cd))
 	      (if (not (y-or-n-p "Add more?")) (return))
 	    )
 	  )
+	  
+	  (prompt-for-cds)
 	  
 	  #|
 	  Let's add CDs!
@@ -512,7 +565,7 @@
 				  (defun read-bool (prompt)
 				    (y-or-n-p prompt)) ; y-or-n-p will prompt for user until y|Y or n|N is entered
 				  
-				  (defun prompt-new-cd ()
+				  (defun prompt-for-cd ()
 				    (make-cd
 				     (prompt-read "Title")
 				     (prompt-read "Artist")
@@ -521,17 +574,17 @@
 				    )
 				  )
 				  
-				  (defun dump-db ()
-				    ; Prints 2 elements from a plist delimited by \n
-				    (format t "~{~{~a:~10t~a~%~}~%~}" *db*))
-				  
-				  (defun new-cds ()
+				  (defun prompt-for-cds ()
 				    (format t "Let's add CDs!~%")
 				    (loop
-				      (add-record (prompt-new-cd))
+				      (add-record (prompt-for-cd))
 				      (if (not (y-or-n-p "Another?")) (return))
 				    )
 				  )
+				  
+				  (defun dump-db ()
+				    ; Prints 2 elements from a plist delimited by \n
+				    (format t "~{~{~a:~10t~a~%~}~%~}" *db*))
 				  
 				  (defun save-db (filename)
 				  	(with-open-file
@@ -556,14 +609,14 @@
 				  	)
 				  )
 				  
-				  (new-cds)
+				  (prompt-for-cds)
 				  
 				  (format t "~%Preview db~%")
 				  (dump-db)
 				  (format t "~%Saving db~%")
 				  (save-db "cd.db")
 				  
-				  (format t "~%Add new track after db saved~%")
+				  (format t "~%Add new cd after db saved~%")
 				  (add-record (make-cd "late_title" "late_artist" 0 t))
 				  (dump-db)
 				  
@@ -573,25 +626,45 @@
 			- stdout running `cd.lisp`:
 				- ```
 				  Let's add CDs!
-				  Title: idiot wind
-				  Artist: bob dylan
+				  Title: the dark side of the moon
+				  Artist: pink floyd
 				  Rating: 5
 				  Ripped (y/n) y
 				  Another? (y/n) y
-				  Title: angie
-				  Artist: the rolling stones
+				  Title: the wall
+				  Artist: pink floyd
 				  Rating: 4
+				  Ripped (y/n) y
+				  Another? (y/n) y
+				  Title: blood on the tracks
+				  Artist: bob dylan
+				  Rating: 5
+				  Ripped (y/n) n
+				  Another? (y/n) y
+				  Title: blond on blond
+				  Artist: bob dylan
+				  Rating: 5
 				  Ripped (y/n) n
 				  Another? (y/n) n
 				  
 				  Preview db
-				  TITLE:    angie
-				  ARTIST:   the rolling stones
-				  RATING:   4
+				  TITLE:    blond on blond
+				  ARTIST:   bob dylan
+				  RATING:   5
 				  RIPPED:   NIL
 				  
-				  TITLE:    idiot wind
+				  TITLE:    blood on the tracks
 				  ARTIST:   bob dylan
+				  RATING:   5
+				  RIPPED:   NIL
+				  
+				  TITLE:    the wall
+				  ARTIST:   pink floyd
+				  RATING:   4
+				  RIPPED:   T
+				  
+				  TITLE:    the dark side of the moon
+				  ARTIST:   pink floyd
 				  RATING:   5
 				  RIPPED:   T
 				  
@@ -600,36 +673,178 @@
 				  Saving db to cd.db
 				  Saved db to cd.db
 				  
-				  Add new track after db saved
+				  Add new cd after db saved
 				  TITLE:    late_title
 				  ARTIST:   late_artist
 				  RATING:   0
 				  RIPPED:   T
 				  
-				  TITLE:    angie
-				  ARTIST:   the rolling stones
-				  RATING:   4
+				  TITLE:    blond on blond
+				  ARTIST:   bob dylan
+				  RATING:   5
 				  RIPPED:   NIL
 				  
-				  TITLE:    idiot wind
+				  TITLE:    blood on the tracks
 				  ARTIST:   bob dylan
+				  RATING:   5
+				  RIPPED:   NIL
+				  
+				  TITLE:    the wall
+				  ARTIST:   pink floyd
+				  RATING:   4
+				  RIPPED:   T
+				  
+				  TITLE:    the dark side of the moon
+				  ARTIST:   pink floyd
 				  RATING:   5
 				  RIPPED:   T
 				  
 				  Loading db from cd.db
 				  Loaded db from cd.db
-				  TITLE:    angie
-				  ARTIST:   the rolling stones
-				  RATING:   4
+				  TITLE:    blond on blond
+				  ARTIST:   bob dylan
+				  RATING:   5
 				  RIPPED:   NIL
 				  
-				  TITLE:    idiot wind
+				  TITLE:    blood on the tracks
 				  ARTIST:   bob dylan
+				  RATING:   5
+				  RIPPED:   NIL
+				  
+				  TITLE:    the wall
+				  ARTIST:   pink floyd
+				  RATING:   4
+				  RIPPED:   T
+				  
+				  TITLE:    the dark side of the moon
+				  ARTIST:   pink floyd
 				  RATING:   5
 				  RIPPED:   T
 				  ```
 			- And this is how data formatted with `PRINT` written to `cd.db` looks like:
+			  > Note: CD with title `late_title` is not saved to disk because it was pushed to db after db was persisted. After `load-db`, the global variable `*db*` gets overwritten by data from the file
+			  
 			  ```
-			  ((:|TITLE| "angie" :|ARTIST| "the rolling stones" :|RATING| 4. :|RIPPED| |COMMON-LISP|::|NIL|) (:|TITLE| "idiot wind" :|ARTIST| "bob dylan" :|RATING| 5. :|RIPPED| |COMMON-LISP|::|T|))
+			  ((:|TITLE| "blond on blond" :|ARTIST| "bob dylan" :|RATING| 5. :|RIPPED| |COMMON-LISP|::|NIL|) (:|TITLE| "blood on the tracks" :|ARTIST| "bob dylan" :|RATING| 5. :|RIPPED| |COMMON-LISP|::|NIL|) (:|TITLE| "the wall" :|ARTIST| "pink floyd" :|RATING| 4. :|RIPPED| |COMMON-LISP|::|T|) (:|TITLE| "the dark side of the moon" :|ARTIST| "pink floyd" :|RATING| 5. :|RIPPED| |COMMON-LISP|::|T|)) 
 			  ```
 	- ### Basic queries
+		- Filtering can be done with [`REMOVE-IF-NOT` macro](((6748a839-342e-496e-925e-9ff3fca233f7)))
+			- For example, filtering out only entries with particular artist:
+			  ```lisp
+			  (remove-if-not
+			    #'(lambda (cd) (equal (getf cd :artist) "Bab Dylon")) *db*)
+			  ```
+			  Or ripped tracks:
+			  ```lisp
+			  (remove-if-not
+			    #'(lambda (cd) (equal (getf cd :ripped) T)) *db*)
+			  ```
+		- We can just simply write multiple select functions, like `select-by-artist`, `select-by-title`, and so on:
+		  ```lisp
+		  (defun select-by-artist (artist)
+		    (remove-if-not
+		     #'(lambda (cd) (equal (getf cd :artist) artist))
+		     *db*))
+		  ```
+			- ```lisp
+			  (load-db "cd.db")
+			  (format t "Dumping db after loading~%")
+			  (dump-db)
+			  (format t "bob dylan cds: ~a~%" (select-by-artist "bob dylan"))
+			  ```
+			- ```
+			  Loading db from cd.db
+			  Loaded db from cd.db
+			  Dumping db after loading
+			  TITLE:    blond on blond
+			  ARTIST:   bob dylan
+			  RATING:   5
+			  RIPPED:   NIL
+			  
+			  TITLE:    blood on the tracks
+			  ARTIST:   bob dylan
+			  RATING:   5
+			  RIPPED:   NIL
+			  
+			  TITLE:    the wall
+			  ARTIST:   pink floyd
+			  RATING:   4
+			  RIPPED:   T
+			  
+			  TITLE:    the dark side of the moon
+			  ARTIST:   pink floyd
+			  RATING:   5
+			  RIPPED:   T
+			  
+			  bob dylan cds: ((TITLE blond on blond ARTIST bob dylan RATING 5 RIPPED NIL) (TITLE blood on the tracks ARTIST bob dylan RATING 5 RIPPED NIL))
+			  ```
+		- But that observe that only the anonymous function would need to change for each selector. So we are better off with a solution that lets us supply the lambda function instead of writing one by hand:
+		  ```lisp
+		  (defun selector-fn (fn)
+		    (remove-if-not fn *db*)
+		  )
+		  
+		  (defun select-by-artist-2 (artist)
+		    (selector-fn #'(lambda (cd) (equal (getf cd :artist) artist))))
+		  ```
+		- We can even give the get-by-artist logic a name that we can reuse:
+		  ```lisp
+		  (defun selector-fn (fn)
+		    (remove-if-not fn *db*)
+		  )
+		  
+		  (defun selector-artist (artist)
+		    (lambda (cd) (equal (getf cd :artist) artist))
+		  )
+		  
+		  ; Not a good idea, but still possible
+		  (defun get-bob-dylan () (selector-fn (selector-artist "bob dylan")))
+		  ```
+			- ```lisp
+			  (defun selector-fn (fn)
+			    (remove-if-not fn *db*)
+			  )
+			  
+			  (defun selector-artist (artist)
+			    (lambda (cd) (equal (getf cd :artist) artist))
+			  )
+			  
+			  ; Not a good idea, but still possible
+			  (defun get-bob-dylan () (selector-fn (selector-artist "bob dylan")))
+			  
+			  (load-db "cd.db")
+			  (format t "Dumping db after loading~%")
+			  (dump-db)
+			  (format t "bob dylan cds: ~a~%" (selector-fn (lambda (cd) (equal (getf cd :artist) "bob dylan"))))
+			  (format t "bob dylan cds: ~a~%" (selector-fn (selector-artist "bob dylan")))
+			  (format t "bob dylan cds: ~a~%" (get-bob-dylan))
+			  
+			  ```
+			- ```
+			  Loading db from cd.db
+			  Loaded db from cd.db
+			  Dumping db after loading
+			  TITLE:    blond on blond
+			  ARTIST:   bob dylan
+			  RATING:   5
+			  RIPPED:   NIL
+			  
+			  TITLE:    blood on the tracks
+			  ARTIST:   bob dylan
+			  RATING:   5
+			  RIPPED:   NIL
+			  
+			  TITLE:    the wall
+			  ARTIST:   pink floyd
+			  RATING:   4
+			  RIPPED:   T
+			  
+			  TITLE:    the dark side of the moon
+			  ARTIST:   pink floyd
+			  RATING:   5
+			  RIPPED:   T
+			  
+			  bob dylan cds: ((TITLE blond on blond ARTIST bob dylan RATING 5 RIPPED NIL) (TITLE blood on the tracks ARTIST bob dylan RATING 5 RIPPED NIL))
+			  bob dylan cds: ((TITLE blond on blond ARTIST bob dylan RATING 5 RIPPED NIL) (TITLE blood on the tracks ARTIST bob dylan RATING 5 RIPPED NIL))
+			  bob dylan cds: ((TITLE blond on blond ARTIST bob dylan RATING 5 RIPPED NIL) (TITLE blood on the tracks ARTIST bob dylan RATING 5 RIPPED NIL))
+			  ```
