@@ -19,7 +19,9 @@
 	  int a[10];
 	  ```
 	  defines an array  named `a` of size 10
-	- C array name *is* the pointer to the 0th element
+	- C array variable *is* the pointer to the 0th element of the array
+		- Most languages implement arrays this way
+		- Go is different - [in Go, arrays are composite values]([[Go slices]]), much like Go structs, and not some pointers to some first elements
 	- Note that array names are not variable, so we can't reassign `a`
 	- Like with other language, we can access elements with array subscript:
 	  ```c

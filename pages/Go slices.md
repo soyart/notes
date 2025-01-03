@@ -9,9 +9,9 @@
 	  c := [10]int{}            // [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 	  d := [...]int{7, 5, 3, 1} // d's type is [4]int
 	  ```
-	  Here, `a` and `b` are of different types, and for `b` the third element is automatically initialized to zero value for us. `c` is also an array of int of length 10, whose elements are all initialized to 0.
+	  Here, `a` and `b` are of different types, and for `b` the third element is automatically initialized to zero value for us. `c` is also an array of int of length 10, whose elements are all initialized to zero.
 	- Think about arrays as a sort of struct but with indexed rather than named fields: a fixed-size composite value.
-	- Unlike in C, Go array variables are values and **NOT some pointers to the first element**.
+	- [Unlike C arrays]([[C pointers and arrays]]), Go array variables are values and **NOT some pointers to the first element**.
 		- ```go
 		  package main
 		  import "fmt"
@@ -44,7 +44,7 @@
 	  c := make([]int, 5, 5)
 	  ```
 	  Go will allocate a new array of capacity 5 and length 5, returning a slice that uses that new array
-	- We can also *slicing* existing arrays and slices using half-open range:
+	- We can also perform *slicing* on existing arrays and slices using half-open range:
 	  ```go
 	  b := []byte{'g', 'o', 'l', 'a', 'n', 'g'}
 	  
@@ -87,7 +87,7 @@
 		    	"cap": 5,
 		  }
 		  ```
-- # Slicing internals
+- # Slicing
 	- Slicing does not copy elements to new storage for the new slice.
 	- Slicing creates a new value pointing to the original array
 	- Therefore *modifying slice elements also modifies the elements in the original arrays*:
