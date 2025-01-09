@@ -258,7 +258,7 @@
 	  a len 10 cap 10 [0 0 0 0 0 0 0 0 0 0]
 	  */
 	  ```
-- # Code examples
+- # Examples
 	- One thing I find myself hating to reason with is the lifetime of Go bytes.
 		- Where do these bytes come from?
 		- When will they be garbage collected?
@@ -280,26 +280,19 @@
 		  this is 2nd line
 		  this is the last line`)
 		  
-		  	s2 := changeLineFirstChar(s1, '!')
-		  
-		  	fmt.Println("s1")
+		  	changeLineFirstChar(s1, '!')
 		  	fmt.Println(string(s1))
-		  	fmt.Println("=========")
-		  	fmt.Println("s2")
-		  	fmt.Println(string(s2))
 		  }
 		  
-		  func changeLineFirstChar(s []byte, c byte) []byte {
+		  func changeFirstChar(s []byte, c byte) {
 		  	lines := bytes.Split(s, []byte{'\n'})
 		  	for i := range lines {
 		  		line := lines[i]
 		  		if len(line) == 0 {
 		  			continue
 		  		}
-		        	// Changing the first char of line to c!
 		  		line[0] = c
 		  	}
-		  	return bytes.Join(lines, []byte{'\n'})
 		  }
 		  ```
 		- Do we know if `s1` and `s2` are referencing to the same storage?
@@ -315,24 +308,19 @@
 				- `this is 1st line` points to the first byte of `s` with *both len and cap of 16*
 				- `this is 2nd line` points to the first byte of the second line of `s`, with *both len and cap of 16*
 				- `this is the last line` points to the first byte of the 3rd line of `s`, with *both len and cap of 21*
-		- Because `bytes.Split` returned sub-slices reference the original storage, these return values all point to the same underlying storage
-		- These sub-slices are then *modified by changing value at index 0 (the first char in each line)*
+		- Because `bytes.Split` returned sub-slices reference the original storage
+		- We know that every element in `lines` and `s1` all point to the same underlying Go byte array storage
+		- We also know that *each sub-slice `line` is modified by changing value at index 0 (the first char in each line)*
 		- Since the simple assignment `line[0] = c` does not grow our slice, the same old storage is used for each `line`
 		- This means that `changeLineFirstChar` will have side effects on `s1` in main, as seen in the output of the example code:
 		  ```
-		  s1
-		  !his is 1st line
-		  !his is 2nd line
-		  !his is the last line
-		  =========
-		  s2
 		  !his is 1st line
 		  !his is 2nd line
 		  !his is the last line
 		  ```
 		- So, instead of `changeLineFirstChar`, what if we have something like this instead:
 		  ```go
-		  func appendCharToLines(s []byte, c byte) []byte {
+		  func appendCharToLines(s []byte, c byte) {
 		  	lines := bytes.Split(s, []byte{'\n'})
 		  	for i := range lines {
 		  		line := lines[i]
@@ -342,20 +330,88 @@
 		        	// Append c to line!
 		        	line = append(line, c)
 		  	}
-		  	return bytes.Join(lines, []byte{'\n'})
 		  }
 		  ```
 		- So instead of `line[i] = x`, this function uses `append` on the sub-slice returned by `bytes.Split` (which we know are all full)
 		- Because each `line` is fully capped, any `append` operation will allocate a new storage and destroying the shared references
 		- This is shown in the output:
 		  ```
-		  s1
 		  this is 1st line
 		  this is 2nd line
 		  this is the last line
+		  ```
+	- ## Example 2
+		- ```go
+		  import (
+		  	"bytes"
+		  	"fmt"
+		  )
+		  
+		  // Like with Example 1,
+		  // but the function(s) now returns a slice too
+		  
+		  func main() {
+		  	s1 := []byte(`this is 1st line
+		  this is 2nd line
+		  this is the last line`)
+		  
+		  	s2 := changeLineFirstChar(s1, '!')
+		  
+		    	// See if changeLineFirstChar has side effects on s1
+		  	fmt.Println("s1")
+		  	fmt.Println(string(s1))
+		  	fmt.Println("=========")
+		  	fmt.Println("s2")
+		  	fmt.Println(string(s2))
+		  
+		    	// See if s1 and s2 share underlying storage
+		    	// Change something in s1 and see if it affects s2
+		  	s1[0] = '@'
+		  	fmt.Println("s1")
+		  	fmt.Println(string(s1))
+		  	fmt.Println("=========")
+		  	fmt.Println("s2")
+		  	fmt.Println(string(s2))
+		  }
+		  
+		  func changeLineFirstChar(s []byte, c byte) []byte {
+		  	lines := bytes.Split(s, []byte{'\n'})
+		  	for i := range lines {
+		  		line := lines[i]
+		  		if len(line) == 0 {
+		  			continue
+		  		}
+		  		line[0] = c
+		  	}
+		    	// This will allocate a new slice
+		  	return bytes.Join(lines, []byte{'\n'})
+		  }
+		  ```
+		- In `main`, we test twice:
+			- First prints are to see if `changeLineFirstChar` has side effects on `s1`
+			- Later prints are to see if `s1` and `s2` refer to the same storage
+		- Our `changeLineFirstChar` first splits a byte string into lines, and changing the first char to `c` in-place
+		- Once all lines are modified, `changeLineFirstChar` join `[][]byte` into `[]byte` with `bytes.Join`, which returns a new slice
+		- We know from previous example that `line[0] = c` will not allocate a new storage, so we know that `s1` must have been effected by `changeLineFirstChar`
+		- And since we also know that `bytes.Join` returns a new slice, we can be sure that `s1` and `s2` do not share the same storage
+		- We can see all that in our output that the `@` that we just put in `s1` does not appear in `s2`:
+		  ```
+		  s1
+		  !his is 1st line
+		  !his is 2nd line
+		  !his is the last line
 		  =========
 		  s2
-		  this is 1st line!
-		  this is 2nd line!
-		  this is the last line!
+		  !his is 1st line
+		  !his is 2nd line
+		  !his is the last line
+		  s1
+		  @his is 1st line
+		  !his is 2nd line
+		  !his is the last line
+		  =========
+		  s2
+		  !his is 1st line
+		  !his is 2nd line
+		  !his is the last line
 		  ```
