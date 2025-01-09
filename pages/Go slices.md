@@ -33,6 +33,16 @@
 		  	a[0] = -1
 		  }
 		  ```
+	- Although we treat Go arrays like any other value types, i.e use `*[10]int` to work with references, the syntax for working with array pointers are identical to with slices:
+	  ```go
+	  func changeArray(a *[10]int) {
+	    // *a[0] = 1 // Syntax error!
+	    a[0] = 1     // Use this instead
+	  }
+	  func changeSlice(s []int) {
+	    s[0] = 1
+	  }
+	  ```
 - # Slice declaration/definition
 	- A slice literal is like Go array literal, except the fact that the length is omitted from type definition:
 	  ```go
@@ -248,3 +258,104 @@
 	  a len 10 cap 10 [0 0 0 0 0 0 0 0 0 0]
 	  */
 	  ```
+- # Code examples
+	- One thing I find myself hating to reason with is the lifetime of Go bytes.
+		- Where do these bytes come from?
+		- When will they be garbage collected?
+		- Will I accidentally modify other data if I write to this slice?
+	- ## Example 1
+		- ```go
+		  import (
+		  	"bytes"
+		  	"fmt"
+		  )
+		  
+		  // We have an original byte string `s1`.
+		  // Then `s1` is passed to changeLineFirstChar,
+		  // which splits the byte string into byte strings by line,
+		  // and modifying the first character of each line to `c`:
+		  
+		  func main {
+		  	s1 := []byte(`this is 1st line
+		  this is 2nd line
+		  this is the last line`)
+		  
+		  	s2 := changeLineFirstChar(s1, '!')
+		  
+		  	fmt.Println("s1")
+		  	fmt.Println(string(s1))
+		  	fmt.Println("=========")
+		  	fmt.Println("s2")
+		  	fmt.Println(string(s2))
+		  }
+		  
+		  func changeLineFirstChar(s []byte, c byte) []byte {
+		  	lines := bytes.Split(s, []byte{'\n'})
+		  	for i := range lines {
+		  		line := lines[i]
+		  		if len(line) == 0 {
+		  			continue
+		  		}
+		        	// Changing the first char of line to c!
+		  		line[0] = c
+		  	}
+		  	return bytes.Join(lines, []byte{'\n'})
+		  }
+		  ```
+		- Do we know if `s1` and `s2` are referencing to the same storage?
+		- We know that our code uses `bytes.Split(b []byte, delim byte)`, which returns sub-slices of `s` delimited by `delim`.
+		- Each sub-slice returned from `bytes.Split` are *full*
+			- For example, consider this byte string `s` (of type `[]byte`):
+			  ```
+			  this is 1st line
+			  this is 2nd line
+			  this is the last line
+			  ```
+			- If we split this byte string by `'\n'`, then **we get 3 sub-slices referencing the original byte string `s`**:
+				- `this is 1st line` points to the first byte of `s` with *both len and cap of 16*
+				- `this is 2nd line` points to the first byte of the second line of `s`, with *both len and cap of 16*
+				- `this is the last line` points to the first byte of the 3rd line of `s`, with *both len and cap of 21*
+		- Because `bytes.Split` returned sub-slices reference the original storage, these return values all point to the same underlying storage
+		- These sub-slices are then *modified by changing value at index 0 (the first char in each line)*
+		- Since the simple assignment `line[0] = c` does not grow our slice, the same old storage is used for each `line`
+		- This means that `changeLineFirstChar` will have side effects on `s1` in main, as seen in the output of the example code:
+		  ```
+		  s1
+		  !his is 1st line
+		  !his is 2nd line
+		  !his is the last line
+		  =========
+		  s2
+		  !his is 1st line
+		  !his is 2nd line
+		  !his is the last line
+		  ```
+		- So, instead of `changeLineFirstChar`, what if we have something like this instead:
+		  ```go
+		  func appendCharToLines(s []byte, c byte) []byte {
+		  	lines := bytes.Split(s, []byte{'\n'})
+		  	for i := range lines {
+		  		line := lines[i]
+		  		if len(line) == 0 {
+		  			continue
+		  		}
+		        	// Append c to line!
+		        	line = append(line, c)
+		  	}
+		  	return bytes.Join(lines, []byte{'\n'})
+		  }
+		  ```
+		- So instead of `line[i] = x`, this function uses `append` on the sub-slice returned by `bytes.Split` (which we know are all full)
+		- Because each `line` is fully capped, any `append` operation will allocate a new storage and destroying the shared references
+		- This is shown in the output:
+		  ```
+		  s1
+		  this is 1st line
+		  this is 2nd line
+		  this is the last line
+		  =========
+		  s2
+		  this is 1st line!
+		  this is 2nd line!
+		  this is the last line!
+		  ```
