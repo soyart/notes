@@ -1,0 +1,5 @@
+- Kafka is a distributed, replicated, persistent, pub/sub messaging data systems
+	- Like with other pub/sub systems, Kafka producers produce *Kafka messages* to *Kafka topics*, and consumers of that topics receive the messages as they are produced
+	- Kafka doesn't look at the messages - to Kafka, they're just bytes. It's the producer and consumer applications's jobs to make sense of the data
+- Kafka brokers are servers that connect to producer and consumer applications
+- # Data on Kafka
