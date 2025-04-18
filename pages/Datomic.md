@@ -1,6 +1,28 @@
-tags:: logseq, datoms, datomic, datalog
+tags::  Data systems, logseq, datoms, datomic, datalog
 title:: Datomic
 
+- Datomic is a [database]([[Databases]]) for the JVM
+	- Datomic is a distributed implementation of [[Datalog]]
+- [[logseq]], itself a [[Clojure]] application, internally uses Datomic for its databases and queries
+- # Inspiration
+	- Datomic was inspired by [Out of the Tar Pit (2006)](https://curtclifton.net/papers/MoseleyMarks06a.pdf)
+		- A paper about complexity in modern software
+		- The paper suggests that we build a new, stateless data system
+		- Datomic is an attempt to implement that new database
+		- The paper identifies the root causes of many complexity in databases
+			- ### States
+				- Databases are inherently stateful
+			- ### Same query, different result
+				- This is because decision making involves >1 components of the database
+				- And these components may behave weirdly on race condition
+			- ### The database is *over there*
+				- Databases are shared by multiple consumers
+			- ### Poor definition of *updates*
+				- The new replaces the old?
+					- Or write a new value to an immutable log?
+				- Visibility?
+					- Do other programs see these updates being updated?
+					- Can they choose if they want to lock on reads?
 - # EDN, Datomic, and Datalog
 	- [Logseq queries](https://docs.logseq.com/#/page/advanced%20queries) use [Datomic](https://www.datomic.com/), a dialect of [Datalog](https://www.learndatalogtoday.org/)
 	- Datalog is a *declarative* language for data query and manipulation
@@ -296,6 +318,7 @@ title:: Datomic
 			- This means that, given the relation above and `?director` equal to `"Ridley Scott"`, we'll be able to query box office values of all Ridley Scott movies in the relation
 				- If the relation supplied lacks any titles by Ridley Scott, then the query returns empty
 	- ## Predicates
+	  id:: 680296c3-f38e-4fd3-aa52-432ce2486bc6
 		- With data patterns, we can match against something with equal-to operations
 		- But we have not yet compared the values (which one is greater, etc.)
 		- This is where predicates come in
@@ -330,6 +353,7 @@ title:: Datomic
 		  (my.namespace/awesome? ?movie)
 		  ```
 	- ## Transformation
+	  id:: 680299ac-da59-4d1f-995b-cad9d2175145
 		- Transformation is purely functional transformation of the query *pattern variables*
 		- A transformation function clause is in the form:
 		  ```edn
@@ -379,6 +403,7 @@ title:: Datomic
 		  [(f ?t) ?a]
 		  ```
 	- ## Aggregate
+	  id:: 68029dc3-5659-4fe5-9037-1f9f2e96c1ca
 		- Simple aggregations like `sum`, `max`, `min` are readily available in the `:find` clause:
 		  ```edn
 		  [:find (max ?rating)
@@ -453,31 +478,27 @@ title:: Datomic
 					  | `[1987]` | `"Lethal Weapon"` |
 					  | `[1989]` | `"Lethal Weapon 2"` |
 	- ## Rules
-		- Datomic rules are like program functions - named reusable chunk of logic
+		- [Datomic rules](https://docs.datomic.com/query/query-data-reference.html#rules) are like program functions - named reusable chunk of logic
 		- We can compose a rule, give it a name, and use it in our queries
-		- Rules have simple form:
+		- Rules can contain data patterns, ((68029dc3-5659-4fe5-9037-1f9f2e96c1ca)), ((680299ac-da59-4d1f-995b-cad9d2175145)), and ((680296c3-f38e-4fd3-aa52-432ce2486bc6))
+		- **A rule is a list of lists**, with a very simple form:
 		  ```edn
-		  [(head-vector) body]
+		  [(head-vector) [body1] [body2] ...]
 		  ```
 			- 1st vector is called a *rule head*
 				- It's possible to use `[ ]` to enclose the rule head vector
-				- But it's convention to use `( )` to enclose, for visual comfort
+				- But it's convention to use `( )` to enclose the head, for visual comfort
 				- The head is akin to function signature: it specifies its name and rule arguments
-			- The rest is called *rule body*
-		- **Example 1**
-			- Let's create a simple rule:
-			  ```edn
-			  [(actor-movie ?name ?title)
-			   [?p :person/name ?name]
-			   [?m :movie/cast ?p]
-			   [?m :movie/title ?title]]
+			- The rest is informally called *rule body*
+			- Definition:
 			  ```
-			- This rule is named `actor-movie`
-			- This rule can be used for both input and output, and thus can be used to:
-				- Find movie titles, given an actor name
-				- Find actor name, given a movie title
-				- Find all combinations of actor-movie mapping, given nothing
+			  rule                       = [ [rule-head clause+]+ ]
+			  rule-head                  = [rule-name rule-vars]
+			  rule-name                  = plain-symbol
+			  rule-vars                  = [variable+ | ([variable+] variable*)]
+			  ```
 		- To use rules, *write the head* of the rules instead of the data patterns
+		- ### Example 1
 			- Original query (without rules):
 			  ```edn
 			  [:find ?name
@@ -493,6 +514,11 @@ title:: Datomic
 			   [?m :movie/cast ?p]
 			   [?m :movie/title ?title]]
 			  ```
+				- This rule is named `actor-movie`
+				- This rule can be used for both input and output, and thus can be used to:
+					- Find movie titles, given an actor name
+					- Find actor name, given a movie title
+					- Find all combinations of actor-movie mapping, given nothing
 			- New query, replacing data patterns with rule
 			  ```edn
 			  [:find ?name
@@ -500,3 +526,44 @@ title:: Datomic
 			   (actor-movie ?name "The Terminator")]
 			  ```
 			- The `%` symbol in `:in` represent the rule
+		- We can use >1 rules, collect their result into a vector, before passing it on to the query like usual:
+		  ```edn
+		  [
+		  	[(head-1) [...] [...] [...]]
+		  	[(head-2) [...] [...] [...]]
+		  ]
+		  ```
+		  Which might look something like this
+		  ```edn
+		  [[(rule-a ?a ?b)
+		    ...]
+		   [(rule-b ?a ?b)
+		    ...]
+		   ...]
+		  ```
+			- With this, rules can also be composed to implement **logical `OR`**
+				- Rules `associated-with` can be used multiple times:
+				  ```edn
+				  [[
+				    (associated-with ?person ?movie)
+				    [?movie :movie/cast ?person]]
+				   [(associated-with ?person ?movie)
+				    [?movie :movie/director ?person]
+				  ]]
+				  ```
+				  Foo
+				  ```edn
+				  [:find ?name
+				   :in $ %
+				   :where
+				   [?m :movie/title "Predator"]
+				   (associated-with ?p ?m)
+				   [?p :person/name ?name]]
+				  ```
+		- ### Example 2
+			- Rule `movie-year`, which matches movie titles with release year
+			  ```edn
+			  [[(movie-year ?title ?year)
+			   	[?m :movie/title ?title]
+			    	[?m :movie/year ?year]]]
+			  ```

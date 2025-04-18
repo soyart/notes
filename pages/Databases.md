@@ -1,3 +1,6 @@
+tags:: Data systems
+alias:: Database
+
 - Databases are software tools to help us store and query data efficiently
 - # Database types
 	- #SQL
