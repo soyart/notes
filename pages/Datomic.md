@@ -1,14 +1,28 @@
-tags::  Data systems, logseq, datoms, datomic, datalog
+tags::  Data systems, datomic, datom, datomic, Datalog, datascript
 title:: Datomic
 
-- Datomic is a [database]([[Databases]]) for the JVM
+- Datomic is a **closed-source** [database]([[Databases]]) for the JVM developed by Nu bank
 	- Datomic is a distributed implementation of [[Datalog]]
-- [[logseq]], itself a [[Clojure]] application, internally uses Datomic for its databases and queries
+	- Datomic is a *database of facts*, called [datoms](((68027a1b-5568-497f-a056-29716b8417b9)))
+	- Datomic transactions add datoms, never updating or removing them
+	- This means that we have an immutable past
+	- Datomic’s indexes automatically support many access patterns common in SQL, column, K/V, hierarchical, and graph databases.
+- [[Logseq]], itself a [[Clojure]] application, internally uses [[DataScript]], an in-browser or JVM database reverse-engineered from Datomic for its databases and queries
+	- [Unlike Datomic](https://github.com/tonsky/datascript?tab=readme-ov-file#differences-from-datomic)
+		- DataScript is **open-source**
+		- Aimed to run on browsers
+		- Does not keep track of all history by default
+		- Simplified schema, not queryable
+		- No schema migrations
+		- No full-text search, no partitions
+		- No external dependencies
 - # Inspiration
 	- Datomic was inspired by [Out of the Tar Pit (2006)](https://curtclifton.net/papers/MoseleyMarks06a.pdf)
 		- A paper about complexity in modern software
 		- The paper suggests that we build a new, stateless data system
 		- Datomic is an attempt to implement that new database
+			- It redefines databases as values, instead of places to get values
+			- Datomic thinks of database as expanding set of facts
 		- The paper identifies the root causes of many complexity in databases
 			- ### States
 				- Databases are inherently stateful
@@ -23,9 +37,35 @@ title:: Datomic
 				- Visibility?
 					- Do other programs see these updates being updated?
 					- Can they choose if they want to lock on reads?
+- # Components
+	- > Datomic delegates storage to external services
+	  >
+	  > This means we can integrate Datomic with any storage, from simple file systems, to other databases
+	- ![Screenshot 2025-04-19 at 22.18.35.png](../assets/Screenshot_2025-04-19_at_22.18.35_1745075921452_0.png)
+	- ## Transactor
+		- Transactor is the writer part of Datomic
+		- Runs separately from the application (that has peers), with some connection
+	- ## Peers
+		- Peers are "readers", and maintain live indexes
+		- Can be scaled horizontally
+		- When reading from storage, peers require no coordination with the Datomic transactor
 - # EDN, Datomic, and Datalog
 	- [Logseq queries](https://docs.logseq.com/#/page/advanced%20queries) use [Datomic](https://www.datomic.com/), a dialect of [Datalog](https://www.learndatalogtoday.org/)
-	- Datalog is a *declarative* language for data query and manipulation
+	- [Datalog](https://en.wikipedia.org/wiki/Datalog) is a *declarative* logical programming language
+		- A Datalog program consists of:
+			- Facts - which are statements held to be *true*
+				- Below are 2 facts:
+				  ```datalog
+				  parent(xerces, brooke).
+				  parent(brooke, damocles).
+				  ```
+				- 1st fact: Xerxes is a parent of Brooke,
+				- 2nd fact: Brooke is a parent of Damocles
+			- Rules - how to deduce (not derive!) new facts from known facts
+				- ```datalog
+				  ancestor(X, Y) :- parent(X, Y).
+				  ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
+				  ```
 	- In Datomic, **Datalog query is written in [[EDN]]**
 		- Logseq config is also in EDN: config.edn
 	- Datomic is a [database]([[Databases]]) implementation with simplicity scalability in mind
@@ -33,6 +73,7 @@ title:: Datomic
 	- Read more on InfoQ: https://www.infoq.com/articles/Architecture-Datomic/
 	  ![datomic.webp](../assets/datomic_1744992865210_0.webp)
 - # Datomic datom
+  id:: 68027a1b-5568-497f-a056-29716b8417b9
 	- In Datomic, data model is based around *atomic facts* called datoms
 	- Datoms are 4-element tuples:
 		- Entity ID
@@ -55,9 +96,10 @@ title:: Datomic
 			- And that `167` is just e-id for some entity with attribute `:person/name` equal to `"James Cameron"`
 			- In [[SQL]] way of thinking, this is like linking a field in table `movies` with a foreign key set to some primary key in table `persons`
 		- We see that transaction ID `102` is shared by all datoms here, implying they were written as part of the same database transaction
+	- Even Datomic indexes are datoms - they are sorted set of datoms
+	- Datomic indexes that sort by entity, attribute, value, and transaction is called EVAT
 - # Datomic query
 	- A Datomic query is a [[EDN]] vector
-	  id:: 68027fbb-6e71-4c1b-b72b-810772875f77
 	- The query vector always starts with keyword `:find`
 	- After `:find` comes one or more *pattern variables*, which are EDN symbols starting with `?`
 	- After that comes the `:where` clause with its *data patterns* to match against
