@@ -8,6 +8,7 @@ title:: Datomic
 	- This means that we have an immutable past
 	- Datomic’s indexes automatically support many access patterns common in SQL, column, K/V, hierarchical, and graph databases.
 - [[Logseq]], itself a [[Clojure]] application, internally uses [[DataScript]], an in-browser or JVM database reverse-engineered from Datomic for its databases and queries
+	- See also: [Logseq query]([[Query]])
 	- [Unlike Datomic](https://github.com/tonsky/datascript?tab=readme-ov-file#differences-from-datomic)
 		- DataScript is **open-source**
 		- Aimed to run on browsers
