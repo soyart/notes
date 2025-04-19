@@ -117,3 +117,31 @@
 		    ]
 		   }
 		  #+END_QUERY%
+	- ## Example 4
+		- #+BEGIN_QUERY
+		  {
+		    :title [:b "Find all featuresv2 blocks for Test Query 2 by its original name"]
+		    :query [
+		      :find (pull ?b [*])
+		        :where
+		        [?b :block/page ?p]
+		        [page-property ?p :tags "testquery"]
+		        [?p :block/name "test query 2"]
+		        [property ?b :tags "featurev2"]
+		    ]
+		   }
+		  #+END_QUERY%
+	- ## Example 5
+		- #+BEGIN_QUERY
+		  {
+		    :title [:b "Find all featuresv2 blocks for Test Query 2 by its alias"]
+		    :query [
+		      :find (pull ?b [*])
+		        :where
+		        [?b :block/page ?p]
+		        [page-property ?p :tags "testquery"]
+		        [page-property ?p :page/alias "TQ 2"]
+		        [property ?b :tags "featurev2"]
+		    ]
+		   }
+		  #+END_QUERY%
