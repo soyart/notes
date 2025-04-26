@@ -680,8 +680,14 @@ tags:: Datomic, DataScript, EDN
 		  rule-name                  = plain-symbol
 		  rule-vars                  = [variable+ | ([variable+] variable*)]
 		  ```
-	- To use rules, *write the head* of the rules instead of the data patterns
-	- ### Example 1
+	- ## Using rules
+		- To use rules, *write the head* of the rules instead of the data patterns
+		- Note that we have to do 2 things before we can use rules inside of `:where` clause
+		- Pass the *rule set* as input
+		  logseq.order-list-type:: number
+		- Reference the rule set in `:in` with `%`
+		  logseq.order-list-type:: number
+	- ## Example 1
 		- Original query (without rules):
 		  ```edn
 		  [:find ?name
@@ -709,47 +715,142 @@ tags:: Datomic, DataScript, EDN
 		   (actor-movie ?name "The Terminator")]
 		  ```
 		- The `%` symbol in `:in` represent the rule
-	- We can use >1 rules, collect their result into a vector, before passing it on to the query like usual:
-	  ```edn
-	  [
-	  	[(head-1) [...] [...] [...]]
-	  	[(head-2) [...] [...] [...]]
-	  ]
-	  ```
-	  Which might look something like this
-	  ```edn
-	  [[(rule-a ?a ?b)
-	    ...]
-	   [(rule-b ?a ?b)
-	    ...]
-	   ...]
-	  ```
-		- With this, rules can also be composed to implement **logical `OR`**
-			- Rules `associated-with` can be used multiple times:
-			  ```edn
-			  [[
-			    (associated-with ?person ?movie)
-			    [?movie :movie/cast ?person]]
-			   [(associated-with ?person ?movie)
-			    [?movie :movie/director ?person]
-			  ]]
-			  ```
-			  Foo
-			  ```edn
-			  [:find ?name
-			   :in $ %
-			   :where
-			   [?m :movie/title "Predator"]
-			   (associated-with ?p ?m)
-			   [?p :person/name ?name]]
-			  ```
-	- ### Example 2
+	- ## Example 2
 		- Rule `movie-year`, which matches movie titles with release year
 		  ```edn
 		  [[(movie-year ?title ?year)
 		   	[?m :movie/title ?title]
 		    	[?m :movie/year ?year]]]
 		  ```
+	- ## Example 3
+		- Consider this rule:
+		  ```edn
+		  [(track-info ?artist ?name ?duration)
+		   [?track :track/artists ?artist]
+		   [?track :track/name ?name]
+		   [?track :track/duration ?duration]]
+		  ```
+			- This rule simply binds artist to a track's name and duration
+		- Now consider this Clojure:
+		- ```edn
+		  (def rulesfoo ;; Put rules into a collection called rulesfoo
+		    '[[(track-info ?artist ?name ?duration)
+		       [?track :track/artists ?artist]
+		       [?track :track/name ?name]
+		       [?track :track/duration ?duration]]])
+		  
+		  (d/q '[:find ?name ?duration
+		         :in $ % ?aname
+		         :where [?artist :artist/name ?aname]
+		                (track-info ?artist ?name ?duration)]
+		       db rulesfoo "The Beatles")
+		  ```
+		- **Line 1** puts the `track-info` rule into a collection named `rulesfoo`
+		- **Line 8** reference the rules with `%`, as input.
+		- **Line 10** invokes the rule `track-info` by name in the `:where` clause, outputting
+		  ```edn
+		  [["Here Comes the Sun" 186000] 
+		   ["Hey Jude" 428000] 
+		   ["Come Together" 257000]
+		  ]
+		  ```
+		- **Line 11** caller passes `rulesfoo` to the query
+	- ## Multiple rules
+		- We can use >1 rules, collect their result into a vector, before passing it on to the query like usual
+			- With this, rules can also be composed to implement **logical `OR`**
+				- Rules `associated-with` can be used multiple times:
+				  ```edn
+				  [[
+				    (associated-with ?person ?movie)
+				    [?movie :movie/cast ?person]]
+				   [(associated-with ?person ?movie)
+				    [?movie :movie/director ?person]
+				  ]]
+				  ```
+				  Foo
+				  ```edn
+				  [:find ?name
+				   :in $ %
+				   :where
+				   [?m :movie/title "Predator"]
+				   (associated-with ?p ?m)
+				   [?p :person/name ?name]]
+				  ```
+		- ```edn
+		  [
+		  	[(head-1) [...] [...] [...]]
+		  	[(head-2) [...] [...] [...]]
+		  ]
+		  ```
+	- ## Multiple rule heads
+		- Multiple rule heads can be used to implement logical `OR`
+		- Consider rule `benelux`, which is defined 3 times over
+		  ```edn
+		  [
+		   	[(benelux ?artist)
+		  		[?artist :artist/country :country/BE]]
+		  	[(benelux ?artist)
+		  		[?artist :artist/country :country/NL]]
+		  	[(benelux ?artist)
+		  		[?artist :artist/country :country/LU]]
+		  ]
+		  ```
+		- Using this rule in side a `:where` clause will match any Benelux countries:
+		  ```edn
+		  :where
+		  	(benelux ?artist)
+		  	[?artist :artist/name ?name]]
+		  ```
+	- ## Required variables/bindings
+		- Some rules will only match if a certain variables are bound
+		- We can specify required bindings when we declare the rules
+		- This helps detect errors when writing a new rule
+		- We declare required bindings in the rule head
+		- This rule `track-info` now requires that variable `?artist` be bound:
+		  ```edn
+		  [[(track-info [?artist] ?name ?duration)
+		       [?track :track/artists ?artist]
+		       [?track :track/name ?name]
+		       [?track :track/duration ?duration]]]
+		  ```
+			- This ensures that `?artist` is bound before `track-info` fires
+			- If our query does not bind `?artist`, we'll get an error
+				- ```Clojure
+				  (def rules
+				  	'[[(track-info [?artist] ?name ?duration)
+				  		[?track :track/artists ?artist]
+				  	[?track :track/name ?name]
+				  	[?track :track/duration ?duration]]])
+				  
+				  (d/q '[:find ?artist ?name ?duration
+				  	:in $ %
+				  	:where
+				  		(track-info ?artist ?name ?duration)]
+				  		db rules)
+				  
+				  (ex-data *e) ;; Print execution error in Clojure?
+				  ```
+				  ```Clojure
+				  {:cognitect.anomalies/category :cognitect.anomalies/incorrect,
+				   :cognitect.anomalies/message "[?artist] not bound in clause: (track-info ?artist ?name ?duration)",
+				   :db/error :db.error/insufficient-binding}
+				  ```
+				- Although this is easy to fix: {{embed ((680d4381-1038-4c81-b204-bf680262c3d1))}}
+			- Only query that binds `?artist` can use `track-info`
+				- id:: 680d4381-1038-4c81-b204-bf680262c3d1
+				  ```Clojure
+				  (def rules
+				    '[[(track-info [?artist] ?name ?duration)
+				       [?track :track/artists ?artist]
+				       [?track :track/name ?name]
+				       [?track :track/duration ?duration]]])
+				  
+				  (d/q '[:find ?artist ?name ?duration
+				         :in $ %
+				         :where [?artist :artist/name "The Rolling Stones"]
+				                (track-info ?artist ?name ?duration)]
+				       db rules)
+				  ```
 - # Grammar
   id:: 680d25da-958d-4e6d-9b4e-b17e06ddf7b6
 	- Definition
