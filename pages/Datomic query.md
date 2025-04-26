@@ -23,8 +23,10 @@ tags:: Datomic, DataScript, EDN
 	  + one or more
 	  ```
 - # Data patterns
+  id:: 680d3988-5fb8-4220-89a0-71c5404dc068
 	- The *data patterns* are just datoms, with some elements replaced with *pattern variables*
 	- **Data patterns** are actually 5-member tuples
+	  id:: 680d3988-dedc-4680-8e54-1c430e8fe20f
 	  ```edn
 	  [<database> <entity-id> <attribute> <value> <transaction-id>]
 	  ```
@@ -185,7 +187,7 @@ tags:: Datomic, DataScript, EDN
 			- The query no longer hard-codes string `"Sylvester Stallone"` in the 1st data pattern
 			- It looks like this query is taking 1 argument
 			- But the query actually takes 2 arguments:
-				- [`$`, which is the database itself](((680289b6-ea47-434b-80ae-bb6268c3a69e)))
+				- [`$`, which is the database itself](((680d3988-dedc-4680-8e54-1c430e8fe20f)))
 					- This means that we could rewrite the parameterized query above as:
 					  ```edn
 					  [:find ?title
@@ -200,9 +202,9 @@ tags:: Datomic, DataScript, EDN
 					- Here `?name` is bound to scalar (string) values
 					- But it's possible to bind it to
 						- Scalar (e.g. string and number like in this example)
-						- [Tuples](((68028b14-8cf4-41af-b92f-5a9532432a41)))
-						- [Collections](((68028cb3-be06-41c0-9610-6083df1735e7)))
-						- [Relations](((68028e85-f169-4642-851a-e217c852c2c2)))
+						- [Tuples](((680d3988-addb-40e0-817a-acff35500f5a)))
+						- [Collections](((680d3988-1e3e-4e97-a14f-449bacee38cf)))
+						- [Relations](((680d3988-3f3c-420b-846d-7398e57ad2ce)))
 			- In pseudo-language, the query engine `q` is performing something like:
 			  ```lisp
 			  (q query db "Steven Seagal")
@@ -227,7 +229,7 @@ tags:: Datomic, DataScript, EDN
 				    ...}
 				  ```
 	- ### Example 2
-		- Get all [attributes](((680291ef-e7a3-4747-8c42-1a735cb33c75))) of a movie with matching title
+		- Get all attributes of a movie with matching title
 		- ```edn
 		  [:find ?attr
 		   :in $ ?title
@@ -238,6 +240,7 @@ tags:: Datomic, DataScript, EDN
 		  ]
 		  ```
 	- ### Tuple input parameter
+	  id:: 680d3988-addb-40e0-817a-acff35500f5a
 		- We can write input parameter as *a single tuple* `[?director ?actor]`:
 		  ```edn
 		  [:find ?title
@@ -267,6 +270,7 @@ tags:: Datomic, DataScript, EDN
 		  ```
 			- In this case, **the query must be called with 2 variables (excl. the database `$`)** - a string for `?director` and another for `?actor`
 	- ### Collections input parameter
+	  id:: 680d3988-1e3e-4e97-a14f-449bacee38cf
 		- *Collections* can be used to implement a **logical `OR`**
 		- *Collections* are denoted with literal ellipsis `...`
 		- ```edn
@@ -282,6 +286,7 @@ tags:: Datomic, DataScript, EDN
 		- > Calling this query with scalar input `"James Cameron"` will get empty results
 		  > And 2 scalar inputs will also return empty result: `"James Cameron" "Ridley Scott"`
 	- ### Relations input parameter
+	  id:: 680d3988-3f3c-420b-846d-7398e57ad2ce
 		- A *relation* is **a set of tuples**
 		- *Relations* are the most powerful form of input binding
 		- A relation lets us define some simple relationship
@@ -299,7 +304,7 @@ tags:: Datomic, DataScript, EDN
 		   [?m :movie/title ?title]
 		  ]
 		  ```
-			- > Note: `?box-office` does not appear in the [`:where` clause data patterns](((68027fd8-5cfb-40ab-9293-312aecb03bda)))
+			- > Note: `?box-office` does not appear in the `:where` clause
 			- Note how it defines **2 inputs**
 				- Input 1: Scalar `?director`
 				- Input 2: Relation `[?title ?box-office]`
@@ -357,11 +362,11 @@ tags:: Datomic, DataScript, EDN
 	  [(<fn> <arg1> <arg2> ...) <result-binding>]
 	  ```
 	  The return value of the call is bound to `<result-binding>`
-	- The binding variable, [like with input parameters](((680288ce-44a1-4435-9733-a9d48e890ed0))), could be
+	- The binding variable, like with input parameters, could be
 		- Scalar
-		- Tuple
-		- Collection
-		- Relationship
+		- [Tuple](((680d3988-addb-40e0-817a-acff35500f5a)))
+		- [Collection](((680d3988-1e3e-4e97-a14f-449bacee38cf)))
+		- [Relationship](((680d3988-3f3c-420b-846d-7398e57ad2ce)))
 	- For example, if we have this Clojure function at namespace path `tutorial.fn/age`:
 	  ```clojure
 	  (defn age [birthday today]
