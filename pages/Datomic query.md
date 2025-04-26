@@ -3,13 +3,25 @@ tags:: Datomic, DataScript, EDN
 - A Datomic query is an [[EDN]] vector
 - Before we go into the queries, let's first see how data on Datomic is stored as set of atoms:
 	- {{embed ((68027d18-15ee-4f14-82c5-a817d316c0fd))}}
-- # Basic form
+- # Basic form and syntax
+  id:: 680d1990-fb1c-48d7-8478-16659801f65c
 	- ```edn
 	  [:find <pattern-variable> :where <data-patterns>]
 	  ```
 	- The query vector always starts with keyword `:find`
 	- After `:find` comes one or more *pattern variables*, which are EDN symbols starting with `?`
 	- After that comes the `:where` clause with its *data patterns* to match against
+	- Special characters in Datomic query:
+	  ```
+	  '' literal
+	  "" string
+	  [] = list or vector
+	  {} = map {k1 v1 ...}
+	  () grouping
+	  | choice
+	  ? zero or one
+	  + one or more
+	  ```
 - # Data patterns
 	- The *data patterns* are just datoms, with some elements replaced with *pattern variables*
 	- **Data patterns** are actually 5-member tuples
@@ -74,6 +86,7 @@ tags:: Datomic, DataScript, EDN
 		  ```
 			- The pattern variable `?e` is referenced in both data patterns, serving as the connection between the 2 data patterns
 			- This means that `?e` is bound to the same variable, so all `?t` returns must comes from entity IDs whose attribute satisfies the 2 data patterns
+				- We call this [unification](https://docs.datomic.com/query/query-executing.html#unification)
 		- **Example 2**: Find out everyone who's starred in `"Lethal Weapon"`
 		  ```edn
 		  [
@@ -147,7 +160,7 @@ tags:: Datomic, DataScript, EDN
 	  to get the timestamp of the insertion of James Cameron name into our database
 - # Parameterized data patterns
 	- Input parameters eliminate hard coded values like `"Lethal Weapon"`
-	- The `:in` clause helps bind input parameters into the data patterns
+	- The `:in` clause binds input parameters into the data patterns
 	- We can have any number of input parameters
 	- ### Example 1
 		- We have this non-parameterized data patterns, which has hard-coded string `"Sylvester Stallone"` as actor name:
@@ -195,6 +208,24 @@ tags:: Datomic, DataScript, EDN
 			  (q query db "Steven Seagal")
 			  ```
 			  Where `query` is the query above, `db` is the database, and `"Steven Seagal"` as input `?name`
+				- ```clojure
+				  (require '[datomic.api :as d])
+				  ;; get db value
+				  (def db (d/db conn))
+				  
+				  ;; query
+				  (d/q '[:find ?release-name
+				         :where [_ :release/name ?release-name]]
+				        db)
+				  ```
+				- ```clojure
+				  ;; output
+				  #{["Osmium"]
+				    ["Hela roept de akela"]
+				    ["Ali Baba"]
+				    ["The Power of the True Love Knot"]
+				    ...}
+				  ```
 	- ### Example 2
 		- Get all [attributes](((680291ef-e7a3-4747-8c42-1a735cb33c75))) of a movie with matching title
 		- ```edn
@@ -368,14 +399,159 @@ tags:: Datomic, DataScript, EDN
 	  [(g ?x) ?t]
 	  [(f ?t) ?a]
 	  ```
+- # Pull expression
+	- # Return map
+		- Supplying return maps will make query return a map instead of a tuple
+		- There're 3 keywords used for return maps
+		  | Keyword | Symbols become |
+		  | ---- | ---- | ---- |
+		  | `:keys` | Keyword keys |
+		  | `:strs` | String keys |
+		  | `:syms` | Symbol keys |
+		- An example would be this:
+		  ```edn
+		  [:find ?artist-name ?release-name
+		  	:keys artist release
+		  	:where
+		   		[?release :release/name ?release-name]
+		   		[?release :release/artists ?artist]
+		  		[?artist :artist/name ?artist-name]]
+		  ```
+		- Which will returns result map:
+		  ```edn
+		  {
+		   {:artist "George Jones" :release "With Love"}
+		   {:artist "Shocking Blue" :release "Hello Darkness / Pickin' Tomatoes"} 
+		   {:artist "Junipher Greene" :release "Friendship"}
+		  }
+		  ```
+	- Definition
+	  ```
+	  pull-expr = ['pull' variable pattern]
+	  pattern   = (pattern-name | pattern-data-literal)
+	  ```
+	- A pull expression returns information about a variable as specified by a pattern.
+	- Each variable can appear in *at most one pull expression*
+	- ## Example 1
+		- Let's consider a simple `find` that returns the start and end year of artist:
+		  ```edn
+		  [
+		  	:find ?start-year ?end-year
+		   	:where
+		   		[?e :artist/name "The Beatles"]
+		  		[?e :artist/start-year]
+		   		[?e :artist/end-year]
+		  ]
+		  ```
+			- Here, we've used 3 data patterns to retrieve 2 information, albeit from a single entity
+		- We can use `pull` to selectively returns desired fields from that entity instead:
+		  ```edn
+		  [
+		  	:find (pull ?e [:artist/startYear :artist/endYear])
+		   	:where
+		   		[?e :artist/name "The Beatles"]
+		  ]
+		  ```
+			- The pull query above just *finds* 1 entity `?e`, and then use `pull` to pull out 2 fields out of `?e`, returning it
+	- This API provides a declarative interface where we specify *what* information we want for an entity without specifying *how* to find it.
+	- We can use `pull` to do separation of concerns:
+		- Notice `:find (pull ?t pattern)` on line 2
+		- ```Clojure
+		  (def songs-by-artist
+		    '[:find (pull ?t pattern)
+		      :in $ pattern ?artist-name
+		      :where
+		      [?a :artist/name ?artist-name]
+		      [?t :track/artists ?a]])
+		  
+		  (def track-releases-and-artists
+		    [:track/name
+		     {:medium/_tracks
+		      [{:release/_media
+		        [{:release/artists [:artist/name]}
+		         :release/name]}]}])
+		  
+		  ;; Query 1
+		  ;; Pull only the :track/name
+		  (d/q songs-by-artist db [:track/name] "Bob Dylan")
+		  
+		  
+		  ;; Query 2
+		  ;; Use a different pull pattern to get the track name, the release name, and the artists on the release.
+		  (d/q songs-by-artist db track-releases-and-artists "Bob Dylan")
+		  
+		  
+		  ;; Result of Query 1
+		  ([#:track{:name "California"}]
+		   [#:track{:name "Grasshoppers in My Pillow"}]
+		   [#:track{:name "Baby Please Don't Go"}]
+		   [#:track{:name "Man of Constant Sorrow"}]
+		   [#:track{:name "Only a Hobo"}]
+		  ...)
+		  
+		  ;; Result of Query 2
+		  ([{:track/name "California",
+		     :medium/_tracks
+		     #:release{:_media #:release{:artists [#:artist{:name "Bob Dylan"}], :name "A Rare Batch of Little White Wonder"}}]
+		   [{:track/name "Grasshoppers in My Pillow",
+		     :medium/_tracks
+		     #:release{:_media #:release{:artists [#:artist{:name "Bob Dylan"}], :name "A Rare Batch of Little White Wonder"}}]
+		   [{:track/name "Baby Please Don't Go",
+		     :medium/_tracks
+		     #:release{:_media #:release{:artists [#:artist{:name "Bob Dylan"}], :name "A Rare Batch of Little White Wonder"}}]
+		   [{:track/name "Man of Constant Sorrow",
+		     :medium/_tracks
+		     #:release{:_media #:release{:artists [#:artist{:name "Bob Dylan"}], :name "A Rare Batch of Little White Wonder"}}]
+		   [{:track/name "Only a Hobo",
+		     :medium/_tracks
+		     #:release{:_media #:release{:artists [#:artist{:name "Bob Dylan"}], :name "A Rare Batch of Little White Wonder"}}]
+		   ...)
+		  ```
 - # Aggregate
-	- Simple aggregations like `sum`, `max`, `min`, `count` are readily available in the `:find` clause:
+	- Aggregate functions transform `:find` result
+	- Aggregate function appear as [a list](((680d1990-fb1c-48d7-8478-16659801f65c))) [in `find-spec`](((680d25da-958d-4e6d-9b4e-b17e06ddf7b6)))
+	- Aggregates appear as lists in a find-spec
+	- Built-in aggregate functions
+		- Simple aggregation like `sum`, `max`, `min`, `count` are readily available in the `:find` clause:
+		  ```edn
+		  [:find (max ?rating)
+		   :where
+		   [?m :movie/director "James Cameron"]
+		   [?m :movie/rating ?rating]
+		  ]
+		  ```
+			- | Aggregate | Return n value | Notes |
+			  | ---- | ---- | ---- |
+			  | avg | 1 |   |
+			  | count | 1 | counts duplicates |
+			  | count-distinct | 1 | counts only unique values |
+			  | distinct | n | set of distinct values |
+			  | max | 1 | compares all types, not just numbers |
+			  | max n | n | returns up to n largest |
+			  | median | 1 |   |
+			  | min | 1 | compares all types, not just numbers |
+			  | min n | n | returns up to n smallest |
+			  | rand n | n | random up to n with duplicates |
+			  | sample n | n | sample up to n, no duplicates |
+			  | stddev | 1 |   |
+			  | sum | 1 |   |
+			  | variance | 1 |   |
+	- Aggregate functions can also appear in data patterns, as with `count` on line 4
 	  ```edn
-	  [:find (max ?rating)
-	   :where
-	   [?m :movie/director "James Cameron"]
-	   [?m :movie/rating ?rating]
-	  ]
+	  [:find ?year (median ?namelen) (avg ?namelen) (stddev ?namelen)
+	         :with ?track
+	         :where [?track :track/name ?name]
+	                [(count ?name) ?namelen]
+	                [?medium :medium/tracks ?track]
+	                [?release :release/media ?medium]
+	                [?release :release/year ?year]]
+	  
+	  [[1968 16 18.92181098534824 12.898760656290333] 
+	   [1969 16 18.147895557287608 11.263945894977244] 
+	   [1970 15 18.007481296758105 12.076103750401026] 
+	   [1971 15 18.203682039283294 13.715552693168124] 
+	   [1972 15 17.907170949841063 11.712941060399375] 
+	   [1973 16 18.19300100438759 12.656827911058622]]
 	  ```
 	- ## Single value return value
 		- `sum`, `max`, `count`, etc. returns a single value
@@ -441,16 +617,54 @@ tags:: Datomic, DataScript, EDN
 			  | `[1982]` | `"First Blood"` |
 			  | `[1987]` | `"Lethal Weapon"` |
 			  | `[1989]` | `"Lethal Weapon 2"` |
+- # `:with` clause
+  id:: 680d34cf-4098-40d5-b6b7-6d80f4300b3f
+	- The with-clause *considers additional variable* not mentioned in the find-spec
+		- That variable is then removed
+		- This leaves a bag (not a set!) of values to be consumed by the  find-spec
+	- Consider this query, which finds all them years in which Bob Dylan released his records:
+	  ```edn
+	  [:find ?year
+	  	:where
+	   		[?artist :artist/name "Bob Dylan"]
+	  		[?release :release/artists ?artist]
+	  		[?release :release/year ?year]
+	  ]
+	  ```
+	  ```edn
+	  [[1969] [1970] [1971] [1973] [1968]]
+	  ```
+	- The 5 years are years in which Bob Dylan released his records, according to this database
+	- But we know that there're possibly >5 records releases that year
+		- **Identical years are merged due to set logic**
+		- This means that if in 1973 Bob released more than 1 records,  we'll still only see a single `1973` in the output, despite the fact
+		- This is where `:with` comes in handy
+	- So if we need to *find every Bob Dylan's record's release years*, we can use `:with ?release` on line 2 to also consider `?release` the same way we consider `?year`:
+	  ```edn
+	  [:find ?year
+	   	:with ?release
+	  	:where
+	   		[?artist :artist/name "Bob Dylan"]
+	  		[?release :release/artists ?artist]
+	  		[?release :release/year ?year]
+	  ]
+	  ```
+	  Thanks to `:with ?release`, the query returns a list of the year of *each release* in the database:
+	  ```edn
+	  [[1973] [1971] [1973] [1973] [1970] [1968] [1971] [1969] [1968] [1970] [1973] [1970] [1971] [1970] [1973] [1968] [1971] [1973] [1970] [1969] [1971] [1970]]
+	  ```
+	  Bob Dylan is crazy
 - # Rules
-	- [Datomic rules](https://docs.datomic.com/query/query-data-reference.html#rules) are like program functions - named reusable chunk of logic
+	- [Rules](https://docs.datomic.com/query/query-data-reference.html#rules) allow us to package set of `:where` clauses into named rules
+	- Rules are like program functions - named reusable chunk of logic
 	- We can compose a rule, give it a name, and use it in our queries
-	- Rules can contain data patterns, ((68029dc3-5659-4fe5-9037-1f9f2e96c1ca)), ((680299ac-da59-4d1f-995b-cad9d2175145)), and ((680296c3-f38e-4fd3-aa52-432ce2486bc6))
-	- **A rule is a list of lists**, with a very simple form:
+	- Rules can contain data patterns, aggregates, and
+	- A rule is **a list of lists**, with a very simple form:
 	  ```edn
 	  [(head-vector) [body1] [body2] ...]
 	  ```
-		- 1st vector is called a *rule head*
-			- It's possible to use `[ ]` to enclose the rule head vector
+		- 1st list is called a *rule head*
+			- It's possible to use `[ ]` to enclose the rule head list
 			- But it's convention to use `( )` to enclose the head, for visual comfort
 			- The head is akin to function signature: it specifies its name and rule arguments
 		- The rest is informally called *rule body*
@@ -531,3 +745,13 @@ tags:: Datomic, DataScript, EDN
 		   	[?m :movie/title ?title]
 		    	[?m :movie/year ?year]]]
 		  ```
+- # Grammar
+  id:: 680d25da-958d-4e6d-9b4e-b17e06ddf7b6
+	- Definition
+	  ```
+	  query = [find-spec with-clause? inputs? where-clauses?]
+	  ```
+	- `find-spec` specifies pattern variables or aggregates to return
+	- [Optional] `with-clause` controls how duplicate find values are handled
+	- [Optional] `inputs` names the databases, data, and rules available to the query engine
+	- [Optional] `where-clauses` additional constrain and transform data

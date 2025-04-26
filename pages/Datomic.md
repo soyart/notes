@@ -18,6 +18,7 @@ title:: Datomic
 		- No full-text search, no partitions
 		- No external dependencies
 - Datomic applications use [[Datomic query]] to query information from the database
+- Datomic is a *functional* database: databases are immutable values and API operations other than (create/delete?) and d/transact are *pure functions without side effects*
 - # Inspiration
 	- Datomic was inspired by [Out of the Tar Pit (2006)](https://curtclifton.net/papers/MoseleyMarks06a.pdf)
 		- A paper about complexity in modern software
