@@ -150,7 +150,7 @@ tags:: Datomic, DataScript, EDN
 	- The `:in` clause helps bind input parameters into the data patterns
 	- We can have any number of input parameters
 	- ### Example 1
-		- We have this non-parameterized data patterns, which has hard-coded string `"Sylvestor Stallone"` as actor name:
+		- We have this non-parameterized data patterns, which has hard-coded string `"Sylvester Stallone"` as actor name:
 		  ```edn
 		  [:find ?title
 		   :where
@@ -159,7 +159,7 @@ tags:: Datomic, DataScript, EDN
 		   [?m :movie/title ?title]
 		  ]
 		  ```
-		- But we also want to reuse this query with other actors, probably `"Steven Seagal"`:
+		- But we also want to reuse this query with other actors. This is where the input parameter comes in:
 		  ```edn
 		  [:find ?title
 		   :in $ ?name
@@ -169,7 +169,9 @@ tags:: Datomic, DataScript, EDN
 		   [?m :movie/title ?title]
 		  ]
 		  ```
-			- Here, this query takes 2 arguments
+			- The query no longer hard-codes string `"Sylvester Stallone"` in the 1st data pattern
+			- It looks like this query is taking 1 argument
+			- But the query actually takes 2 arguments:
 				- [`$`, which is the database itself](((680289b6-ea47-434b-80ae-bb6268c3a69e)))
 					- This means that we could rewrite the parameterized query above as:
 					  ```edn
@@ -267,10 +269,10 @@ tags:: Datomic, DataScript, EDN
 		  ]
 		  ```
 			- > Note: `?box-office` does not appear in the [`:where` clause data patterns](((68027fd8-5cfb-40ab-9293-312aecb03bda)))
-			- Note how it has 2 inputs
+			- Note how it defines **2 inputs**
 				- Input 1: Scalar `?director`
 				- Input 2: Relation `[?title ?box-office]`
-		- Then, if we supply these tuples as input 2:
+		- Then, if we supply this tuple set as input 2:
 		  ```edn
 		  [
 		   ["Die Hard" 140700000]
@@ -367,7 +369,7 @@ tags:: Datomic, DataScript, EDN
 	  [(f ?t) ?a]
 	  ```
 - # Aggregate
-	- Simple aggregations like `sum`, `max`, `min` are readily available in the `:find` clause:
+	- Simple aggregations like `sum`, `max`, `min`, `count` are readily available in the `:find` clause:
 	  ```edn
 	  [:find (max ?rating)
 	   :where
@@ -375,71 +377,70 @@ tags:: Datomic, DataScript, EDN
 	   [?m :movie/rating ?rating]
 	  ]
 	  ```
-	- An aggregate function collects value from multiple datoms and returns
-		- Single value
-			- `sum`, `max`, `count`, etc. returns a single value
-			- Find newest movie
+	- ## Single value return value
+		- `sum`, `max`, `count`, etc. returns a single value
+		- Find newest movie
+		  ```edn
+		  [:find (max ?year)
+		   :where
+		   [_ :movie/year ?year]
+		  ]
+		  ```
+		  | `(max ?year)` |
+		  | ---- |
+		  | `2003` |
+		- Count all movie entities in the database
+		  ```edn
+		  [:find (count ?m)
+		   :where
+		   [?m :movie/title _]
+		  ]
+		  ```
+		  | `(count ?m)` |
+		  | --- |
+		  | `20` |
+		  Or we could count them by titles:
+		  ```edn
+		  [:find (count ?t)
+		   :where
+		   [_ :movie/title ?t]
+		  ]
+		  ```
+		  | `(count ?m)` |
+		  | --- |
+		  | `20` |
+	- ## Multiple values
+		- Some aggregates can be formed to return >1 values
+		- `(min n ?v)` returns a collection of at most `n` values of `?v`, in this case, the `n` smallest values
+		- Find release year of the 4 oldest movies:
+		  ```edn
+		  [:find (min 4 ?year)
+		   :where
+		   [_ :movie/year ?year]
+		  ]
+		  ```
+		  | `?year` |
+		  | --- |
+		  | `[1979 1981 1982 1984]` |
+			- Note that we **cannot **do
 			  ```edn
-			  [:find (max ?year)
+			  [:find (min 4 ?year) ?title
 			   :where
-			   [_ :movie/year ?year]
+			   [?m :movie/year ?year]
+			   [?m :movie/title ?title]
 			  ]
 			  ```
-			  | `(max ?year)` |
-			  | ---- |
-			  | `2003` |
-			- Count all movie entities in the database
-			  ```edn
-			  [:find (count ?m)
-			   :where
-			   [?m :movie/title _]
-			  ]
-			  ```
-			  | `(count ?m)` |
-			  | --- |
-			  | `20` |
-			  Or we could count them by titles:
-			  ```edn
-			  [:find (count ?t)
-			   :where
-			   [_ :movie/title ?t]
-			  ]
-			  ```
-			  | `(count ?m)` |
-			  | --- |
-			  | `20` |
-		- Multiple values
-			- Some aggregates can be formed to return >1 values
-			- `(min n ?v)` returns a collection of at most `n` values of `?v`, in this case, the `n` smallest values
-			- Find release year of the 4 oldest movies:
-			  ```edn
-			  [:find (min 4 ?year)
-			   :where
-			   [_ :movie/year ?year]
-			  ]
-			  ```
-			  | `?year` |
-			  | --- |
-			  | `[1979 1981 1982 1984]` |
-				- Note that we **cannot **do
-				  ```edn
-				  [:find (min 4 ?year) ?title
-				   :where
-				   [?m :movie/year ?year]
-				   [?m :movie/title ?title]
-				  ]
-				  ```
-				- This will simply finds all movie titles, and `(min 4 ?year)` will return 1-element tuple containing 1 value - the year of the movie title:
-				  | `(min 4 ?year)` | `?title` |
-				  | ---- | ---- | ---- |
-				  | `[1979]` | `"Alien"` |
-				  | `[1986]` | `"Aliens"` |
-				  | `[1995`] | `"Braveheart"` |
-				  | `[1985]` | `"Commando"` |
-				  | `[1988]` | `"Die Hard"` |
-				  | `[1982]` | `"First Blood"` |
-				  | `[1987]` | `"Lethal Weapon"` |
-				  | `[1989]` | `"Lethal Weapon 2"` |
+			- This will simply finds all movie titles, and `(min 4 ?year)` will return 1-element tuple containing 1 value - the year of the movie title:
+			  | `(min 4 ?year)` | `?title` |
+			  | ---- | ---- | ---- |
+			  | `[1979]` | `"Alien"` |
+			  | `[1986]` | `"Aliens"` |
+			  | `[1995`] | `"Braveheart"` |
+			  | `[1985]` | `"Commando"` |
+			  | `[1988]` | `"Die Hard"` |
+			  | `[1982]` | `"First Blood"` |
+			  | `[1987]` | `"Lethal Weapon"` |
+			  | `[1989]` | `"Lethal Weapon 2"` |
 - # Rules
 	- [Datomic rules](https://docs.datomic.com/query/query-data-reference.html#rules) are like program functions - named reusable chunk of logic
 	- We can compose a rule, give it a name, and use it in our queries
