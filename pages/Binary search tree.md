@@ -1,4 +1,6 @@
-- #[[Data Structure]]
+tags:: Data structure, Tree
+alias:: BST
+
 - Binary search trees are sorted [[Binary tree]]
 - Each node in BST has a value called *key*, and BSTs are sorted by these keys
 	- The left child's key is always less than its root's key

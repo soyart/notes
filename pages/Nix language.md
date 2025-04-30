@@ -1,3 +1,5 @@
+tags:: Programming, Language
+
 - > The Nix language is a domain-specific functional programming language created to compose [[Nix derivation]] , which is precise describing how contents of existing files are used to derive new files. Nix is also dynamically-typed, lazily-evaluated.
 - The Nix language is at the core of [[Nix]]
 - Since Nix is a functional language, there're *no statements*, only **expression**

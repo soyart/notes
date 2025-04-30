@@ -87,7 +87,7 @@ id:: 64b848e9-88a9-4ebf-b907-99fcbb74dc84
 				- To do this, we can't just append writes to files as they appear
 				- We need a write buffer, with some structure, before writing to SST files.
 				- The buffer structure must allow us to append key-value pairs in any order and read them back sorted efficiently
-				- This can be done in-memory (*memtable*), usually using self-balancing binary search [[BBST]] trees such as *[[AVL tree]]  and  *Red-Black tree*
+				- This can be done in-memory (*memtable*), usually using self-balancing binary search [[Balanced binary search tree]] trees such as *[[AVL tree]]  and  *Red-Black tree*
 			- Using self-balancing tree write cache (memtable) before committing to SSTable segment files on-disk is called **LSM**.
 			- We also need a way to mark deleted keys - usually done with tombstones or bloom filters
 				- [*Tombstone*](https://en.wikipedia.org/wiki/Tombstone_(data_store)) - deletion as data

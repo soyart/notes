@@ -1,4 +1,5 @@
-- #[[Data Structure]]
+tags:: Data structure
+
 - # Graph theory
 	- A study of networks of vertices (nodes), connected by edges
 - # Properties

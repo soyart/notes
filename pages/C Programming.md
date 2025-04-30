@@ -1,3 +1,6 @@
+tags:: Programming, Language
+alias:: C
+
 - > Note: the notes are tested on macOS clang on M3 Pro
 - # C types
 	- > The standard (as per K&R) only specifies a few types

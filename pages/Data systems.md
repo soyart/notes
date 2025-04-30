@@ -1,4 +1,4 @@
-## Transactional vs Analytics #Databases
+## Transactional vs Analytics [[Database]]
 	- ### Transactions (OLTP)
 		- Most database use is transactional
 		- We only need to **read and write a small chunks of data in transactions**

@@ -1,4 +1,6 @@
-- > **A machine with finite states**
+tags:: Automata
+> **A machine with finite states**
+
 - The most basic type of machines.
 - Good for regular languages and [[Regular expression]]
 - ### Real world examples

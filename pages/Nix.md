@@ -13,6 +13,30 @@
 		  $ nix-store -q --tree `which man`
 		  $ nix-store -q --tree ~/.nix-profile
 		  ```
+- # Why Nix?
+	- ## Safety
+		- Nix is designed to maximize reproducibility
+		- Once Nix builds, it'll always build
+		- ### NixOS
+			- #### Immutable systems
+				- Configuration and executables are immutable and content-addressed with cryptographic functions
+				- We can even set up a truly stateless system by using ephemeral root filesystem that gets wiped every time the machine reboots
+			- #### Smart rollback/backup
+				- We can roll back to the previous "state" (i.e. generation)
+				- Even if we deleted the generations from our system, we can still use the same Nix source code to build the deleted generation
+				- And if we version control our Nix expressions, then we can go back in time anytime we want
+			- #### Hardware optimization
+				- In most distros, using hardware-specific options like video hardware acceleration is very difficult and may break the next time you upgrade your system
+				- Nix provides hardware optimization
+	- ## Abstraction
+		- You don't have to learn the lower-level configuration files if you don't want to
+		- You can mix and match configurations as modules
+	- ## Support
+	- Nix community is large and growing
+		- I found 3-4 engineers at my firm already using Nix
+		- Nix is used in production at my company worth hundreds of millions
+	- Nix has many cool infrastructure
+		- Their binary cache is very useful
 - # [[Nix language]]
 - # [[nix-shell]]
 	- At the core of Nix is nix-shell, which wraps other shell (e.g. bash) with reproducible Nix environment
@@ -656,7 +680,7 @@
 		  }
 		  ```
 	- ## Parameterized builds With `callPackage`
-		- `callPackage` [helps with auto assigning attrs to argument](((660d1a12-4c9b-4bbb-a1ea-de865fd5c4f8)))
+		- `callPackage` <<<<<<< missing link
 		- Let's say we have this recipe for package `hello`:
 		- ```nix
 		  # hello.nix

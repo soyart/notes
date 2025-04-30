@@ -1,7 +1,7 @@
-tags::  Data systems, datomic, datom, datomic, Datalog, datascript
+tags:: Data systems, datomic, datom, datomic, Datalog, datascript
 title:: Datomic
 
-- Datomic is a **closed-source** [database]([[Databases]]) for the JVM developed by Nu bank
+- Datomic is a **closed-source** [database]([[Database]]) for the JVM developed by Nu bank
 	- Datomic is a distributed implementation of [[Datalog]]
 	- Datomic is a *database of facts*, called [[Datom]]s
 	- Datomic transactions add datoms, never updating or removing them
@@ -71,7 +71,7 @@ title:: Datomic
 				  ```
 	- In Datomic, **Datalog query is written in [[EDN]]**
 		- Logseq config is also in EDN: config.edn
-	- Datomic is a [database]([[Databases]]) implementation with simplicity scalability in mind
+	- Datomic is a [database]([[Database]]) implementation with simplicity scalability in mind
 	- Datomic presents data as if it's in-memory, as a graph of attributes
 	- Read more on InfoQ: https://www.infoq.com/articles/Architecture-Datomic/
 	  ![datomic.webp](../assets/datomic_1744992865210_0.webp)

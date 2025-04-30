@@ -3,6 +3,6 @@
 - # [[Data systems]]
 	- There're many aspects of system design problems, and data is usually one of them
 	- We usually have to think about:
-		- Choosing appropriate [[Databases]] for appropriate data
+		- Choosing appropriate [[Database]] for appropriate data
 		- Creating [[Data warehouse]] for analytics
 		- Distributed databases

@@ -4,13 +4,13 @@
 	- Files are organized into *Git objects*, analogous to blocks in filesystems
 		- Git objects are stored under `.git/objects`
 		- > We can inspect these objects with `git show` or `git show <object>`
-		- Blobs are organized into *trees*
+		- Blobs are organized into [trees]([[Tree]])
 			- We can do `git ls-tree` to list all trees
 			- Git trees are hash trees (Merkle trees), so they're blockchain of sort
 		- Blobs are raw data (i.e. file content)
 		- Trees are accessed via *commits*
 		- These Git objects reside in `.git` directory
-- Data in Git repos can be thought of as existing in 1 of these 3 states:
+- Data in Git repos can be thought of as [existing in 1 of these 3 states]([[Finite state automata]]):
 	- *Working*
 		- > Think of it like working memory
 		- Working data stays on the filesystems, on disks
@@ -19,6 +19,7 @@
 		- This is when the changes have been made into Git objects as blobs
 		- We can commit the blobs into a new tree with `git commit`
 	- *Repository*
+		- Data is committed to the tree
 - # Git internal walkthroughs
 	- Init a new Git repo
 	  ```sh

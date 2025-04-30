@@ -1,0 +1,22 @@
+- My personal [Logseq notes](https://github.com/soyart/notes)!
+- # Index
+	- ## Languages
+		- [[C Programming]]
+		- [[Nix language]]
+		- [[Datomic query]]
+		- [[Regex]]
+	- ## Tech
+		- [[Nix]]
+		- [[NixOS]]
+		- [[Git]]
+		- [[Databases]] and [[Data systems]]
+		- [[Datomic]]
+		- [[Kubernetes]]
+		- [[OS virtualization]]
+		- [[Ethereum]]
+	- ## Others
+		- [[Integers]]
+		- [[Data structure]]
+		- [[Language theory]]
+		- [[Regular expression]]
+		- [[Automata]]

@@ -1,5 +1,6 @@
-- #[[Data Structure]]
-- AVL tree is a balanced [[BST]] ([[BBST]])
+tags:: Data structure, Tree
+
+- AVL tree is a balanced [[Binary search tree]] ([[Balanced binary search tree]])
 - AVL tree balances itself after insertion/deletion
 - AVL tree balances itself by determining *Balance Factor* BF, and using that information to perform rotation if needed.
 - ## AVL tree Balance Factor

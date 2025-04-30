@@ -1,4 +1,6 @@
-- > A machine using a push-down stack as unbounded memory
+tags:: Automata
+> A machine using a push-down stack as unbounded memory
+
 - # Definition $P = (Q, \Sigma, \Gamma, \delta, q_0, f)$
 	- Alphabet $\Sigma$
 	- Stack variable $\Gamma$

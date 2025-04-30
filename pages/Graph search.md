@@ -1,4 +1,5 @@
-- #[[Data Structure]] #Graph
+tags:: Data structure, Graph
+
 - # Connectivity and hops
 	- ## DFS
 		- Go depth-first, maintaining a stack for backtracking
