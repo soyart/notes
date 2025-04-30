@@ -3,6 +3,16 @@ tags:: Datomic, DataScript, EDN
 - A Datomic query is an [[EDN]] vector
 - Before we go into the queries, let's first see how data on Datomic is stored as set of atoms:
 	- {{embed ((68027d18-15ee-4f14-82c5-a817d316c0fd))}}
+- # General grammar
+  id:: 680d25da-958d-4e6d-9b4e-b17e06ddf7b6
+	- > Definition
+	  ```
+	  query = [find-spec with-clause? inputs? where-clauses?]
+	  ```
+	- `find-spec` specifies pattern variables or aggregates to return
+	- [Optional] `with-clause` controls how duplicate find values are handled
+	- [Optional] `inputs` names the databases, data, and rules available to the query engine
+	- [Optional] `where-clauses` additional constrain and transform data
 - # Basic form and syntax
   id:: 680d1990-fb1c-48d7-8478-16659801f65c
 	- ```edn
@@ -185,49 +195,55 @@ tags:: Datomic, DataScript, EDN
 		  ]
 		  ```
 			- The query no longer hard-codes string `"Sylvester Stallone"` in the 1st data pattern
-			- It looks like this query is taking 1 argument
-			- But the query actually takes 2 arguments:
-				- [`$`, which is the database itself](((680d3988-dedc-4680-8e54-1c430e8fe20f)))
-					- This means that we could rewrite the parameterized query above as:
-					  ```edn
-					  [:find ?title
-					   :in $ ?name
-					   :where
-					   [$ ?p :person/name ?name]
-					   [$ ?m :movie/cast ?p]
-					   [$ ?m :movie/title ?title]
-					  ]
-					  ```
-				- `?name`, which will be the input for actor name
-					- Here `?name` is bound to scalar (string) values
-					- But it's possible to bind it to
-						- Scalar (e.g. string and number like in this example)
-						- [Tuples](((680d3988-addb-40e0-817a-acff35500f5a)))
-						- [Collections](((680d3988-1e3e-4e97-a14f-449bacee38cf)))
-						- [Relations](((680d3988-3f3c-420b-846d-7398e57ad2ce)))
+			- Note: the `:in` clause
+			  ```edn
+			  :in $ ?name
+			  ```
+				- The query actually takes 2 arguments:
+					- [`$`, which is the database itself](((680d3988-dedc-4680-8e54-1c430e8fe20f)))
+						- If the `:in` clause is omitted, then `$` is still implicitly used
+						- Remember that our datoms are 5-tuple? This means that we could rewrite the parameterized query above as:
+						  ```edn
+						  [:find ?title
+						   :in $ ?name
+						   :where
+						   [$ ?p :person/name ?name]
+						   [$ ?m :movie/cast ?p]
+						   [$ ?m :movie/title ?title]
+						  ]
+						  ```
+					- `?name`, which will be the input for actor name
+						- Here `?name` is bound to scalar (string) values
+						- But it's possible to bind it to
+							- Scalar (e.g. string and number like in this example)
+							- [Tuples](((680d3988-addb-40e0-817a-acff35500f5a)))
+							- [Collections](((680d3988-1e3e-4e97-a14f-449bacee38cf)))
+							- [Relations](((680d3988-3f3c-420b-846d-7398e57ad2ce)))
 			- In pseudo-language, the query engine `q` is performing something like:
 			  ```lisp
 			  (q query db "Steven Seagal")
 			  ```
-			  Where `query` is the query above, `db` is the database, and `"Steven Seagal"` as input `?name`
-				- ```clojure
-				  (require '[datomic.api :as d])
-				  ;; get db value
-				  (def db (d/db conn))
-				  
-				  ;; query
-				  (d/q '[:find ?release-name
-				         :where [_ :release/name ?release-name]]
-				        db)
-				  ```
-				- ```clojure
-				  ;; output
-				  #{["Osmium"]
-				    ["Hela roept de akela"]
-				    ["Ali Baba"]
-				    ["The Power of the True Love Knot"]
-				    ...}
-				  ```
+			  Where `query` is the query above, `db` is the database, and `"Steven Seagal"` as input `?name`.
+				- In this Clojure example, we have a query without `:in` clause
+					- But database `$` is still implicit, so we need to supply `db` as the database for the query as shown on line 8:
+					  ```clojure
+					  (require '[datomic.api :as d])
+					  ;; get db value
+					  (def db (d/db conn))
+					  
+					  ;; query
+					  (d/q '[:find ?release-name
+					         :where [_ :release/name ?release-name]]
+					        db)
+					  ```
+					- ```clojure
+					  ;; output
+					  #{["Osmium"]
+					    ["Hela roept de akela"]
+					    ["Ali Baba"]
+					    ["The Power of the True Love Knot"]
+					    ...}
+					  ```
 	- ### Example 2
 		- Get all attributes of a movie with matching title
 		- ```edn
@@ -283,44 +299,69 @@ tags:: Datomic, DataScript, EDN
 		  ]
 		  ```
 		- In the above example, if we call the query with *a tuple containing 2 director names* `["James Cameron" "Ridley Scott"]`, then it'll get all titles for movies directed by either of the 2 directors
-		- > Calling this query with scalar input `"James Cameron"` will get empty results
-		  > And 2 scalar inputs will also return empty result: `"James Cameron" "Ridley Scott"`
+			- Calling this query with scalar input `"James Cameron"` will get empty results
+			- Using 2 scalar inputs will also return empty result: `"James Cameron" "Ridley Scott"`
+		- Example output
+			- Input = `["Ridley Scott"]`
+			  | `?title` |
+			  | ---- | ---- | ---- |
+			  | "Alien" |
+			- Input = `["Ridley Scott" "Mel Gibson"]`
+			  | `?title` |
+			  | ---- | ---- | ---- |
+			  | "Alien" |
+			  | "Braveheart" |
 	- ### Relations input parameter
 	  id:: 680d3988-3f3c-420b-846d-7398e57ad2ce
-		- A *relation* is **a set of tuples**
-		- *Relations* are the most powerful form of input binding
+		- A *relation* is **a set of tuples**, looking something like {{embed ((681268e8-ecb5-4c6e-837b-5de3afce2fb2))}}
+		- Relation is the **most powerful** form of input binding
 		- A relation lets us define some simple relationship
-		- For example, a relation input parameter is defined as:
-		  ```edn
-		  [movie-title box-office-earnings]
-		  ```
-		- And we have this query:
-		  ```edn
-		  [:find ?title ?box-office
-		   :in $ ?director [[?title ?box-office]]
-		   :where
-		   [?p :person/name ?director]
-		   [?m :movie/director ?p]
-		   [?m :movie/title ?title]
-		  ]
-		  ```
-			- > Note: `?box-office` does not appear in the `:where` clause
-			- Note how it defines **2 inputs**
-				- Input 1: Scalar `?director`
-				- Input 2: Relation `[?title ?box-office]`
-		- Then, if we supply this tuple set as input 2:
-		  ```edn
-		  [
-		   ["Die Hard" 140700000]
-		   ["Alien" 104931801]
-		   ["Lethal Weapon" 120207127]
-		   ["Commando" 57491000]
-		  ]
-		  ```
-			- This relation provides a relationship between some movie titles and some box office values, which existed outside of the database
-			- The movie titles, i.e. the 1st element of the tuple, will be destructured into `?title`, while the 2nd element into `?box-office`
-		- This means that, given the relation above and `?director` equal to `"Ridley Scott"`, we'll be able to query box office values of all Ridley Scott movies in the relation
-			- If the relation supplied lacks any titles by Ridley Scott, then the query returns empty
+		- Example: we want to provide additional information via relation inputs
+			- We want to map movie titles to their box office earnings
+			- Then *each* relation can be represented by a 2-tuple looking something like:
+			  ```edn
+			  [title box-office]
+			  ```
+			- So if movie `foo` box office is `10`, the 2-tuple would be:
+			  ```edn
+			  ["foo" 10]
+			  ```
+			- A relation is a 1D 2-tuple vector, so relations would be a 2D 2-tuple vector:
+			  id:: 681268e8-ecb5-4c6e-837b-5de3afce2fb2
+			  ```edn
+			  [
+			   ["Die Hard" 140700000]
+			   ["Alien" 104931801]
+			   ["Lethal Weapon" 120207127]
+			   ["Commando" 57491000]
+			  ]
+			  ```
+			- And we have this query, which has 3 pattern variables `?title`, `?box-office`, `?director`:
+			  > Note: `?box-office` does not appear in the `:where` clause but is instead referenced in the relation input (i.e. Input 2)
+			  ```edn
+			  [:find ?title ?box-office ?director
+			   :in $ [[?title ?box-office]]
+			   :where
+			   [?m :movie/title ?title]
+			   [?m :movie/director ?p]
+			   [?p :person/name ?director]
+			  ]
+			  ```
+				- Note how it defines **2 inputs**
+					- Input 1: Scalar `?director`
+					- Input 2: Relation `[?title ?box-office]`
+			- Then, if we supply this tuple set as input 2 {{embed ((681268e8-ecb5-4c6e-837b-5de3afce2fb2))}}
+				- This relation provides a relationship between some movie titles and some box office values, which existed outside of the database
+				- The movie titles, i.e. the 1st element of the tuple, will be destructured into `?title`, while the 2nd element into `?box-office`
+			- We'll get something like this:
+			  | `?title` | `?box-office` | `?director` |
+			  | ---- | ---- | ---- |
+			  | "Commando" | 57491000 | "Mark L. Lester" |
+			  | "Lethal Weapon" | 120207127 | "Richard Donner" |
+			  | "Alien" | 104931801 | "Ridley Scott" |
+			  | "Die Hard" | 140700000 | "John McTiernan" |
+			- This means that, given the relation above and `?director` equal to `"Ridley Scott"`, we'll be able to query box office values of all Ridley Scott movies in the relation
+				- If the relation supplied lacks any titles by Ridley Scott, then the query returns empty
 - # Predicates
 	- With data patterns, we can match against something with equal-to operations
 	- But we have not yet compared the values (which one is greater, etc.)
@@ -404,33 +445,33 @@ tags:: Datomic, DataScript, EDN
 	  [(g ?x) ?t]
 	  [(f ?t) ?a]
 	  ```
+- # Return map
+	- Supplying return maps will make query return a map instead of a tuple
+	- There're 3 keywords used for return maps
+	  | Keyword | Symbols become |
+	  | ---- | ---- | ---- |
+	  | `:keys` | Keyword keys |
+	  | `:strs` | String keys |
+	  | `:syms` | Symbol keys |
+	- An example would be this:
+	  ```edn
+	  [:find ?artist-name ?release-name
+	  	:keys artist release
+	  	:where
+	   		[?release :release/name ?release-name]
+	   		[?release :release/artists ?artist]
+	  		[?artist :artist/name ?artist-name]]
+	  ```
+	- Which will returns result map:
+	  ```edn
+	  {
+	   {:artist "George Jones" :release "With Love"}
+	   {:artist "Shocking Blue" :release "Hello Darkness / Pickin' Tomatoes"} 
+	   {:artist "Junipher Greene" :release "Friendship"}
+	  }
+	  ```
 - # Pull expression
-	- # Return map
-		- Supplying return maps will make query return a map instead of a tuple
-		- There're 3 keywords used for return maps
-		  | Keyword | Symbols become |
-		  | ---- | ---- | ---- |
-		  | `:keys` | Keyword keys |
-		  | `:strs` | String keys |
-		  | `:syms` | Symbol keys |
-		- An example would be this:
-		  ```edn
-		  [:find ?artist-name ?release-name
-		  	:keys artist release
-		  	:where
-		   		[?release :release/name ?release-name]
-		   		[?release :release/artists ?artist]
-		  		[?artist :artist/name ?artist-name]]
-		  ```
-		- Which will returns result map:
-		  ```edn
-		  {
-		   {:artist "George Jones" :release "With Love"}
-		   {:artist "Shocking Blue" :release "Hello Darkness / Pickin' Tomatoes"} 
-		   {:artist "Junipher Greene" :release "Friendship"}
-		  }
-		  ```
-	- Definition
+	- > Definition
 	  ```
 	  pull-expr = ['pull' variable pattern]
 	  pattern   = (pattern-name | pattern-data-literal)
@@ -660,6 +701,13 @@ tags:: Datomic, DataScript, EDN
 	  ```
 	  Bob Dylan is crazy
 - # Rules
+	- > Definition:
+	  ```
+	  rule                       = [ [rule-head clause+]+ ]
+	  rule-head                  = [rule-name rule-vars]
+	  rule-name                  = plain-symbol
+	  rule-vars                  = [variable+ | ([variable+] variable*)]
+	  ```
 	- [Rules](https://docs.datomic.com/query/query-data-reference.html#rules) allow us to package set of `:where` clauses into named rules
 	- Rules are like program functions - named reusable chunk of logic
 	- We can compose a rule, give it a name, and use it in our queries
@@ -673,13 +721,6 @@ tags:: Datomic, DataScript, EDN
 			- But it's convention to use `( )` to enclose the head, for visual comfort
 			- The head is akin to function signature: it specifies its name and rule arguments
 		- The rest is informally called *rule body*
-		- Definition:
-		  ```
-		  rule                       = [ [rule-head clause+]+ ]
-		  rule-head                  = [rule-name rule-vars]
-		  rule-name                  = plain-symbol
-		  rule-vars                  = [variable+ | ([variable+] variable*)]
-		  ```
 	- ## Using rules
 		- To use rules, *write the head* of the rules instead of the data patterns
 		- Note that we have to do 2 things before we can use rules inside of `:where` clause
@@ -851,13 +892,3 @@ tags:: Datomic, DataScript, EDN
 				                (track-info ?artist ?name ?duration)]
 				       db rules)
 				  ```
-- # Grammar
-  id:: 680d25da-958d-4e6d-9b4e-b17e06ddf7b6
-	- Definition
-	  ```
-	  query = [find-spec with-clause? inputs? where-clauses?]
-	  ```
-	- `find-spec` specifies pattern variables or aggregates to return
-	- [Optional] `with-clause` controls how duplicate find values are handled
-	- [Optional] `inputs` names the databases, data, and rules available to the query engine
-	- [Optional] `where-clauses` additional constrain and transform data
