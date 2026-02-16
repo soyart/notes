@@ -3,10 +3,10 @@ permissions:
   contents: write
 
 on:
-    workflow_dispatch:
-    push:
-      branches:
-        - master
+  workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
         run: echo "notes.artnoi.com" > "$GITHUB_WORKSPACE/www/CNAME"
 
       - name: build spa
-        uses: logseq/publish-spa@v0.3.1
+        uses: logseq/publish-spa@main
         # with:
         #   theme_mode: dark
 
