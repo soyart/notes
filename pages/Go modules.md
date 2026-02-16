@@ -1,4 +1,4 @@
-- > Read more: https://go.dev/ref/mod #Go
+- > Read more: https://go.dev/ref/mod #[[Go]]
 - Go modules and packages are code organization strategy, first introduced in Go 1.11 and became default, replacing `$GOPATH` in Go 1.12
 - Go modules are cached by `go get` at `$GOPATH/mod`
 - Go modules are identify by a `go.mod` at the module's root

@@ -128,61 +128,10 @@
 			- `alloca` is limited to small size allocations
 	- ## Automatic memory management
 		- The runtime manages memory (i.e. no need for programmers to manage memory), like with Go runtime
+		- ### Call stack variable
+			- In most languages, even [[C]], the call stack variables are automatically deallocated
+			- Can be considered zero-costs
 		- ### [[Garbage collection]] (GC)
-			- GC provides automatic deallocation of unreachable and unreferenced objects from allocated memory, returning it to free memory pools
-			- GC is usually implemented in the programming languages, such as [[Go]] and [[Python]]
-			- > Note that not all objects are cleaned up by GC: some are explicitly destroyed via destructors, e.g. **network sockets**, **database handles**
-			- #### Strategies
-				- #### Tracing
-					- Tracing is the most common form of GC
-					- It does this by chain "tracing" reachable objects from certain roots
-					- Unreachable objects are considered garbage
-					- If memory fills often, GC is invoked many times, degrading performance
-				- #### [[Reference counting]]
-					- RC tracks all references of an object with a count integer
-					- When a new reference is created, the count is incremented
-					- When a reference is dropped, the count is decremented
-					- When count is 0, we can safely free the object, as there's no other reference (no surprise null value)
-						- It destroys objects as soon as it could
-					- Could be used for managing other shared resources, such as OS objects e.g. disks
-					- Compared to tracing, it needs less memory to work
-				- #### [[Region-based memory management]]
-					- AKA *memory pools*, or **partition**, **subpool**, **zone**, **arena**, **area**, or **memory context**
-						- > Note that this is different from manual memory pool, which is fixed-size.
-						  > This is more like the concept of connection pools in database libraries
-						- Allocators using region-based managements are often called **area allocators**, and [when they work by only "bumping" a single pointer, as **bump allocators**](((6986227b-97e4-4674-ae34-f3f5638eff1d))).
-					- Pools in this context are **collection of objects that can be allocated and deallocated at once**
-					- Allocation/deallocation in this manner is usually tied to lifecycle of a certain stage or request
-					- Like [RC]([[Reference counting]]), the technique can be used elsewhere, not just in GC
-					- **Concept**
-						- > And the same concept can be said about function stack frames.
-						  >
-						  > A function call creates a region/arena on the stack with all the local variables, and that region is wholly deallocated once when the function returns
-						- Our program might allocate large chunk of memory many times as it executes
-						- Tracking them manually is difficult and costly
-						- BUT, there's a known point in our program where we know that objects are for sure no longer in use
-							- For example, in a web server, the lifetime of most objects (e.g. request header strings) is tied to the lifetime of the request servicing
-							- After the web-server sent the response, those objects are no longer needed.
-					- **Example 1**: a simple "bump allocator" backed by a C array ((6986227b-97e4-4674-ae34-f3f5638eff1d))
-					- **Example 2**: using [[freelist]]
-						- Each "region" is a linked lists of blocks
-						- > Note that we can have many regions, shared or private, e.g. an input region, a working region, and an output region
-						- Each block is large enough to service many allocations
-						- Maintain a "current block", which points to the next-free block
-							- If the block is filled, a new one is created and appended to the freelist
-						- When the region is deallocated, the region's next-free block is pointed to the first block in the freelist.
-							- And if we share regions, then the deallocated region's list can be appended to the global freelist
-					- **Good**
-						- We don't have to allocate/deallocate every single object
-						- Deallocation is O(1)
-						- Unlike other typical GC styles such as tracing, regions don't require that objects be tagged with its type
-						- Unlike stacks, the objects could live longer that the stack frame, but like stacks, it has low overhead costs
-					- **Bad**
-						- If regions become very large, as they might contain more dead than live objects before they are eventually deallocated
-						- Region inference (safer abstraction over raw regions) might make debugging hard, due to inference algorithm
-			- Example: Lisp's stop-and-copy GC
-				- Lisp maintains 2 pools of memory: *working* and *free*
-				- New objects are allocated in *working*
-				- When *working* is full, the GC pauses the programs and traces all in-use references in *working* and then copies it to the *free* pools
-				- Now, our *free* pools contain only the objects currently in use, and we can use it as the new *working*
-				- *Working* pool (full of garbage) can be designated as the new free
+			- Very popular way to manage memory. Used in many languages
+			- Have overhead costs
+			- Potential "GC pause" problems

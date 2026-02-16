@@ -2,11 +2,12 @@
 - # Index
 	- Go back to [artnoi.com](https:artnoi.com)
 	- ## Languages
-		- [[C Programming]]
-		- [[Nix language]]
-		- [[Rust language]]
-		- [[Datomic query]]
+		- [[C]]
+		- [[Go]]
+		- [[Rust]]
 		- [[Regex]]
+		- [[Nix language]]
+		- [[Datomic query]]
 	- ## Tech
 		- [[Memory]]
 		- [[Nix]]

@@ -1,3 +1,5 @@
+alias:: Rust
+
 - This is me returning to Rust after 2 years, only the important is noted down
 - # Types
 	- ## Scalar
@@ -180,4 +182,4 @@
 	- #Memory
 	- Ownership is how Rust models memory management
 	- Rust has no GC, and so programmers must manage the program's memory by themselves
-	- Ownership helps Rust programmers manage memory *at compile time*, enforced by
+	- Ownership helps Rust programmers manage memory *at compile time*, enforced by `rustc`
