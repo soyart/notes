@@ -70,9 +70,50 @@
 	  printf("%d\n", *(p+1)); // 200 (a[1])
 	  ```
 	- However, pointers and non-0 ints are not interchangeable, except for 0. C allows pointer assignment of 0, and comparison with 0
-	- ## Example: basic salloc
-		- We'll implement basic memory management
+	- ## Example: salloc
+	  id:: 6986227b-97e4-4674-ae34-f3f5638eff1d
+		- #[[Region-based memory management]]
 		- Unlike `malloc`, memory will be statically initialized to a char array `char *sbuf`
 		- `sbuf` states are tracked via `sbufp`, which points to the *next free location*
 		- We will allocate memory with `char *salloc(int)`
 		- And we'll free memory with `int sfree(char *p)`
+		- ```c
+		  #include <stdio.h>
+		  
+		  #define ALLOCSIZE 10000 /* size of available space */
+		  
+		  static char sbuf[ALLOCSIZE];      /* storage for salloc */
+		  static char *sbufp = sbuf;        /* next free position */
+		  
+		  /* Return pointer to n characters */
+		  char *salloc(int n) {
+		      if (sbuf + ALLOCSIZE - sbufp >= n) { /* it fits */
+		          sbufp += n;
+		          return sbufp - n; /* old p */
+		      } else { /* not enough room */
+		          return NULL;
+		      }
+		  }
+		  
+		  /* Free storage pointed to by p */
+		  void sfree(char *p) {
+		      if (p >= sbuf && p < sbuf + ALLOCSIZE) {
+		          sbufp = p;
+		      }
+		  }
+		  
+		  int main() {
+		      // Example Usage
+		      char *ptr1 = salloc(10);
+		      if (ptr1) printf("Allocated 10 bytes at %p\n", (void*)ptr1);
+		  
+		      char *ptr2 = salloc(20);
+		      if (ptr2) printf("Allocated 20 bytes at %p\n", (void*)ptr2);
+		  
+		      // Freeing ptr2 returns the pointer to that position
+		      sfree(ptr2);
+		      printf("sbufp reset to %p\n", (void*)sbufp);
+		  
+		      return 0;
+		  }
+		  ```

@@ -4,9 +4,11 @@
 	- ## Languages
 		- [[C Programming]]
 		- [[Nix language]]
+		- [[Rust language]]
 		- [[Datomic query]]
 		- [[Regex]]
 	- ## Tech
+		- [[Memory]]
 		- [[Nix]]
 		- [[NixOS]]
 		- [[Git]]
