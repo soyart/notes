@@ -27,6 +27,7 @@ tags:: Programming, Language
 	  ```
 - # Nix expressions
 	- Evaluating a Nix expression produces a Nix value
+		- And that value might include a side-effect #[[Nix side effects]]
 	- Everything is an expression
 	- Evaluating an expression produces a value
 		- Let's try evaluating Nix expressions with the REPL built into the interpreter:

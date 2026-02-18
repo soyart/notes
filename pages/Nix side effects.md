@@ -1,0 +1,1 @@
+- Nix evaluations might produce side effects, such as network activity or writing new files on disks

@@ -1,4 +1,4 @@
-- My personal [Logseq notes](https://github.com/soyart/notes)!
+- My personal [Logseq notes](https://github.com/soyart/notes)
 - # Index
 	- Go back to [artnoi.com](https:artnoi.com)
 	- ## Languages
