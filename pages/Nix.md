@@ -37,7 +37,7 @@
 		- Nix is used in production at my company worth hundreds of millions
 	- Nix has many cool infrastructure
 		- Their binary cache is very useful
-- # [[Nix language]]
+- # [[Nix (language)]]
 - # [[nix-shell]]
 	- At the core of Nix is nix-shell, which wraps other shell (e.g. bash) with reproducible Nix environment
 	- ## Ad-hoc shell

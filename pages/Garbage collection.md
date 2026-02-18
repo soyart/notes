@@ -1,12 +1,20 @@
-- GC provides automatic deallocation of unreachable and unreferenced objects from allocated memory, returning it to free memory pools
-- GC is usually implemented in the programming languages, such as [[Go language]] and [[Python]]
+alias:: GC, Garbage Collector
+
+- GC provides automatic deallocation of unreachable and unreferenced objects from allocated memory, returning it to [memory]([[Memory]]) pools
+- GC is usually implemented in the programming languages, such as [[Go]] and [[Python]], but sometimes exist in other systems, such as [[Git]] and [[Nix]]
 - > Note that not all objects are cleaned up by GC: some are explicitly destroyed via destructors, e.g. **network sockets**, **database handles**
 - # Strategies
 	- ## Tracing
 		- Tracing is the most common form of GC
 		- It does this by chain "tracing" reachable objects from certain roots
 		- Unreachable objects are considered garbage
-		- If memory fills often, GC is invoked many times, degrading performance
+		- A tracing GC is invoked periodically or explicitly
+		- How tracing GC generally works
+			- When invoked, the program pauses normal execution and prepare to do GC
+			- The GC is started and scans for all unused objects
+			- The GC deallocates the unused objects
+			- The GC hands back the execution to our program
+			- If memory fills often, GC is invoked many times, degrading performance
 	- ## [[Reference counting]]
 		- RC tracks all references of an object with a count integer
 		- When a new reference is created, the count is incremented

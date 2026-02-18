@@ -1,3 +1,4 @@
+alias:: Nixlang
 tags:: Programming, Language
 
 - > The Nix language is a domain-specific functional programming language created to compose [[Nix derivation]] , which is precise describing how contents of existing files are used to derive new files. Nix is also dynamically-typed, lazily-evaluated.

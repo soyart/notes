@@ -1,5 +1,17 @@
-- Memory stores data for an [[Process]]'s immediate use and could be volatile or persistent
-- Memory is backed by multiple types of hardware, e.g. CPU registers, RAM, disks, etc.
+- Memory is the faculty of the mind/system that data can be stored, encoded, and retrieved
+- We can use everyday objects as memory, e.g. storing numbers with abacus
+- > Most of h1 in this page is explicitly about computer memory
+- # Computer memory
+	- Classical computers store data as bits
+		- So the smallest unit of data is a bit
+		- Memory can store >1 bits, and we could combine these bits to derive meanings beyond binary true and false
+		- I imagine memory as a 1-dimensional collection of bits, i.e. one big list of bits:
+		  ```json
+		  [0, 0, 1, 1, 1, 0, 0, ...]
+		  ```
+		- Because it's just 1 big list, simple offsets are enough to work with and manipulate memory. Like indexing an array
+	- Computer memory stores data for an [[Process]]'s immediate use and could be volatile or persistent
+	- Computer memory is backed by multiple types of hardware, e.g. CPU registers, CPU caches, RAM, disks, etc.
 - # [[Physical memory]]
 	- Physical memory maps to real memory location on a hardware
 		- e.g. the offset `0x50` of a RAM stick

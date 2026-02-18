@@ -1,4 +1,4 @@
-- > Nix module system could be included in [[Nix language]] section, but I found it deserving a page of their own
+- > Nix module system could be included in [[Nix (language)]] section, but I found it deserving a page of their own
 - A [[Nix]] module is a [Nix file]((660ada16-e454-4f18-bf6f-b5a231487f15))
 	- Nix modules are treated a bit differently than other non-module Nix files in Nix ecosystem
 - Like most Nix files, a Nix module evaluates to a single expr:
@@ -350,7 +350,7 @@
 	- Dependency packages `curl` and `feh` will then come from this `pkgs`
 	- We also change text output with string interpolation on path `${./map}`, [which has side effects of copying the file `./map` to Nix store](((660c39e1-3de2-417a-8d00-04f98f4d17f5)))
 	- Let's say we have another file, `eval.nix`, which [evaluates this module](((66103169-7817-4639-8a1a-63ae69f2bcda)))
-	- Because of `evalModules` in `eval.nix`, then we can't just pass pkgs to `mod.nix` as with normal function calls.
+	- Because of `evalModules` in `eval.nix`, we can't simply pass `pkgs` to `mod.nix` as with normal function calls.
 	- We instead have to modify `config._module.args` to use `pkgs` from `eval.nix`, which we do so via a dummy module loaded before `mod.nix`
 	- ```nix
 	  pkgs.lib.evalModules {

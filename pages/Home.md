@@ -6,7 +6,7 @@
 		- [[Go]]
 		- [[Rust]]
 		- [[Regex]]
-		- [[Nix language]]
+		- [[Nix (language)]]
 		- [[Datomic query]]
 	- ## Tech
 		- [[Memory]]
