@@ -15,9 +15,9 @@ tags:: Programming, Language
 	  # to only evaluate the expression and do nothing else
 	  $ nix-instantiate --eval 'foo.nix'; # Evaluates to 3
 	  ```
-	- If `--eval` is omitted, `nix-instantiate` will evaluate the expression to a [[Nix derivation]]
 	- By default, `nix-instantiate` looks for `default.nix`
-	- Pass `--strict` to `nix-instantiate` [if lazy evaluation messes up with our eval output](((660adc30-a264-4f5e-8d4a-0c6fec093f97)))
+	- If `--eval` is omitted, `nix-instantiate` will evaluate the expression to a [[Nix derivation]]
+	- Pass `--strict` to `nix-instantiate` to avoid lazy evaluation
 	- And because whitespaces are most of the times insignificant in Nix, we can write the expression above in this form instead:
 	  ```nix
 	  let
@@ -111,7 +111,7 @@ tags:: Programming, Language
 		- Nix strings are values of type `lib.types.str`
 		- Utilities are built-in as well as implemented as Nixpkgs library `lib.strings`
 		- ### Interpolation with `${...}`
-			- > Sometimes, [string interpolation evaluation may have  *side effects*](((660c39e1-3de2-417a-8d00-04f98f4d17f5))), usually with paths
+			- > Sometimes, [string interpolation evaluation may have  *side effects*]([[Nix side effects]]) usually with paths
 			- The following expr evaluates to string `Hello World!`
 			  ```nix
 			  let
@@ -581,7 +581,7 @@ tags:: Programming, Language
 - # Impurities
 	- Most Nix expressions are pure
 	- Examples of impurities are *build inputs*, which may be read from files on the system
-	- ## Nix side effects
+	- ## [[Nix side effects]]
 		- **Paths**: **Whenever a path is used in string interpolation, its content is copied to Nix store**, and the string interpolation expression evals to the absolute path to that file/directory in the Nix store
 			- Why copy to Nix store? To make it more reproducible and robust.
 			- With hash-enforced access, content file changes will have less detrimental effects on our builds:

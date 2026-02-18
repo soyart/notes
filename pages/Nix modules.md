@@ -348,7 +348,7 @@
 		  $ ./result/bin/map
 		  ```
 	- Dependency packages `curl` and `feh` will then come from this `pkgs`
-	- We also change text output with string interpolation on path `${./map}`, [which has side effects of copying the file `./map` to Nix store](((660c39e1-3de2-417a-8d00-04f98f4d17f5)))
+	- We also change text output with string interpolation on path `${./map}`, [which has side effects of copying the file `./map` to Nix store]([[Nix side effects]])
 	- Let's say we have another file, `eval.nix`, which [evaluates this module](((66103169-7817-4639-8a1a-63ae69f2bcda)))
 	- Because of `evalModules` in `eval.nix`, we can't simply pass `pkgs` to `mod.nix` as with normal function calls.
 	- We instead have to modify `config._module.args` to use `pkgs` from `eval.nix`, which we do so via a dummy module loaded before `mod.nix`
