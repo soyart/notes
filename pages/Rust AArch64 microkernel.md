@@ -15,7 +15,9 @@
 		    -kernel dist/virt/os-aarch64-virt.elf # Our kernel ELF
 		  ```
 			- We chose GICv2 because it's simpler and perfect for single-core
-		- `#![no_std]` tells our compiler to omit Rust `std`
+		- Freestanding Rust binary
+		  id:: 69dd2f62-bc5b-49a8-aa62-0b896ab753e6
+			- `#![no_std]` tells Rust compiler to not include `std`
 			- Meaning we have to say goodbye to `println!`
 			- Even if we try this:
 			  ```rust
@@ -248,6 +250,7 @@
 			- Configure EL2 to "return" to EL1 (for the switch)
 			- Configure EL2 to not crash EL1 on some instructions (e.g. floating point)
 			- Initialize stuff for EL1 and "return" from EL2 to EL1
+		- Based on the original blog post, we'll be implementing Qemu AArch64 boot process in https://github.com/bahree/rust-microkernel/blob/main/crates/arch_aarch64_virt/src/main.rs
 		- `boot.S`
 			- Here's our assembly `boot.S` that prepares the system for our Rust microkernel
 				- ```asm
@@ -339,7 +342,7 @@
 				- This is pessimistic, typical of assembly programmers
 				- If our Rust code has a bug, or cosmic ray happens and our Rust pops a return address, and our CPU returns to the line after our `bl rust_main` line, the execution would be caught in this loop.
 		- `main.rs`
-			- Here's our Rust entrypoint
+			- Here's our Rust entrypoint (see also: ((69dd2f62-bc5b-49a8-aa62-0b896ab753e6)))
 				- ```rust
 				  #![no_std]
 				  #![no_main]
@@ -449,3 +452,106 @@
 				      }
 				  }
 				  ```
+			- Include `boot.S`
+			  ```rust
+			  core::arch::global_asm!(include_str!("boot.S"));
+			  ```
+				- Include our assembly text from `boot.S` as global assembly for this crate
+				- The assembler processes our boot code, the linker resolves the symbols (`_start`, `rust_main`, `__stack_top`, etc.)
+				- Everything ends up in one binary
+			- Feature gates
+			  ```rust
+			  #[cfg(feature = "demo-ipc")]
+			  {
+			      logger.log("rustOS: IPC + cooperative scheduling demo\n");
+			      kernel::kmain(&logger)
+			  }
+			  ```
+				- Acts as compile-time switches
+				- Each feature runs one at a time (per build)
+			- Panic handler
+			  ```rust
+			  #[panic_handler]
+			  fn panic(_info: &PanicInfo) -> ! {
+			      UartLogger::puts("rustOS: PANIC\n");
+			      loop {
+			          hal::arch::halt();
+			      }
+			  }
+			  ```
+				- Since `#![no_std]` removes the standard panic handler function (usually linked to OS), we must provide our own
+				- Because we have OS running underneath, our simple panic handler uses UartLogger to log a static text and halt the machine
+			- PL011 UART and [MMIO](https://en.wikipedia.org/wiki/Memory-mapped_I/O_and_port-mapped_I/O)
+			  ```rust
+			  const UART0_BASE: usize = 0x0900_0000;
+			  impl UartLogger {
+			      #[inline(always)]
+			      fn mmio_write(offset: usize, val: u32) {
+			          unsafe { core::ptr::write_volatile((UART0_BASE + offset) as *mut u32, val) }
+			      }
+			      #[inline(always)]
+			      fn mmio_read(offset: usize) -> u32 {
+			          unsafe { core::ptr::read_volatile((UART0_BASE + offset) as *const u32) }
+			      }
+			    
+			    	// Writing a char
+			      fn putc(c: u8) {
+			          // FR (0x18) bit5 = TXFF (transmit FIFO full)
+			          while (Self::mmio_read(0x18) & (1 << 5)) != 0 {}
+			          Self::mmio_write(0x00, c as u32);
+			      }
+			    	// Writing a string
+			      pub(crate) fn puts(s: &str) {
+			          for &b in s.as_bytes() {
+			              if b == b'\n' {
+			                  Self::putc(b'\r');
+			              }
+			              Self::putc(b);
+			          }
+			      }
+			  }
+			  ```
+				- In normal programs, addresses map to memory
+				- But we're OS, so, some addresses map to special objects, like a device
+				- For example, writing to address `0x0900_0000` on our QEMU `virt` machine doesn’t store anything in memory. It sends a byte out the serial line
+					- PL011 UART has 2 buffers: **Transmit FIFO (TX)** and **Receive FIFO (RX)** buffers
+						- These 2 buffers do not actually have corresponding registers/addresses to them
+						- We interact with it via the Data Register, which is offset 0 from our device address, in this case, `0x0900_0000`
+					- The Data Register (`UARTDR`, Offset `0x00`)
+						- Is a 16-bit register
+							- **Bits [0:7] (8 bits) are used to store data**
+							- **Bits [11:8] are *error flags***
+								- If you read a char and those bits are non-zero, something went wrong with the transmission.
+								- Example errors: Framing, Parity, Break, Overrun
+						- **When you WRITE 8 bits to it:**
+							- The character is pushed into the **TX**. The UART hardware then picks it up, wraps it in start/stop bits, and shifts it out bit-by-bit over the physical wire.
+							- Since the data register is 16-bit, we can try writing 16-bit of data into the register, but the hardware would just ignore the upper 8 bits and only write the bottom 8 bits
+						- **When you READ 16 bits from it:**
+							- You receive the next character from the **RX** along with the error flags, if any.
+					- The Flag Register (`UARTFR`, Offset `0x18`)
+						- Is a 9-bit register (on AArch64 we might interact with 32-bit)
+						- **Bit 3 (BUSY):**
+							- This stays `1` as long as the UART is still shifting bits out, even if the FIFO is empty.
+						- **Bit 5 (TXFF - Transmit FIFO Full):**
+							- Before writing to `0x00`, you must read the Flag Register and check this bit.
+							- If it's `1`, you must wait (spin).
+					- With access to both the Data and Flag register, we can safely write data to serial output without losing data (**polling** or **busy-waiting**)
+				- `mmio_read` and `mmio_write` primitives
+					- `write_volatile` and `read_volatile` are critical. Normally, the Rust compiler (through LLVM) is free to optimize away memory operations. If you write to an address and never read it back, the optimizer might skip the write entirely. “Why bother,” it thinks, “nobody’s going to look at it.”
+					- But for MMIO, the hardware IS looking at it. Writing to the UART data register transmits a byte. The compiler can’t see that side effect. volatile tells the compiler: “this access has effects you can’t reason about. Do it exactly as written, in exactly this order.”
+					- Both functions are unsafe because we’re casting raw integers to pointers and dereferencing them. In safe Rust, pointer arithmetic is forbidden. On bare metal, it’s the only way to talk to hardware.
+				- `putc` and `puts`
+					- `putc` handles safe write with the polling/busy-waiting, so no data is lost
+						- This is done by first checking the Flag Register (FR) before writing
+					- `puts` handles safe string write
+						- At this level, `s.as_bytes()` are raw bytes and not some Unicode bytes
+						- We also replace `\n` with `\r`, because most serial terminal expects a carriage return `\r`
+		- Implementing HAL logger for UartLogger
+		  ```rust
+		  impl hal::log::Logger for UartLogger {
+		      fn log(&self, s: &str) {
+		          UartLogger::puts(s);
+		      }
+		  }
+		  ```
+		  We need this since the kernel code will not be calling UartLogger::puts directly, but rather via HAL trait `hal::log::Logger`
