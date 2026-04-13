@@ -1,4 +1,4 @@
-# Operating systems
+# [[Operating systems]]
 	- OS runs and manages other program and hardware resources, such as [[Memory]] and disks
 	- Before software OS, there used to be a human operator who loaded and operated the computer
 	- Early OS was tied to its hardware, and usually came in the form of a machine-specific standard library (i.e. providing functions for I/O and display)

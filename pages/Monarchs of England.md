@@ -1,0 +1,144 @@
+- Monarchs of England were sovereigns of the Anglo-Saxon kingdoms, and later the Kingdom of England, before its Union with Scotland in 1601
+- > Note 1: not every Wessex kings are listed here. Only from Egbert Bretwalda.
+  > Note 2: We'll also write their names in modern English spelling
+- # [[House of Wessex]]
+	- House of Wessex originally controlled the heptarchy kingdom of Wessex
+	- ## [[Egbert, King of Wessex]], Bretwalda
+		- > https://en.wikipedia.org/wiki/Ecgberht,_King_of_Wessex
+		- ### [Ecgbeorht](https://en.wikipedia.org/wiki/Egbert): Bright Edge
+			- *[ecg](https://en.wiktionary.org/wiki/ecg#Old_English)* (“edge (of a blade)”)
+			- *[beorht](https://en.wiktionary.org/wiki/beorht#Old_English)* (“bright”)
+		- ### Birth and death
+			- d. 839
+		- ### Reign
+			- 802-839, [[Kingdom of Wessex]]
+				- Next: [[Aethelwulf, King of Wessex]]
+		- ### Issues
+			- [[Athelwulf, King of Wessex]]
+		- Originally prince Egbert III of Kent, and grandson of Eafe of Wessex
+		- Best known for having unified English kingdoms for a brief period
+		- [780s] Forced by Mercia and Wessex into exile in Francia
+			- He learned a lot from Charlemagne's court
+		- [802] Returned to Britain and conquered Wessex
+		- [820] Conquered Kent (homeland) into Wessex
+			- Cornwall, Sussex, Essex, Kent all bowed to Egbert
+			- Northumbria also submitted to Egbert
+			- Wales as well
+			- Only Mercia remained
+		- [829] Drove Wiglaf of Mercia away from Mercia
+			- But Mercia had not fully submitted, it was only subdued
+			- Wiglaf later returned a year later
+		- Dubbed *[Bretwalda](https://en.wikipedia.org/wiki/Bretwalda)* after Mercian submission
+			- > ⁊ þy geare geeode Ecgbriht cing Myrcna rice ⁊ eall þæt be suþan Humbre wæs, ⁊ he wæs eahtaþa cing se ðe Bretenanwealda wæs.
+			  >
+			  > And the same year King Egbert conquered the kingdom of Mercia, and all that was south of the Humber, and he was the eighth king who was 'Wide-ruler'.
+			- English land was briefly unified, laying groundworks for later monarchs
+	- ## [[Aethelwulf, King of Wessex]]
+		- > https://en.wikipedia.org/wiki/%C3%86thelwulf,_King_of_Wessex
+		- ### [Æþelwulf](https://en.wiktionary.org/wiki/%C3%86%C3%BEelwulf): Noble Wolf
+			- *[æþele](https://en.wiktionary.org/wiki/%C3%A6%C3%BEele#Old_English)* (“noble”)
+			- *[wulf](https://en.wiktionary.org/wiki/wulf#Old_English)* (“wolf”)
+		- ### Parents
+			- [[Egbert, King of Wessex]]
+		- ### Birth and death
+			- d. 858
+		- ### Reign
+			- 839-858, Kingdom of Wessex
+			- Next: [[Aethelbald, King of Wessex]]
+		- ### Issues
+			- Aethelstan, King of Kent
+				- In 850, Aethelstan became the leader of the first Saxon sea battle victory against Danes
+				- Probably died a year later that naval victory
+				- His death was why his next oldest brother inherited Wessex
+			- [[Aethelbald, King of Wessex]]
+			- [[Aethelbert, King of Wessex]]
+		- [842] Danish viking invasion began
+			- Danes presence pressured Mercia and Wessex to join forces
+			- Putting an end to 300-year Wessex-Mercia beef
+		- [851] Wessex won [Battle of Aclea](https://en.wikipedia.org/wiki/Battle_of_Aclea) against the Danes
+		- [855] Went to pilgrimage in Rome
+		  id:: 699ae7e8-be1e-448a-bf59-d32293d193e0
+			- Appointed his oldest living son [Aethelbald]([[Aethelbald, King of Wessex]]) as King of Wessex
+			- Appointed his [Athelbert]([[Aethelbert, King of Wessex]]) as King of Kent
+			- He stayed with [Charles the Bald, King of West Francia](https://en.wikipedia.org/wiki/Charles_the_Bald)
+			- Married Judith, Charles the Bald's daughter
+			  id:: 699aeb59-6211-4b0a-b85a-439497595146
+		- [856] Returning home
+			- Son Aethelbald refused to give back the Wessex crown
+			- Most historians believe that Æthelbald continued to be king of Wessex while Æthelberht gave up Kent to his father, but some think that Wessex itself was divided, with Æthelbald ruling the west and his father the east, while Æthelberht kept Kent. When Æthelwulf died in 858, Æthelbald continued as (or became again) king of Wessex and his brother resumed (or carried on) his kingship of Kent.
+	- ## [[Aethelbald, King of Wessex]]
+	  id:: 699aea85-04ec-4653-84b4-767c10ee76a7
+		- > https://en.wikipedia.org/wiki/%C3%86thelbald,_King_of_Wessex
+		- ### [Æþelbald](https://en.wiktionary.org/wiki/%C3%86%C3%BEelbald): Noble Bold
+		- ### Parents
+			- [[Aethelwulf, King of Wessex]]
+		- ### Birth and death
+			- d. 860
+		- ### Reign
+			- 855/858-860
+				- > See [[Athelwulf, King of Wessex]] and his return from Rome
+			- Next: [[Aethelbert, King of Wessex]]
+		- Note quite popular due to previous beef with his dad after the Rome pilgrimage
+		- Even more unpopular when he married his dad's widow
+		- Very short reign indeed
+	- ## [[Aethelbert, King of Wessex]]
+		- > https://en.wikipedia.org/wiki/%C3%86thelred_I_of_Wessex
+		- ### [Æþelbeorht](https://en.wiktionary.org/wiki/%C3%86%C3%BEelbeorht): Noble Bright
+		- ### Parents
+			- [[Aethelwulf, King of Wessex]]
+		- ### Birth and death
+			- d. 865
+		- ### Reign
+			- 860-865
+			- Next: [[Aethelred I, King of Wessex]]
+		- Was briefly King of Kent [when his father was in Rome for pilgrimage](((699ae7e8-be1e-448a-bf59-d32293d193e0)))
+		- After [his brother Aethelbald of Wessex]([[Aethelbald, King of Wessex]]) died in 860, he ruled both Kent and Wessex in personal union
+		- His reign also experienced heavy Viking raids
+			- Ragnar Lodbrok and Ivar the Boneless were both mentioned in England this time
+		- [865] Vikings sacked Wessex capital Winchester, and Aethelbert later died around this time
+	- ## [[Aethelred I, King of Wessex]]
+		- > https://en.wikipedia.org/wiki/%C3%86thelred_I_of_Wessex
+		- ### [Æthelred](https://en.wiktionary.org/wiki/Ethelred#English): Noble Counsel
+			- *[æþele](https://en.wiktionary.org/wiki/%C3%A6%C3%BEele#Old_English)* (“noble”)
+			- *[rǣd](https://en.wiktionary.org/wiki/r%C3%A6d#Old_English)* (“counsel, advice”)
+		- ### Parents
+			- [[Aethelwulf, King of Wessex]]
+		- ### Birth and death
+			- d. 871
+		- ### Reign
+			- 866-871
+			- Next: [[Alfred the Great of Wessex]]
+		- [867] Vikings captured York in Northumbria
+		- [871]
+			- Aethelred was defeated at [Battle of Reading](https://en.wikipedia.org/wiki/Battle_of_Reading_(871)) in Jan
+			- Aethelred won [Battle of Ashdown](https://en.wikipedia.org/wiki/Battle_of_Ashdown) 4 days later, fighting together with [his brother Alfred]([[Alfred the Great of Wessex]])
+			- Was later killed after losing [Battle of Basing](https://en.wikipedia.org/wiki/Battle_of_Basing) and [Meretun (Merton)](https://en.wikipedia.org/wiki/Battle_of_Meretun)
+	- ## [[Alfred the Great of Wessex]]
+		- > https://en.wikipedia.org/wiki/Alfred_the_Great
+		- ### Ælfrǣd: Elf Counsel
+			- *[ælf](https://en.wiktionary.org/wiki/%C3%A6lf#Old_English)* ("elf")
+			- *[rǣd](https://en.wiktionary.org/wiki/r%C3%A6d#Old_English)* ("counsel")
+		- ### Parents
+			- [[Aethelwulf, King of Wessex]]
+		- ### Birth and death
+			- d. 899
+		- ### Reign
+			- 871-899
+			- Next: [[Edward the Elder]]
+		- [874] Danes marched and defeated Mercia, forcing the Mercian King into exile
+			- This gave Alfred control over both Mercia and Wessex
+		- [878]
+			- All Anglo-Saxon kingdoms other than Wessex had been defeated by the Danes
+			- Danes launched [surprise attack into Alfred's stronghold of Chippenham](https://en.wikipedia.org/wiki/Battle_of_Chippenham), forcing Alfred to flee to the marshes of Somerset
+				- There was little to no survivor in the surprise attack
+				- The Danes later settled in Chippenham, turning it into their stronghold
+				- Alfred later built his new fort in the Somerset marshes
+			- Alfred emerged from his marshes
+				- He met with people of [Somerset](https://en.wikipedia.org/wiki/Somerset), [Wiltshire](https://en.wikipedia.org/wiki/Wiltshire) and [Hampshire](https://en.wikipedia.org/wiki/Hampshire)
+				- With this, he could raise 3 [fyrds](https://en.wikipedia.org/wiki/Fyrd) from the 3 shires
+				- These meetings suggested there was some form of "government" still in tact within England to enable the secure meetings, even after the defeats against Danes
+			- Alfred won decisive victory at [Battle of Edington](https://en.wikipedia.org/wiki/Battle_of_Edington)
+			- Alfred chased the Danes back to their Chippenham
+				- After having been starved them to submission, Danish king Guthrum agreed to convert to Christianity
+				- The Danish king and 29 of his men were baptized with Alfred as witness
+				- Alfred even accepted Guthrum as his spiritual son
