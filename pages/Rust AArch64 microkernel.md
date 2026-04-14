@@ -2,7 +2,7 @@
 - This will be based on the following blog series
 	- [2018+] https://os.phil-opp.com/
 	- [2026] https://blog.desigeek.com/post/2026/02/building-microkernel-part0-why-build-an-os/
-- # Part 1
+- # Part 1: booting bare-metal
 	- This part will deal with booting up our [freestanding Rust binary](https://os.phil-opp.com/freestanding-rust-binary/) (our minimum *kernel*) from qemu
 		- The configuration for our VM would look like this:
 		  ```shell
@@ -699,6 +699,7 @@
 		  >
 		  > Also note that on Qemu `virt` machine, the RAM region that starts at `0x40000000`, while `0x80000` offset is a convention
 		- The linker script is the document that says: put `.text.boot` first (so the CPU’s entry point is at the right address), put `.text` after it, then `.rodata`, `.data`, `.bss`, and finally the stack. It also defines symbols like `__bss_start`, `__bss_end`, and `__stack_top`
+		  id:: 69de7a63-ec6c-4ff5-831b-634b26c88d3c
 			- ```ld
 			  ENTRY(_start)
 			  
@@ -756,3 +757,381 @@
 			  ```
 		- `cargo:rustc-link-arg=-T.../linker.ld` passes the linker script to our linker at compile time
 			- Without it, a default layout will be used, which will likely crash our system
+	- ### Result
+		- We got a working OS that can boot up a machine, log something, then halt.
+- # Part 2: IPC and cooperative scheduler
+	- The goal here is to run >1 processes at a time
+	- Cooperative means each process yields voluntarily, as opposed to preemptive multitasking we see in modern OS [[Process]] management
+	- To do this we need 2 parts
+		- IPC for message passing
+			- At the center of this is our IPC Router
+			- Processes send a fixed-size data through this router instead of sharing their memory
+		- Cooperative scheduler
+			- polls tasks in round-robin order
+	- Which now looks more like a microkernel, instead of a monolithic one
+		- This is good because we can run everything else, including device drivers and networking stack, in userspace and isolate them
+		- The cost is speed because everything else runs in userspace (EL0), so we must cross privilege boundaries when we want to talk to the kernel
+	- ## [[IPC]] (inter-process communication)
+		- IPC is how process talks to each other on the same machine
+		- IPC can be implemented in multiple ways (socket file, messaging, etc), but we'll choose message-passing for now because we don't have filesystems yet
+		- ### Minimal message structure
+			- `header`
+				- > A header with `from` and `to` is handy because the OS (the router, in this case) can just route each message to its destination, and it can also pass unreceived message back to the sender.
+				  >
+				  > Note that we'd probably need more fields, but the ones listed here are semantically required
+				- `from`
+				- `to`
+			- `payload`
+		- ### Message structure for ping-pong
+			- > Note: `#[repr(u8)]` tells the compiler to store the enum’s discriminant as exactly one byte (`u8`), making our struct size known and exact at compile time, otherwise Rust might try to optimize the memory layout.
+			  >
+			  > 1 byte is chosen for simplicity.
+			- `struct Message`
+				- ```rust
+				  pub const MAX_PAYLOAD: usize = 8;
+				  
+				  #[derive(Copy, Clone, Debug)]
+				  #[repr(C)]
+				  pub struct MsgHeader {
+				      pub src: EndpointId,      // who sent this
+				      pub dst: EndpointId,      // who should receive it
+				      pub ty: MsgType,          // what kind of message
+				      pub len: u8,              // how many payload bytes are used
+				      pub seq: u32,             // sequence number for ordering
+				  }
+				  
+				  #[derive(Copy, Clone, Debug)]
+				  #[repr(C)]
+				  pub struct Message {
+				      pub header: MsgHeader,
+				      pub payload: [u8; MAX_PAYLOAD],
+				  }
+				  ```
+			- Our enums for ping-pong
+				- ```rust
+				  #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+				  #[repr(u8)]
+				  pub enum EndpointId {
+				      Ping = 1,
+				      Pong = 2,
+				  }
+				  #[derive(Copy, Clone, Debug)]
+				  #[repr(u8)]
+				  pub enum MsgType {
+				      Ping = 1,
+				      Pong = 2,
+				  }
+				  ```
+			- We have `MsgHeader.seq` for ordering and being able to tell lost message
+			- This current implementation does not need heap allocation at all
+			- ### Working with payloads
+				- Recall that our payload is just a byte array: `[u8; MAX_SIZE]`
+				- Our ping-pong message does **NOT** actually need payload, but let's store the message sequence `seq: u32` into the payload just for fun
+				- To do that, we need to de/serialize `u32` into a byte array
+					- We already know that our payload would be a `u32`, so it would take 4 bytes
+					- For simplicity (and also because ARM is Little Endian), we'll use little-endian byte order to store this `u32` in the *first 4 bytes* in the byte array
+						- First 4 bytes with Little Endian => start small (LSB comes first)
+						- e.g. `0x12345678` would be stored as `78 56 34 12`
+					- ```rust
+					  pub fn write_u32_le(dst: &mut [u8], v: u32) {
+					      dst[0] = (v & 0xFF) as u8;
+					      dst[1] = ((v >> 8) & 0xFF) as u8;
+					      dst[2] = ((v >> 16) & 0xFF) as u8;
+					      dst[3] = ((v >> 24) & 0xFF) as u8;
+					  }
+					  pub fn read_u32_le(src: &[u8]) -> u32 {
+					      (src[0] as u32)
+					          | ((src[1] as u32) << 8)
+					          | ((src[2] as u32) << 16)
+					          | ((src[3] as u32) << 24)
+					  }
+					  ```
+			-
+		- ### The IPC router (mailbox-based IPC)
+			- In this setup, each "task" (process) has an associated *endpoint*
+			- The kernel maintains a mailbox for each endpoint
+			- When message M is sent from A to B, the kernel puts M into B's mailbox
+				- The mailbox has a size limit and the router will throw an error when it is full
+				- In this setup, that buffer size is 1, i.e. no **backpressure** allowed
+			- When B wants to receive the M, the router checks B's mailbox, and if it's there, marks B's mailbox as empty (because buffer size is 1 here) before returning M to B
+			- ```rust
+			  #[derive(Copy, Clone, Debug)]
+			  pub enum SendError {
+			      MailboxFull,
+			  }
+			  
+			  #[derive(Copy, Clone)]
+			  struct Mailbox {
+			      full: bool,
+			      msg: Message,
+			  }
+			  
+			  impl Mailbox {
+			      const EMPTY: Message = Message {
+			          header: MsgHeader {
+			              src: EndpointId::Ping,
+			              dst: EndpointId::Ping,
+			              ty: MsgType::Ping,
+			              len: 0,
+			              seq: 0,
+			          },
+			          payload: [0; MAX_PAYLOAD],
+			      };
+			      const fn new() -> Self {
+			          Self { full: false, msg: Self::EMPTY }
+			      }
+			      fn put(&mut self, msg: Message) -> Result<(), SendError> {
+			          if self.full { return Err(SendError::MailboxFull); }
+			          self.msg = msg;
+			          self.full = true;
+			          Ok(())
+			      }
+			      fn take(&mut self) -> Option<Message> {
+			          if !self.full { return None; }
+			          self.full = false;
+			          Some(self.msg)
+			      }
+			  }
+			  
+			  pub struct Router {
+			      ping: Mailbox,
+			      pong: Mailbox,
+			  }
+			  
+			  impl Router {
+			      pub const fn new() -> Self {
+			          Self { ping: Mailbox::new(), pong: Mailbox::new() }
+			      }
+			      pub fn send(&mut self, msg: Message) -> Result<(), SendError> {
+			          match msg.header.dst {
+			              EndpointId::Ping => self.ping.put(msg),
+			              EndpointId::Pong => self.pong.put(msg),
+			          }
+			      }
+			      pub fn recv(&mut self, dst: EndpointId) -> Option<Message> {
+			          match dst {
+			              EndpointId::Ping => self.ping.take(),
+			              EndpointId::Pong => self.pong.take(),
+			          }
+			      }
+			  }
+			  ```
+		- ### Where to put the IPC router
+			- This IPC router apparently needs to be globally accessible
+			- This is hard here due to `no_std`, meaning no heap and dynamic allocation
+			- Our `Router` obviously have mutable states, which means Rust will care a lot
+			- #### Dealing with trait `Sync`
+				- The fact that the `Router` is mutable means it's naturally not satisfying trait `Sync`
+					- Note: all `static` must be `Sync`
+				- But remember that our OS here is single-threaded, so, there's no need to care about `Sync`, but still, `Sync` is required for our code to compile
+					- We'll convince Rust with Trust-Me-Bro approach: (`unsafe impl Sync for RouterCell`)
+					- ```rust
+					  use core::cell::UnsafeCell;
+					  
+					  #[repr(transparent)]
+					  struct RouterCell(UnsafeCell<ipc::Router>);
+					  unsafe impl Sync for RouterCell {} // trust-me-bro
+					  
+					  #[link_section = ".data"]
+					  static ROUTER: RouterCell = RouterCell(UnsafeCell::new(ipc::Router::new()));
+					  
+					  pub fn kmain(logger: &dyn Logger) -> ! {
+					      let router: &mut ipc::Router = unsafe { &mut *ROUTER.0.get() };
+					      // ... use router for the rest of the kernel's life
+					  }
+					  ```
+					- Our `Router` solution ends up with 3 details
+						- `UnsafeCell`
+							- Here we use `UnsafeCell` for interior mutability
+							- But we must implement `Sync` manually
+						- Manual `Sync` implementation
+							- The implementation block is empty because we know our OS will only run on single-threaded Qemu machine
+						- `#[link_section] = ".data"`
+							- Ensure that our data is placed in writable memory region [`.data` as defined by our linker](((69de7a63-ec6c-4ff5-831b-634b26c88d3c)))
+							- This is because `.data` holds uninitialized mutable data
+							- On ARM, the MMU enforces these permissions: `.rodata` pages are mapped read-only
+								- Writing to `.rodata` causes a Data Abort
+							- We need to do this because Rust might see that the router is static, and so decides to put to put in `.rodata`, causing Data Abort when we mutate the router
+					- The router initialization is quite Rustic:
+					  ```rust
+					  let router: &mut ipc::Router = unsafe { &mut *ROUTER.0.get() }
+					  ```
+					  Let's look at the expression:
+					  ```rust
+					  unsafe { &mut *ROUTER.0.get() }
+					  ```
+						- `ROUTER` is our static `RouterCell`.
+						- `ROUTER.0` accesses the `UnsafeCell<ipc::Router>` inside `RouterCell`.
+						- `.get()` returns a `*mut ipc::Router`
+						- The `*` dereferences that raw pointer, giving us an `ipc::Router`.
+						- `&mut` borrows it as a mutable reference.
+						- The whole thing is wrapped in `unsafe { ... }` because the compiler can’t verify that no other code holds a reference to the same `Router`. We know it’s safe because we only call this once, at the start of `kmain`, and our kernel is single-threaded. This is a common pattern for global mutable state in `no_std` Rust, but it requires careful reasoning to ensure safety.
+						- The end result is that we get a `&mut ipc::Router` that we can use throughout the kernel to send and receive messages.
+	- ## Tasks (cooperating process)
+		- > Think of it like processes on traditional modern OS
+		- #Process
+		- A task is a fundamental unit of work for our kernel
+		- Each task has its own logic and states, and the scheduler manages when each task runs at any given time
+		- We must define a Rust trait for our tasks
+			- Able to interact with our IPC router
+			- Able to interact with our cooperative scheduler
+		- Trait definition
+			- `id()` method to get the task's ID (maps to IPC end point)
+			- `poll()` method that scheduler can call
+			- ```rust
+			  pub trait Task {
+			      fn id(**&**self) -> EndpointId;
+			      fn poll(**&**mut self, logger: &dyn Logger, ipc: &mut ipc::Router, tick: u64);
+			  }
+			  ```
+			- The cooperative contract is simple: **tasks must return voluntarily from `poll` (i.e. yielding)**
+			- `poll` is called with a `tick`, which increments every time the scheduler runs
+			- Note `poll`'s `logger` parameter is [*Rust trait object*](https://doc.rust-lang.org/reference/types/trait-object.html) `&dyn Logger`
+				- So type resolution happens during runtime, i.e. dynamic dispatch
+				- We need this because we don't want the kernel to know the underlying type *at all*, other than its methods
+				- > Same pattern as `Box<dyn Error>` in standard Rust, but we use a plain reference because we don’t have a heap.
+	- ## PingTask
+		- PingTask is a state machine with 2 states:
+			- `seq`: incremented **after each ping**, NOT `MsgHeader.seq`
+			- `waiting`: bool flag whether waiting for pong reply
+		- The logic is straightforward:
+			- If it’s not waiting, it sends a ping every 10 ticks
+			- If it's waiting, it checks for a pong reply each tick
+				- If it gets a pong reply, it flips `waiting` back to false and increment its `seq`
+		- Implementation
+			- ```rust
+			  pub struct PingTask {
+			      seq: u32,
+			      waiting: bool,
+			  }
+			  
+			  impl PingTask {
+			      pub const fn new() -> Self {
+			          Self { seq: 1, waiting: false }
+			      }
+			  }
+			  
+			  impl Task for PingTask {
+			      fn id(&self) -> EndpointId { EndpointId::Ping }
+			  
+			      fn poll(&mut self, logger: &dyn Logger, ipc: &mut ipc::Router, tick: u64) {
+			          if tick == 0 { logger.log("task/ping: poll\n"); }
+			  
+			          // Check for replies first
+			          if let Some(msg) = ipc.recv(self.id()) {
+			              if matches!(msg.header.ty, MsgType::Pong) {
+			                  self.waiting = false;
+			                  logger.log("task/ping: got pong\n");
+			              }
+			          }
+			  
+			          // Send a ping every 10 ticks, but only if we're not
+			          // already waiting for a reply
+			          if !self.waiting && (tick % 10) == 0 {
+			              let mut payload = [0u8; ipc::MAX_PAYLOAD];
+			              ipc::write_u32_le(&mut payload[0..4], self.seq);
+			              let msg = ipc::Message {
+			                  header: ipc::MsgHeader {
+			                      src: EndpointId::Ping,
+			                      dst: EndpointId::Pong,
+			                      ty: MsgType::Ping,
+			                      len: 4,
+			                      seq: self.seq,
+			                  },
+			                  payload,
+			              };
+			              match ipc.send(msg) {
+			                  Ok(()) => {
+			                      logger.log("task/ping: sent ping\n");
+			                      self.waiting = true;
+			                      self.seq = self.seq.wrapping_add(1);
+			                  }
+			                  Err(_) => {
+			                      logger.log("task/ping: send failed (queue full)\n");
+			                  }
+			              }
+			          }
+			      }
+			  }
+			  ```
+	- ## PongTask
+		- Implementation
+			- ```rust
+			  pub struct PongTask;
+			  
+			  impl PongTask {
+			      pub const fn new() -> Self { Self }
+			  }
+			  
+			  impl Task for PongTask {
+			      fn id(&self) -> EndpointId { EndpointId::Pong }
+			  
+			      fn poll(&mut self, logger: &dyn Logger, ipc: &mut ipc::Router, _tick: u64) {
+			          if let Some(msg) = ipc.recv(self.id()) {
+			              if matches!(msg.header.ty, MsgType::Ping) {
+			                  let seq = ipc::read_u32_le(&msg.payload[0..4]);
+			                  logger.log("task/pong: got ping\n");
+			  
+			                  let mut payload = [0u8; ipc::MAX_PAYLOAD];
+			                  ipc::write_u32_le(&mut payload[0..4], seq);
+			                  let reply = ipc::Message {
+			                      header: ipc::MsgHeader {
+			                          src: EndpointId::Pong,
+			                          dst: EndpointId::Ping,
+			                          ty: MsgType::Pong,
+			                          len: 4,
+			                          seq,
+			                      },
+			                      payload,
+			                  };
+			                  let _ = ipc.send(reply);
+			              }
+			          }
+			      }
+			  }
+			  ```
+			- `PongTask` is a unit struct (i.e., it has no fields) because it doesn’t need to track any state
+			- Every tick, it checks its mailbox. If there’s a ping, it sends a pong reply back to `PingTask`
+			- It deliberately discards any send errors, for simplicity
+	- ## Round-robin scheduler
+		- We'll implement our scheduler as a simple Rust function
+			- ```rust
+			  pub fn run(
+			      tasks: &mut [&mut dyn Task],
+			      logger: &dyn Logger,
+			      ipc: &mut ipc::Router,
+			  ) -> ! {
+			      let mut tick: u64 = 0;
+			      logger.log("sched: starting\n");
+			      loop {
+			          for t in tasks.iter_mut() {
+			              t.poll(logger, ipc, tick);
+			          }
+			          tick = tick.wrapping_add(1);
+			          hal::arch::halt();
+			      }
+			  }
+			  ```
+		- Note the call to `hal::arch::halt`
+			- Why halt at the end of each `loop` iteration?
+				- Because halting allow CPU into lower CPU state, so as to not cook itself when it's waiting on something
+			- Would it not block the 1st `loop` iteration forever?
+				- Recall how our HAL implementation of `halt` for AArch64 is just a simple `wfi` instruction
+				- `wfi` blocks unti the next hardware interrupt
+				- In our case, the clock or other hardware will send the next interrupt within 10 or 100ms anyway (they interrupt in intervals)
+				- This time window allows the CPU to rest
+	- ## Finalized `kmain`
+		- ```rust
+		  pub fn kmain(logger: &dyn Logger) -> ! {
+		      logger.log("rustOS: kernel online\n");
+		      logger.log("rustOS: microkernel step 1 (IPC + cooperative scheduling)\n");
+		  
+		      let router: &mut ipc::Router = unsafe { &mut *ROUTER.0.get() };
+		  
+		      let mut ping = sched::PingTask::new();
+		      let mut pong = sched::PongTask::new();
+		      let mut tasks: [&mut dyn sched::Task; 2] = [&mut ping, &mut pong];
+		  
+		      sched::run(&mut tasks, logger, router)
+		  }
+		  ```
