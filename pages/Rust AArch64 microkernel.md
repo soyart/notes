@@ -1095,26 +1095,26 @@
 			- It deliberately discards any send errors, for simplicity
 	- ## Round-robin scheduler
 		- We'll implement our scheduler as a simple Rust function
-			- ```rust
-			  pub fn run(
-			      tasks: &mut [&mut dyn Task],
-			      logger: &dyn Logger,
-			      ipc: &mut ipc::Router,
-			  ) -> ! {
-			      let mut tick: u64 = 0;
-			      logger.log("sched: starting\n");
-			      loop {
-			          for t in tasks.iter_mut() {
-			              t.poll(logger, ipc, tick);
-			          }
-			          tick = tick.wrapping_add(1);
-			          hal::arch::halt();
-			      }
-			  }
-			  ```
+		  ```rust
+		  pub fn run(
+		      tasks: &mut [&mut dyn Task],
+		      logger: &dyn Logger,
+		      ipc: &mut ipc::Router,
+		  ) -> ! {
+		      let mut tick: u64 = 0;
+		      logger.log("sched: starting\n");
+		      loop {
+		          for t in tasks.iter_mut() {
+		              t.poll(logger, ipc, tick);
+		          }
+		          tick = tick.wrapping_add(1);
+		          hal::arch::halt();
+		      }
+		  }
+		  ```
 		- Note the call to `hal::arch::halt`
 			- Why halt at the end of each `loop` iteration?
-				- Because halting allow CPU into lower CPU state, so as to not cook itself when it's waiting on something
+				- Because halting allow CPU to drop into lower power state, preserving energy and prevent overheating when it's waiting on something
 			- Would it not block the 1st `loop` iteration forever?
 				- Recall how our HAL implementation of `halt` for AArch64 is just a simple `wfi` instruction
 				- `wfi` blocks unti the next hardware interrupt
