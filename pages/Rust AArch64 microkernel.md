@@ -2,6 +2,20 @@
 - This will be based on the following blog series
 	- [2018+] https://os.phil-opp.com/
 	- [2026] https://blog.desigeek.com/post/2026/02/building-microkernel-part0-why-build-an-os/
+- # Project structure
+	- > Repository https://github.com/bahree/rust-microkernel
+	- Crate `crates/kernel`
+		- Hardware-agnostic kernel
+		- Only knows about HAL, and will interact with hardware via HAL implementations
+	- Crate `crates/hal`: HAL
+		- Hardware-agnostic interface specification
+	- Crate `crates/arch_*/`, e.g. `crates/arch_aarch64_virt`
+		- Hardware-specific HAL implementation
+			- In Rust, that means objects from this crate implements traits from the HAL crate
+		- This is not just specific to CPU arch, but the whole machine.
+			- `crates/arch_aarch64_virt` is for CPU `aarch64` and `virt` machine
+			- If we're developing for Raspberry Pi, we'll need another platform crate to cope with different hardware and behavior
+		- Might include assembly, to work with low-level
 - # Part 1: booting bare-metal
 	- This part will deal with booting up our [freestanding Rust binary](https://os.phil-opp.com/freestanding-rust-binary/) (our minimum *kernel*) from qemu
 		- The configuration for our VM would look like this:
@@ -137,18 +151,51 @@
 					  cargo build --target thumbv7em-none-eabihf
 					  ```
 					- Note that we're not using this target `thumbv7em-none-eabihf`, we'll use [custom target triple](https://doc.rust-lang.org/rustc/targets/custom.html) instead
-	- Qemu will boot into ARM EL2 and might handover in EL2 or EL1, so our kernel should be able to drop from EL2 to EL1
-	- ## Primer: #ELF
-		- > An ELF file is like a shipping manifest. It says: “here’s a chunk of 
-		  executable code, load it at this address. Here’s read-only data, put it 
-		  over here. Here’s uninitialized data (BSS), allocate this much space and
-		   zero it. Oh, and the program starts executing at this address.”
-		  >
-		  > https://blog.desigeek.com/post/2026/02/building-microkernel-part1-foundations-boot/
-		- ELF is a *file format* for executables, object code, shared libraries, device drivers, etc
-		- Historically, it was specified in Unix SVR4 ABI
-		- By design, it's cross-platform supports different endianness
-		- When we *build* our Rust microkernel, both `cargo` and our linker of choice produces binary output in ELF
+	- ## AArch64 boot process with Qemu virt machine
+		- > Note that labels like `_start`, `el1_start`, `rust_main`, etc. are defined by ((69de7a40-0417-470d-8f7f-32d7e354195a))
+		- Qemu (our "firmware") loads our ELF binary
+			- > On real hardware, the firmware might not be able to parse and load ELF. In that case, we'd have to produce a raw binary with correct data placement instead
+			- Parses ELF
+			- Load sections to the right addresses
+		- Qemu hands over CPU control to `_start` (assembly)
+			- Qemu initially boots into ARM EL2 and might handover in EL2 or EL1, so our kernel should be able to drop from EL2 to EL1
+		- `_start` drops to EL1, then jumps to `el1_start` (assembly)
+		- `el1_start` prepares EL1 environment before jumping to our Rust `rust_main`
+			- `el1_start` prepares VBAR table
+				- VBAR (Vector Base Address Register) in ARM holds the base address for exception vector tables, directing the CPU to the correct code handlers when exceptions occur
+			- `el1_start` enables some feature flags for EL1 to prevent crashing
+			- `el1_start` jumps to Rust
+		- `rust_main` (HAL, in `crates/arch_aarch64_virt`) configures hardware
+			- This time just the PL011 UART, for printing to screen (note: that this PL011 UART is connected to our host stdio)
+		- `rust_main` (`crates/arch_aarch64_virt`) calls `kmain` (`crates/kernel`)
+		- Kernel runs and manages tasks
+		- ### Differences between other platforms
+			- ### `x86-64`
+				- Due to compatibility requirements with the original 8086 from 1978, `x86-64` boot process is much more complex than ARM
+				- Most Rust OS projects use the `bootloader` crate by Philipp Oppermann, which handles all these mode transitions and loads your kernel ELF
+				- `x86-64` starts in 16-bit real mode
+					- This only gives you 1MB of memory to work with
+				- We have to transition to:
+					- Protected mode (32-bit)
+					- Long mode (64-bit)
+					- [Setup GDTs (Global Descriptor Tables)](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
+					- Configure page tables (required for 64-bit mode)
+				- IO differences
+					- `x86-64` uses COM ports at I/O address `0x3F8`
+					- Accessed with special `in` and `out` instructions (not MMIO)
+					- These details can be wrapped behind in crate `uart_16550`
+			- Raspberry Pi
+				- VideoCore GPU boots first
+					- GPU reads `bootcode.bin` from the SD card
+					- GPU loads `start.elf`, reads `config.txt` for settings
+					- GPU loads your kernel (`kernel8.img`) to address `0x80000`
+				- ARM CPU boots
+					- Because the Pi has firmware, we don't have to drop from EL2 to EL1
+					- Because the Pi has 2 UART hardware, so the UART driver is more complex:
+						- A full PL011 (which is connected to Bluetooth by default)
+						- A simpler Mini-UART on GPIO pins 14/15
+							- However its clock is tied to the GPU frequency, which makes baud rate configuration trickier
+	- ## Primer: [[ELF]]
 		- Qemu knows how to loads ELF
 		- ELF Sections for our kernel:
 			- **`.text.boot`**: The very first code that runs (our assembly entry point)
@@ -156,6 +203,7 @@
 			- **`.rodata`**: Read-only data (string constants, lookup tables)
 			- **`.data`**: Initialized mutable data (statics with non-zero initial values)
 			- **`.bss`**: [Uninitialized data (statics that start at zero](https://en.wikipedia.org/wiki/.bss), just a size, no actual bytes in the binary)
+		- When we *build* our Rust microkernel, both `cargo` and our linker of choice produces binary output in ELF
 	- ## Primer: ARM #Assembly
 		- > Note: we'll focus on AArch64
 		- ### Registers
@@ -242,41 +290,20 @@
 			- Think of it as "emergency phonebook" for a particular EL
 			- When some exception happens, the CPU does not know where to jump to
 			- The CPU uses this to determine where to jump to when it's in a particular EL
-	- ## Basic boot process for qemu AAarch64
-		- Qemu hands control to our "kernel"
+	- ## Assembly for the platform
+		- ### Rationale
+			- We want to run our Rust code in EL1, with a working stack pointers
+			- This means we'll have to combine assembly with Rust, to prepare things for Rust when we're still down low
+		- Qemu loads our ELF, an exectuable version of our code
+		- Qemu hands over the CPU control to our code
 		- We set stack pointer, and zero the BSS
 			- This is done in a "loop", one word at a time
 		- If we're not in EL1 already, drop from EL2 to EL1
 			- Configure EL2 to "return" to EL1 (for the switch)
 			- Configure EL2 to not crash EL1 on some instructions (e.g. floating point)
 			- Initialize stuff for EL1 and "return" from EL2 to EL1
+		- We configure stuff in EL1
 		- Based on the original blog post, we'll be implementing Qemu AArch64 boot process in https://github.com/bahree/rust-microkernel/blob/main/crates/arch_aarch64_virt/src/main.rs, which will "include" `boot.S` assembly
-		- ## Differences between other platforms
-			- ### `x86-64`
-				- Due to compatibility requirements with the original 8086 from 1978, `x86-64` boot process is much more complex than ARM
-				- Most Rust OS projects use the `bootloader` crate by Philipp Oppermann, which handles all these mode transitions and loads your kernel ELF
-				- `x86-64` starts in 16-bit real mode
-					- This only gives you 1MB of memory to work with
-				- We have to transition to:
-					- Protected mode (32-bit)
-					- Long mode (64-bit)
-					- [Setup GDTs (Global Descriptor Tables)](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
-					- Configure page tables (required for 64-bit mode)
-				- IO differences
-					- `x86-64` uses COM ports at I/O address `0x3F8`
-					- Accessed with special `in` and `out` instructions (not MMIO)
-					- These details can be wrapped behind in crate `uart_16550`
-			- Raspberry Pi
-				- VideoCore GPU boots first
-					- GPU reads `bootcode.bin` from the SD card
-					- GPU loads `start.elf`, reads `config.txt` for settings
-					- GPU loads your kernel (`kernel8.img`) to address `0x80000`
-				- ARM CPU boots
-					- Because the Pi has firmware, we don't have to drop from EL2 to EL1
-					- Because the Pi has 2 UART hardware, so the UART driver is more complex:
-						- A full PL011 (which is connected to Bluetooth by default)
-						- A simpler Mini-UART on GPIO pins 14/15
-							- However its clock is tied to the GPU frequency, which makes baud rate configuration trickier
 	- `crates/arch_aarch64_virt/src/boot.S`
 		- Here's our assembly `boot.S` that prepares the system for our Rust microkernel
 			- ```asm
@@ -695,6 +722,7 @@
 				- `wfi` (wait for interrupt, like `hlt` on x86) puts the CPU into a low-power sleep state until an interrupt fires
 				- `wfe` (wait for event) can return immediately if an event  flag is already set, which means your “sleep” loop might spin instead of sleeping. `wfi` is more predictable
 	- `crates/arch_aarch64_virt/linker.ld` (the linker for our qemu aarch64 `virt` machine)
+	  id:: 69de7a40-0417-470d-8f7f-32d7e354195a
 		- > We must provide our own linker because we're writing our OS, we don't have available linker to decide where our code lives in memory
 		  >
 		  > Also note that on Qemu `virt` machine, the RAM region that starts at `0x40000000`, while `0x80000` offset is a convention
@@ -783,45 +811,45 @@
 				- `to`
 			- `payload`
 		- ### Message structure for ping-pong
+			- Implementation
+			  ```rust
+			  pub const MAX_PAYLOAD: usize = 8;
+			  
+			  #[derive(Copy, Clone, Debug)]
+			  #[repr(C)]
+			  pub struct MsgHeader {
+			      pub src: EndpointId,      // who sent this
+			      pub dst: EndpointId,      // who should receive it
+			      pub ty: MsgType,          // what kind of message
+			      pub len: u8,              // how many payload bytes are used
+			      pub seq: u32,             // sequence number for ordering
+			  }
+			  
+			  #[derive(Copy, Clone, Debug)]
+			  #[repr(C)]
+			  pub struct Message {
+			      pub header: MsgHeader,
+			      pub payload: [u8; MAX_PAYLOAD],
+			  }
+			  ```
 			- > Note: `#[repr(u8)]` tells the compiler to store the enum’s discriminant as exactly one byte (`u8`), making our struct size known and exact at compile time, otherwise Rust might try to optimize the memory layout.
 			  >
 			  > 1 byte is chosen for simplicity.
-			- `struct Message`
-				- ```rust
-				  pub const MAX_PAYLOAD: usize = 8;
-				  
-				  #[derive(Copy, Clone, Debug)]
-				  #[repr(C)]
-				  pub struct MsgHeader {
-				      pub src: EndpointId,      // who sent this
-				      pub dst: EndpointId,      // who should receive it
-				      pub ty: MsgType,          // what kind of message
-				      pub len: u8,              // how many payload bytes are used
-				      pub seq: u32,             // sequence number for ordering
-				  }
-				  
-				  #[derive(Copy, Clone, Debug)]
-				  #[repr(C)]
-				  pub struct Message {
-				      pub header: MsgHeader,
-				      pub payload: [u8; MAX_PAYLOAD],
-				  }
-				  ```
 			- Our enums for ping-pong
-				- ```rust
-				  #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-				  #[repr(u8)]
-				  pub enum EndpointId {
-				      Ping = 1,
-				      Pong = 2,
-				  }
-				  #[derive(Copy, Clone, Debug)]
-				  #[repr(u8)]
-				  pub enum MsgType {
-				      Ping = 1,
-				      Pong = 2,
-				  }
-				  ```
+			  ```rust
+			  #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+			  #[repr(u8)]
+			  pub enum EndpointId {
+			      Ping = 1,
+			      Pong = 2,
+			  }
+			  #[derive(Copy, Clone, Debug)]
+			  #[repr(u8)]
+			  pub enum MsgType {
+			      Ping = 1,
+			      Pong = 2,
+			  }
+			  ```
 			- We have `MsgHeader.seq` for ordering and being able to tell lost message
 			- This current implementation does not need heap allocation at all
 			- ### Working with payloads
@@ -846,7 +874,6 @@
 					          | ((src[3] as u32) << 24)
 					  }
 					  ```
-			-
 		- ### The IPC router (mailbox-based IPC)
 			- In this setup, each "task" (process) has an associated *endpoint*
 			- The kernel maintains a mailbox for each endpoint
