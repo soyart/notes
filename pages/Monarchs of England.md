@@ -1,3 +1,5 @@
+alias:: British Royal Family
+
 - Monarchs of England were sovereigns of the Anglo-Saxon kingdoms, and later the Kingdom of England, before its Union with Scotland in 1601
 - > Note 1: not every Wessex kings are listed here. Only from Egbert Bretwalda.
   > Note 2: We'll also write their names in modern English spelling

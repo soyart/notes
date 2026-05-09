@@ -1,7 +1,7 @@
 - My personal [Logseq notes](https://github.com/soyart/notes)
 - # Index
 	- Go back to [artnoi.com](https:artnoi.com)
-	- ## Languages
+	- ## Programming
 		- [[C]]
 		- [[Go]]
 		- [[Rust]]
@@ -25,3 +25,4 @@
 		- [[Language theory]]
 		- [[Regular expression]]
 		- [[Automata]]
+		- [[Monarchs of England]]

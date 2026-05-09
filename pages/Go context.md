@@ -1,8 +1,8 @@
-- Package `context` provides library for working *context*, a way to pass around and handle request-scoped values, including deadlines and cancellation signals in [[Go]]
+- Package `context` provides library for working with *context*. Context is a way to pass around and handle request-scoped values, including deadlines and cancellation signals in [[Go]]
 - The main type is the interface `context.Context`
 	- Most of the time, we just use the implementation from package `context` without knowing about underlying type
 - # context.Context
-	- > Note: we'll call `context.Context` as just `Context`
+	- > Note: sometimes we'll just call `context.Context` as `Context`
 	- `type Context interface{..}` defines some Go methods:
 	  ```go
 	  type Context interface {
@@ -13,8 +13,11 @@
 	  }
 	  ```
 		- **Note: `key` in `Value` is _typed_**
-		- This means that, if we have `type String string`, then `Value(String("hi"))` and `Value("hi")` will return different values
-		- This allows us to store values with essentially the same underlying key data as separate slot, separated by the key's Go type
+			- Being *typed* means that iIf we have `type MyStr string`, then the following expression returns different values even though it's basically the same bytes under the hood:
+				- `Value("hi")`
+				- `Value(MyStr("hi"))`
+				- `Value([]byte("hi"))`
+			- This allows us to store values with essentially more or less the same underlying key as separate slots, differentiated by the key's Go type
 	- The interface suggests `Context` is mostly used to control cancellation and synchronization, as well as store some key-value pairs (`Value`)
 	- To create a new, vanilla `Context`, we can use `context.Background` which creates *background* context in the current scope
 	- ## Parent-child context
@@ -31,30 +34,30 @@
 		    ctxChild, cancel := context.WithCancel(ctx)
 		  }
 		  ```
-		- Parent can propagate their cancellations/deadlines to children, **but not vice versa**, as shown in [one of the examples](((69ff7579-672c-4bef-b921-eb5afed956b4)))
+		- Parent can propagate their cancellations to children, **but not vice versa**, as shown in [one of the examples](((69ff7579-672c-4bef-b921-eb5afed956b4)))
 - # Go context cancellation
 	- We can create a `Context` with the ability to be "canceled" with `context.WithCancel`:
 	  ```go
 	  ctx, cancel := context.WithCancel(context.Background())
 	  ```
 	  When `cancel` is called, `ctx` is *canceled*
-	- When `ctx` is canceled:
+	- ### When `ctx` is canceled:
 		- `ctx.Err()` returns an error saying context is canceled
 		- The channel from `ctx.Done()` finally receive a value
-		- > Use `ctx.Err()` if we want to check for `ctx` status immediately.
-		  > Use `select` over `ctx.Done()` if we want to block and wait for something `ctx`'s doing to finish.
-	- We use `ctx.Err()` if we want to check for `ctx` status immediately
-	- We `select` over `ctx.Done()` if we want to block and wait for something `ctx`'s doing to finish
-	- canceled parents also cancel their children
+		- Canceled parents also cancel their children
+		- The context never becomes nil
+	- > Use `ctx.Err()` if we want to check for `ctx`'s status immediately.
+	  >
+	  > Use `select` or receive from `ctx.Done()` if we want to block and wait for something `ctx`'s doing to finish.
 - # Go context deadline
 	- We can create a `Context` with a timeout deadline with `context.WithTimeout`:
 	  ```go
 	  // Creates a Context that will be automatically canceled in 10s
-	  // or manually when `cancel` is called
+	  // or manually when we call cancel()
 	  ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	  ```
-	- Deadlines are just timed cancellations, so the assumptions from cancellation also hold
-	- The only difference is the error message now being `deadline exceeded`
+	- **Deadlines are just timed cancellations**, so the assumptions from cancellation also hold
+	- The only differences are the timer and the error message, now being `deadline exceeded`
 - # Examples
 	- ## Parent-child cascade
 	  id:: 69ff7579-672c-4bef-b921-eb5afed956b4
@@ -80,8 +83,8 @@
 		  But since c1 has no parent, it should not be canceled and continue to do work.
 		  
 		  - At start, all of the works should start concurrently
-		  - After 3s, c2 is canceled, so the all c2 works are done
-		  - But since c2 has a child, c3, the cancellation propagates to c3 and all c3 works are done
+		  - After 3s timeout, c2 is canceled by the deadline, so all of c2 works are canceled
+		  - But since c2 has a child, c3, the cancellation propagates to c3 and all c3 works are canceled
 		  - Only work=0 (c1) is left printing "work", the rest are done
 		  
 		  ## Key takeaways:
