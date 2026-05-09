@@ -15,7 +15,7 @@
 	- ### ELF Header
 	  id:: 69e3ab7b-1f5e-4942-80c6-31f91ee1997a
 		- > ELF information
-		- `e_ident` (32-bit of data)
+		- `e_ident`
 			- `EI_VERSION`
 				- ELF version
 			- `EI_DATA`
@@ -50,7 +50,7 @@
 		  > This means that non-executable ELF files (e.g. a shared object `.o` files) are missing PHT.
 		  >
 		  > Another thing is PHT is always fixed-size (56 bytes for 64-bit PHT) for parsing speed. When there's no information, the region still takes the same space but zeroed instead
-		- Define multiple memory segments in the table as entries
+		- Defines multiple *memory segments* in the table as entries
 		- Each PHT entry (a segment) is defined with:
 			- > Segments do not have names and are identified from their types only
 			- `p_type`

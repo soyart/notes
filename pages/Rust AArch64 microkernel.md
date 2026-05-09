@@ -17,6 +17,7 @@
 			- If we're developing for Raspberry Pi, we'll need another platform crate to cope with different hardware and behavior
 		- Might include assembly, to work with low-level
 - # Part 1: booting bare-metal
+	- > Note that the kernel is designed to run in EL1, for simplicity
 	- This part will deal with booting up our [freestanding Rust binary](https://os.phil-opp.com/freestanding-rust-binary/) (our minimum *kernel*) from qemu
 		- The configuration for our VM would look like this:
 		  ```shell
@@ -290,23 +291,28 @@
 			- Think of it as "emergency phonebook" for a particular EL
 			- When some exception happens, the CPU does not know where to jump to
 			- The CPU uses this to determine where to jump to when it's in a particular EL
-	- ## Assembly for the platform
+	- ## Boot assembly for the platform
 		- ### Rationale
-			- We want to run our Rust code in EL1, with a working stack pointers
-			- This means we'll have to combine assembly with Rust, to prepare things for Rust when we're still down low
+			- Rust requires a working stack at `sp` and a vbar table
+			- But Qemu does not configure that in EL1 for us
+			- This means we'll have to combine assembly with Rust, to prepare things for Rust right when QEMU hands over to us, when we're still down low, before all Rust comes
 		- Qemu loads our ELF, an exectuable version of our code
 		- Qemu hands over the CPU control to our code
-		- We set stack pointer, and zero the BSS
-			- This is done in a "loop", one word at a time
-		- If we're not in EL1 already, drop from EL2 to EL1
+		- We set stack pointer
+			- Set `sp` to point to the top of 64K memory
+			- This is ok because our Rust kernel does not call many functions yet, so stack won't probably overflow
+		- We zero the BSS
+			- This is done in a "loop" in ([`boot.S, L8-15`]((69dd1a60-ba37-412a-9079-e486f581201d))), one word at a time
+		- Drop from EL2 to EL1 (if we're not in EL1 already)
 			- Configure EL2 to "return" to EL1 (for the switch)
 			- Configure EL2 to not crash EL1 on some instructions (e.g. floating point)
 			- Initialize stuff for EL1 and "return" from EL2 to EL1
-		- We configure stuff in EL1
+		- We configure stuff in EL1 for Rust
 		- Based on the original blog post, we'll be implementing Qemu AArch64 boot process in https://github.com/bahree/rust-microkernel/blob/main/crates/arch_aarch64_virt/src/main.rs, which will "include" `boot.S` assembly
 	- `crates/arch_aarch64_virt/src/boot.S`
-		- Here's our assembly `boot.S` that prepares the system for our Rust microkernel
-			- ```asm
+		- Here's our assembly `boot.S` that prepares the system for our Rust microkernel running in EL1
+			- id:: 69dd1a60-ba37-412a-9079-e486f581201d
+			  ```asm
 			  .section .text.boot
 			  .global _start
 			  _start:
