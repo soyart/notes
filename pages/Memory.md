@@ -54,7 +54,7 @@
 		- Error-prone and potentially unsafe due to memory safety violations
 		- This is accomplished explicitly by `malloc` and `free` for requesting/freeing memory from heap
 			- You can also request for memory on the stack with `alloca` which gets automatically freed
-		- ### Memory pool (fixed size block allocation)
+		- ### [[Fixed size block allocation]]
 			- A large fixed-size allocation
 			- Implemented using *fixed-size* [free list (freelist)](https://en.wikipedia.org/wiki/Free_list) of *fixed-size* blocks of the memory #freelist
 				- A free list is a linked list of unallocated locations
@@ -62,7 +62,7 @@
 				  ```
 				  | block=1, size=4k | block=2, size=4k | block=3, size=4k |
 				  ```
-		- ### Buddy blocks (buddy system allocation)
+		- ### [[Buddy block allocation]]
 			- > See also: https://en.wikipedia.org/wiki/Buddy_memory_allocation
 			- Like with memory pool, but with multiple pools of varying block sizes instead
 			- Unlike memory pools, buddy block aims to minimize memory waste per allocations, i.e. fit a large object into a fittingly large blocks

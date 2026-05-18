@@ -1,4 +1,5 @@
 alias:: GC, Garbage Collector
+id:: 69936e59-9e59-4e44-b5bf-83e70b81dbfb
 
 - GC provides automatic deallocation of unreachable and unreferenced objects from allocated memory, returning it to [memory]([[Memory]]) pools
 - GC is usually implemented in the programming languages, such as [[Go]] and [[Python]], but sometimes exist in other systems, such as [[Git]] and [[Nix]]
