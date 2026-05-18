@@ -6,13 +6,13 @@ tags:: Programming, Language
   [lisp-lang.org/learn](https://lisp-lang.org/learn)
 - > Lisp here will be Common Lisp
 - Lisp is a programming with long history, and even longer list of dialects (Common Lisp, Clojure, Scheme, etc). Each dialect also has its own implementations
-- Lisp also pioneered many features of high-level programming languages, like garbage collection, recursion, dynamic typing
+- Lisp also pioneered many features of high-level programming languages, like [[Garbage Collection]] , recursion, dynamic typing
 - In Lisp family, the underlying building blocks are implemented as linked lists, each node called a con:
   ```
   [CAR (data), CDR (next)-]->[CAR, CDR]->[CAR, CDR]
   ```
 - # Lisp introduction
-	- Lisp stands for *list processing*, so most of Lisp is just lists. And this makes it perfect for AI
+	- Lisp stands for *list processing*, so most of Lisp is just lists. And this makes it perfect for (traditional, pre-LLM-era) AI
 	- Lisp expressions are declared inside a pair of parenthesis, like:
 	  ```lisp
 	  (+ 5 4)

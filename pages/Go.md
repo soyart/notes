@@ -1,7 +1,7 @@
 tags:: Programming, Language
 alias:: Golang, Go language
 
-- Go is a compiled, statically typed programming languages with [[Garbage collection]]
+- Go is a compiled, statically typed programming languages with [[garbage collector]]
 - # Go runtime
 	- Go runtime provides *memory allocator*, *garbage collector*, *scheduler*, *system monitor*, and a lot of stuff to help us Go programmers stay sane and write code that run efficiently
 	- The runtime is included in every Go binary
@@ -66,12 +66,12 @@ alias:: Golang, Go language
 			  id:: 6a0b2972-17b4-4dbf-8858-eaaee1ac472e
 		- `_rt0_go` then initializes *Thread-Local Storage* (TLS)
 		  logseq.order-list-type:: number
+			- > Important: **If TLS fails, Go aborts further execution**
 			- TLS is OS mechanism that allows threads to have their own private data storage
 			- Different threads can read the same TLS slot and get out a different value!
 				- e.g. Two threads may read from the same `slot no. 5` TLS slot, but that *number 5* is actually mapped to different physical memory
 			- Go uses TLS to store pointer to the goroutine that thread is supposed to run
 			- With this, the runtime can always answer *what goroutine am I supposed to run right now?*
-			- If this fails, Go aborts further execution
 		- `_rt0_go` then inspects the CPU
 		  logseq.order-list-type:: number
 			- This is to enable some hardware optimizations
@@ -122,12 +122,12 @@ alias:: Golang, Go language
 			- ### Stop the world
 			  logseq.order-list-type:: number
 				- In Go, this means *pausing* all goroutines (i.e. *marking* them as *stopped*)
-				- During the stop, the runtime can safely does its things
-				- In `schedinit()` case, there's no goroutines running yet, so the world has never started per se, but `schedinit()` explicitly mark them as stopped nonetheless
+				- During the stop, the runtime can safely does its thing
+				- In `schedinit()` case, there're no goroutines running yet, so the world has never started per se, but `schedinit()` still explicitly marks them as stopped nonetheless
 					- This is to ensure all the subsystems behave nicely and simple enough to understand
 			- ### `stackinit` (Go stack pool initialization)
 			  logseq.order-list-type:: number
-				- Goroutines run on a stack, and this stack becomes stack memory of the goroutine
+				- Goroutines must run on a stack, (the stack becomes stack memory of the goroutine)
 				- Goroutines start with 2KB stacks that grow dynamically
 				- The runtime keeps **pools of pre-allocated stack segments**, *organized by size*, so that creating a new goroutine is fast
 					- The Go stack pool uses a form of [[Fixed size block allocation]] (based heavily on the **TCMalloc (Thread-Caching Malloc)**):
@@ -140,8 +140,8 @@ alias:: Golang, Go language
 					            [16 KB ] -> Managed by stackpool[3]
 					            [32 KB+] -> Managed by stackLarge (Via Page Allocator)
 					  ```
-						- **Predefined Classes:** Go does not dynamically split or merge blocks on the fly to fulfill arbitrary sizes. Instead, it rounds every stack request up to the nearest predefined size class [2].
-						- **No Dynamic Merging:** When a 2KB stack is freed, the runtime does not look at the neighboring 2KB block to instantly merge them into a 4KB block (which is what a buddy allocator does). It simply returns the 2KB chunk to the 2KB free pool slot [2].
+						- **Predefined Classes:** Go does not dynamically split or merge blocks on the fly to fulfill arbitrary sizes. Instead, it rounds every stack request up to the nearest predefined size class
+						- **No Dynamic Merging:** When a 2KB stack is freed, the runtime does not look at the neighboring 2KB block to instantly merge them into a 4KB block (which is what [[Buddy Block allocation]] does). Go simply returns the 2KB chunk to the 2KB free pool slot
 				- When a goroutine finishes and its stack is freed, the stack goes back into the pool
 				- This stack pool allows goroutines to be cheaply made, as new goroutines can just grab memory from this pool
 					- ```

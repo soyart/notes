@@ -62,7 +62,7 @@
 				  ```
 				  | block=1, size=4k | block=2, size=4k | block=3, size=4k |
 				  ```
-		- ### [[Buddy block allocation]]
+		- ### [[Buddy Block allocation]]
 			- > See also: https://en.wikipedia.org/wiki/Buddy_memory_allocation
 			- Like with memory pool, but with multiple pools of varying block sizes instead
 			- Unlike memory pools, buddy block aims to minimize memory waste per allocations, i.e. fit a large object into a fittingly large blocks
@@ -143,7 +143,7 @@
 		- ### Call stack variable
 			- In most languages, even [[C]], the call stack variables are automatically deallocated
 			- Can be considered zero-costs
-		- ### [[Garbage collection]] (GC)
+		- ### [[Garbage Collection]] (GC)
 			- Very popular way to manage memory. Used in many languages
 			- Have overhead costs
 			- Potential "GC pause" problems
