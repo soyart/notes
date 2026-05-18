@@ -65,7 +65,7 @@
 			- Used to track content stored in arrays
 			- Every element's value is indexed
 	- ## Creating an index
-		- ### #[[Go language]]
+		- ### #[[Go]]
 			- #### Single/compound field indexes
 				- ```go
 				  // Simple index

@@ -1,5 +1,5 @@
 tags:: Programming, Language
-alias:: Go
+alias:: Golang, Go language
 
 - Go is a compiled, statically typed programming languages with [[Garbage collection]]
 - # Go runtime
