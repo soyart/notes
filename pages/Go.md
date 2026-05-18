@@ -3,10 +3,10 @@ alias:: Golang, Go language
 
 - Go is a compiled, statically typed programming languages with [[Garbage collection]]
 - # Go runtime
-	- Go runtime provides *memory allocator*, *garbage collector*, *scheduler*, *system monitor*, and a lot of stuff to help our Go programs stay sane and run efficiently
+	- Go runtime provides *memory allocator*, *garbage collector*, *scheduler*, *system monitor*, and a lot of stuff to help us Go programmers stay sane and write code that run efficiently
 	- The runtime is included in every Go binary
 	- ## Hands-on: no-op program in C vs Go
-		- We'll write 2 versions of the same program: the program does nothing, not even printing hello world. The first one in C:
+		- We'll write 2 versions of the same program: the program does nothing, not even printing hello world. The first one in [[C]] :
 		  ```c
 		  // nothing.c
 		  int main() {

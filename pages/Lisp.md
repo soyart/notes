@@ -1,3 +1,5 @@
+tags:: Programming, Language
+
 - > See also
   Lisp PoC CD database page [[lisp-cd-db]] 
   [Practical Common Lisp book](https://gigamonkeys.com/book)

@@ -1,5 +1,5 @@
 tags:: Programming, Language
-alias:: C
+alias:: C Programming Language
 
 - > Note: the notes are tested on macOS clang on M3 Pro
 - # [[C types]]

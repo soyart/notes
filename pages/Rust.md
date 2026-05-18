@@ -1,4 +1,5 @@
-alias:: Rust
+tags:: Programming, Language
+alias:: Rust language
 
 - This is me returning to Rust after 2 years, only the important is noted down
 - # Types
