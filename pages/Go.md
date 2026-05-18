@@ -46,16 +46,15 @@ alias:: Golang, Go language
 		  ```
 			- So the real entry point on this particular machine is **`_rt0_amd64_linux`**
 			- `_rt0_amd64_linux` is an [assembly function in `src/runtime/_rt0_amd64_linux`](https://github.com/golang/go/blob/go1.25.3/src/runtime/rt0_linux_amd64.s)
-			- There're more "runtime entry points", each per a each supported architecture and platform
-				- e.g. `_rt0_arm64_linux`, `_rt0_386_linux`
-			- All these `_rt0_<arch>_<platform>` do one thing: they grab CLI args and jump to `_rt0_go`
-			- `_rt0_go` is the real deal here: it's a big function that does the real *bootstrapping*
+				- There're more than 1 "runtime entry point" in Go
+				- Each supported architecture-platform gets its own entry point
+					- e.g. `_rt0_arm64_linux` and `_rt0_386_linux`
+			- All platform-specific entry points do the same thing: **they grab CLI args and jump to `_rt0_go`**
+			- `_rt0_go` is the real deal here: it's a big function that Go uses to perform *bootstrapping*
 	- ## Bootstrapping
 		- Bootstrapping is what happens between the OS starting our [[ELF]] binary and `func main`
 			- Inside the binary, [the entry point will be some `_rt0_<arch>_<platform>` assembly](((6a0b2748-59b4-462f-8280-f5c6e7dbd504)))
 		- Those platform-specific assembly will jump to `_rt0_go`
-		- `_rt0_go` does the heavy lifing
-		  logseq.order-list-type:: number
 		- `_rt0_go` initializes 2 objects: `g0` and `m0`
 		  logseq.order-list-type:: number
 		  id:: 6a0b294c-194f-42fe-9c77-dac8aa08181e
