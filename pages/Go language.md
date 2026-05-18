@@ -58,11 +58,13 @@ alias:: Go
 		  logseq.order-list-type:: number
 		- `_rt0_go` initializes 2 objects: `g0` and `m0`
 		  logseq.order-list-type:: number
+		  id:: 6a0b294c-194f-42fe-9c77-dac8aa08181e
 			- > We need these 2 objects because our code runs on goroutines, which in turn, run on OS threads. This is why we need one of each before we enter our code
 			- `g0` the first goroutine
 				- `g0` is special in that it won't run our code
 				- `g0` is strictly for the runtime's housekeeping
 			- `m0` the first thread
+			  id:: 6a0b2972-17b4-4dbf-8858-eaaee1ac472e
 		- `_rt0_go` then initializes *Thread-Local Storage* (TLS)
 		  logseq.order-list-type:: number
 			- TLS is OS mechanism that allows threads to have their own private data storage
@@ -75,6 +77,7 @@ alias:: Go
 		  logseq.order-list-type:: number
 			- This is to enable some hardware optimizations
 		- `_rt0_go` then inspects if the binary has `CGO` support, and if it does, it also initializes the C runtime
+		  logseq.order-list-type:: number
 		- `_rt0_go` then:
 		  logseq.order-list-type:: number
 			- `check()` check compiler assumptions
@@ -84,15 +87,7 @@ alias:: Go
 		- ## `schedinit()`
 			- `schedinit()` (in [`src/runtime/proc.go`](https://github.com/golang/go/blob/go1.25.3/src/runtime/proc.go)) is Go scheduler initialization function.
 			- > See more about scheduler, and the 3 resource types: *G*s, *M*s, and *P*s: https://go.dev/src/runtime/HACKING#scheduler-structures
-			- Before we go in and see how `schedinit()` works, let's first look at how OS memory gets managed with `mSpan`,`stackpool`, and `stackLarge`
-				- The runtime requests some memory from the OS.
-				  logseq.order-list-type:: number
-					- The OS allocates a chunk of virtual memory addresses for the runtime
-					  logseq.order-list-type:: number
-				- For each contiguous chunk of OS memory, Go wraps it with a `mSpan`
-				  logseq.order-list-type:: number
-				- All available `mSpan`s are tracked in `stackpool`
-				  logseq.order-list-type:: number
+			- Before we go in and see how `schedinit` works, let's first look at how OS memory gets managed with `mSpan`,`stackpool`, and `stackLarge`
 				- ```
 				  ┌────────────────────────────────────────────────────────┐
 				  │  1. OPERATING SYSTEM (OS) LAYER                        │
@@ -117,9 +112,17 @@ alias:: Go
 				  │     • Feeds free stack segments instantly to Go tasks. │
 				  └────────────────────────────────────────────────────────┘
 				  ```
-			- ### Stop the world (mark the *world* as stopped)
+				- The runtime requests some memory from the OS.
+				  logseq.order-list-type:: number
+					- The OS allocates a chunk of virtual memory addresses for the runtime
+					  logseq.order-list-type:: number
+				- For each contiguous chunk of OS memory, Go wraps it with a `mSpan`
+				  logseq.order-list-type:: number
+				- All available `mSpan`s are tracked in `stackpool`
+				  logseq.order-list-type:: number
+			- ### Stop the world
 			  logseq.order-list-type:: number
-				- In Go, this means pausing all goroutines
+				- In Go, this means *pausing* all goroutines (i.e. *marking* them as *stopped*)
 				- During the stop, the runtime can safely does its things
 				- In `schedinit()` case, there's no goroutines running yet, so the world has never started per se, but `schedinit()` explicitly mark them as stopped nonetheless
 					- This is to ensure all the subsystems behave nicely and simple enough to understand
@@ -195,7 +198,7 @@ alias:: Go
 					- > In older, simpler allocator, there's a single global central list of free memory blocks. The global list must be MUTEX protected, meaning there's lock and unlock operations.
 					  >
 					  > Go authors hated this and decided that the memory cache must be lock-free
-					- Go allocator instead creates multiple *P*s, one for each CPU core/thread
+					- Go allocator instead creates a *P* for each CPU core (or thread if it's hyperthreaded)
 						- Think of a P as a resource bucket or a "local workspace" for a CPU thread:
 						  ```
 						  ┌────────────────────────────────────────────────────────┐
@@ -236,7 +239,7 @@ alias:: Go
 						  ```
 						- This P now has its own private stack memory (`stackcache`), and heap memory `mcache`
 						- `stackcache` and `mcache` are only private to P, and the goroutines running on P are share these 2 memory objects
-						- > Note: Exactly 1 goroutine is running on a P at any given microsecond.
+						- > Note: At any given time, exactly 1 goroutine is running on a P
 						  > This means that there's **NO concurrent access** to P (like context switching)
 						- Context switching helps isolate each goroutine's memory
 							- To prevent goroutine G2 messing up with goroutine G1, Go sanitizes and untangles the memory all G1's memory out of the P, before putting G2 on P. G1 will only ever see a its memory, not G2's memory, and vice versa:
@@ -278,8 +281,50 @@ alias:: Go
 								      Note over P: Pool scan reads allocation map,<br/>bypasses occupied Slot #1
 								      P-->>G2: Hands over a fresh, vacant Slot #2
 								  ```
-			- logseq.order-list-type:: number
-			- Go memory management
+			- ### `cpuinit`
+			  logseq.order-list-type:: number
+				- Explore CPU for extensions not described by assembly code
+			- ### `alginit`
+			  logseq.order-list-type:: number
+				- Select a map key hashing algorithm
+				- If `cpuinit` says AES is available on the CPU, Go will use that
+				- Otherwise Go falls back to software implementation
+			- ### `modulesinit`
+			  logseq.order-list-type:: number
+				- Builds table of *all* Go module packages, with data:
+					- Type definitions
+					  logseq.order-list-type:: number
+					- Function pointers
+					  logseq.order-list-type:: number
+					- GC bitmaps
+					  logseq.order-list-type:: number
+			- ### `typelinksinit` and `itabsinit`
+			  logseq.order-list-type:: number
+				- Initialize interface dispatch table, for interfaces
+			- ### `mcommoninit` (m-common-init)
+			  logseq.order-list-type:: number
+				- Finishes preparing `m0` \(((6a0b294c-194f-42fe-9c77-dac8aa08181e)))
+				- Registers `m0` to global list of all threads
+			- ### `goargs` and `goenvs`
+			  logseq.order-list-type:: number
+				- `goargs` converts C-style `argv` to Go string slices (eventually accessed via `os.Args`)
+				- `goenvs` is like `goargs`, but work with environment variables
+			- ### `secure`
+			  logseq.order-list-type:: number
+				- Security checks
+			- ### `checkfds`
+			  logseq.order-list-type:: number
+				- Checking file descriptors to make sure stdin, stdout, and stderr are available
+				  logseq.order-list-type:: number
+			- ### `gcinit`
+			  logseq.order-list-type:: number
+				- Initialize Go **mark-and-sweep** garbage collector
+				  logseq.order-list-type:: number
+			- ### Initialize new **`$GOMAXPROCS` P**s
+			  logseq.order-list-type:: number
+			- ### Start the world
+			  logseq.order-list-type:: number
+			- ### Recap: Go memory management
 				- We know that each contiguous chunk of OS memory gets wrapped inside `mSpan`
 				- And these `mSpan` are all tracked and managed inside a *Central Global Pool*, segregated by size
 				- {{renderer code_diagram,mermaid}}
