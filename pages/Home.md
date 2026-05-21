@@ -8,12 +8,14 @@
 		- [[Regex]]
 		- [[Nix (language)]]
 		- [[Datomic query]]
-	- ## Tech
+	- ## Software
 		- [[Memory]]
+		- [[ELF]]
 		- [[Nix]]
 		- [[NixOS]]
 		- [[Git]]
-		- [[Databases]] and [[Data systems]]
+		- [[Databases]]
+		- [[Data systems]]
 		- [[Datomic]]
 		- [[Kubernetes]]
 		- [[OS virtualization]]
