@@ -1,9 +1,21 @@
 - > See also: [[Git cheat sheet]]
 - Git is a version control system originally developed by Linus Torvalds for Linux development
-- Git tries to be least destructive, and will track everything by default
 - In Git, code is hosted and tracked on a "Git repository"
-- Git repositories are self-hosting, distributed repos
-	- Each local repo is a repo in its own right
+- Git repositories are self-hosting, and are distributed by design
+	- i.e. each repo is a repo in its own right
+- Git tries to be least destructive, and will track everything by default. If we can remember this it'll help to reason with Git behaviors
+- # Git as content-addressable store
+	- At the core, Git is content-addressable filesystem, meaning:
+		- We can insert data into Git
+		  logseq.order-list-type:: number
+		- Git will return a unique key for the stored data ([[Git objects]])
+		  logseq.order-list-type:: number
+		- We can use to retrieve the data from Git later
+		  logseq.order-list-type:: number
+	- Git stores content similar to UNIX filesystems:
+		- *Everything* is stored as tree and blob objects
+		- *Trees* correspond to UNIX filesystem *directory entries*
+		- *Blobs* correspond to *inodes, or file content*
 - # Git internals
 	- Git can be thought of as content-addressable [[filesystem]]
 		- This means that at the core Git is key-value store

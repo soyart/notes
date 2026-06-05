@@ -1,18 +1,7 @@
+- #Git
 - > https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
 - Git objects are what's stored in `.git/objects`, also called *object database*
-- An object also has its own type, such as blob and tree
-- # Git as content-addressable store
-	- At the core, Git is content-addressable filesystem, meaning:
-		- We can insert data into Git
-		  logseq.order-list-type:: number
-		- Git will return a unique key for the stored data
-		  logseq.order-list-type:: number
-		- We can use to retrieve the data from Git later
-		  logseq.order-list-type:: number
-	- Git stores content similar to UNIX filesystems:
-		- *Everything* is stored as tree and blob objects
-		- *Trees* correspond to UNIX filesystem *directory entries*
-		- *Blobs* correspond to *inodes, or file content*
+- An object also has its own type, such as blob, tree, and commits
 - # Walkthrough
 	- A simple walkthrough with `git hash-object` and `git cat-file`
 	- We can use low-level `git hash-object` to see how hashing works
@@ -93,58 +82,63 @@
 		  ```
 - # Git object types
 	- ## [[Git blob]]
-		- Blob objects store data, i.e. the file content
-		- Git usually compresses file content using zlib before creating objects
+	  id:: 6a230b81-b5d2-4c3e-bd12-51fa34fcc352
+		- A blob is a Git object file that contains some byte data (file content)
+		- A blob's filename is derived from SHA-1 hash of the content
 		- Metadata such as timestamps and filenames are not stored in blobs
+		- Note: Normally Git compresses file content using zlib before creating objects
 	- ## [[Git tree]] #Tree
-		- Tree objects can track filenames and group files together
+		- Tree object can track filenames and group files together in a single object
 		- Each tree object represents a snapshot of the repository
 		- A single tree object contains >1 entries
-			- Each tree entry is a SHA-1 hash pointing to a blob, or a subtree with associated metadata (e.g. filesystem mode, type, filenames)
+			- Each tree entry is a SHA-1 hash pointing to either:
+				- ((6a230b81-b5d2-4c3e-bd12-51fa34fcc352))
+				- A subtree with associated metadata (e.g. filesystem mode, type, filenames)
 			- Note that in Git, only 3 filesystem modes are valid for blobs:
 				- `100644` normal files
 				- `100755` executable
 				- `120000` symlink
-			- For example, let's say our repository `master` branch looks like this:
-			  ```sh
-			  git cat-file -p master^{tree}
-			  100644 blob a906cb2a4a904a152e80877d4088654daad0c859      README
-			  100644 blob 8f94139338f9404f26296befa88755fc2598c289      Rakefile
-			  040000 tree 99f1a6d12cb4b6f19c8655fca46c3ecf317074e0      lib
-			  ```
-				- > `master^{tree}` syntax specifies the tree object that is pointed to by the last commit on branch `master`
-				  >
-				  > You might also want to write `master^{tree}` as `"master^{tree}"` on zsh
-			- We can see that the tree `master` currently points to have 3 entries, 2/3 of which are blobs
-			- But `99f1a6d` is a (sub)tree, pointing to `./lib` directory:
-			  ```sh
-			  git cat-file -p 99f1a6d12cb4b6f19c8655fca46c3ecf317074e0
-			  100644 blob 47c6340d6459e05787f644c2447d2595f5d3a54b      simplegit.rb
-			  ```
-			- So `99f1a6d` represents `./lib`, a directory containing only 1 file, `simplegit.rb`, represented by single blob `47c634`
-			- {{renderer code_diagram,mermaid}}
-				- ```mermaid
-				  graph LR
-				      subgraph master_tree ["master^{tree}"]
-				          direction TB
-				          E1[100644 blob a906cb... README]
-				          E2[100644 blob 8f9413... Rakefile]
-				          E3[040000 tree 99f1a6... lib]
-				      end
-				  
-				      subgraph lib_tree [lib tree]
-				          direction TB
-				          E4[100644 blob 47c634... simplegit.rb]
-				      end
-				  
-				      E3 --> lib_tree
-				  ```
-		- ### Creating Git trees
-			- Git normally creates a tree by taking the snapshot of [[Git staging area]] or [[Git index]], and writing tree objects to it (i.e. *commit*)
+				- ### Example: with imaginary repository
+					- For example, let's say our repository `master` branch looks like this:
+					  ```sh
+					  git cat-file -p master^{tree}
+					  100644 blob a906cb2a4a904a152e80877d4088654daad0c859      README
+					  100644 blob 8f94139338f9404f26296befa88755fc2598c289      Rakefile
+					  040000 tree 99f1a6d12cb4b6f19c8655fca46c3ecf317074e0      lib
+					  ```
+						- > `master^{tree}` syntax specifies the tree object that is pointed to by the last commit on branch `master`
+						  >
+						  > You might also want to write `master^{tree}` as `"master^{tree}"` on zsh
+					- We can see that the tree `master` currently points to have 3 entries, 2/3 of which are blobs
+					- But `99f1a6d` is a (sub)tree, pointing to `./lib` directory:
+					  ```sh
+					  git cat-file -p 99f1a6d12cb4b6f19c8655fca46c3ecf317074e0
+					  100644 blob 47c6340d6459e05787f644c2447d2595f5d3a54b      simplegit.rb
+					  ```
+					- So `99f1a6d` represents `./lib`, a directory containing only 1 file, `simplegit.rb`, represented by single blob `47c634`
+					- {{renderer code_diagram,mermaid}}
+						- ```mermaid
+						  graph LR
+						      subgraph master_tree ["master^{tree}"]
+						          direction TB
+						          E1[100644 blob a906cb... README]
+						          E2[100644 blob 8f9413... Rakefile]
+						          E3[040000 tree 99f1a6... lib]
+						      end
+						  
+						      subgraph lib_tree [lib tree]
+						          direction TB
+						          E4[100644 blob 47c634... simplegit.rb]
+						      end
+						  
+						      E3 --> lib_tree
+						  ```
+		- ### Creating Git tree objects
+			- Git normally creates a tree by taking the snapshot of [[Git staging area]] or [[Git index]], and writing tree objects to the index
 			- To create a Git tree, we need to have Git index beforehand, maybe by staging
 				- > Note: `update-index` also writes new objects in the database
 				- ((6a23144a-c2a4-4822-8184-fec10e82627d))
-			- After we have our index, we can use `git write-tree` to write a new [[Git tree]] object from the updated index:
+			- After we have our index, we can use `git write-tree` to write a new tree object from the updated index:
 			  id:: 6a2315f7-0c5b-42be-a798-c70e1db9a012
 			  ```sh
 			  # Create a new tree out of current index
@@ -339,3 +333,29 @@
 				  
 				      First commit
 				  ```
+				- {{renderer code_diagram,mermaid}}
+					- ```mermaid
+					  graph LR
+					      %% Styling Configuration
+					      classDef commitNode fill:#ff9999,stroke:#333,stroke-width:2px;
+					      classDef treeNode fill:#f9f,stroke:#333,stroke-width:1px;
+					      
+					      %% Commit Objects (Chained horizontally via parent links)
+					      Commit3["commit 1a410e<br><i>'Third commit'</i>"]:::commitNode
+					      Commit2["commit cac0ca<br><i>'Second commit'</i>"]:::commitNode
+					      Commit1["commit fdf4fc<br><i>'First commit'</i>"]:::commitNode
+					      
+					      %% Tree Objects
+					      Tree3["tree 3c4e9c"]:::treeNode
+					      Tree2["tree 0155eb"]:::treeNode
+					      Tree1["tree d8329f"]:::treeNode
+					  
+					      %% Commit-to-Parent Links (Moving backwards into history)
+					      Commit3 -->|parent| Commit2
+					      Commit2 -->|parent| Commit1
+					      
+					      %% Commit-to-Tree Links (Points to the snapshot)
+					      Commit3 -->|tree| Tree3
+					      Commit2 -->|tree| Tree2
+					      Commit1 -->|tree| Tree1
+					  ```
