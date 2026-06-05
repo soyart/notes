@@ -271,5 +271,71 @@
 	- ## [[Git commit]]
 		- Each Git tree is a snapshot, so in theory, this is enough to track all history
 			- But it's tiring to remember SHA-1 hashes for every version of our project
-			- Trees by themselves also don't have these information: author, author time, and some message
-		- The Git commit object type provides those functionalities to us instead of mere Git trees
+			- Trees by themselves also don't have these information:
+				- author
+				- author time
+				- what change preceded it (Merkel tree)
+				- human details about the change (commit message)
+		- The Git commit object type provides those functionalities to us
+		- To create Git commit objects, use `git commit-tree` on a tree SHA-1
+			- `commit-tree` needs to know a few things:
+				- The "tree" to create commit from
+				- Any commit messages preceding this object
+				- We can start with the first tree that we created (`d8329f`; 1 file, version 1):
+				  ```sh
+				  echo 'First commit' | git commit-tree d8329f
+				  855e474e65e0c66175f11edd947f2c85d61cdea4
+				  
+				  git cat-file -p 855e474e65e0c66175f11edd947f2c85d61cdea4
+				  tree d8329fc1cc938780ffdd9f94e0d364e0ea74f579
+				  author Prem Phansuriyanon <prem.p@lmwn.com> 1780689015 +0700
+				  committer Prem Phansuriyanon <prem.p@lmwn.com> 1780689015 +0700
+				  
+				  First commit
+				  ```
+				  And the tree becomes our initial commit, i.e. initial snapshot
+				  > Note that if we try to reproduce the commit, we'll get a different hash, this is because of timestamps, authorship, and other metadata mismatch at commit time
+					- Let's compare this with the commit object from git.org (commit SHA-1 is `fdf4fc3`):
+					  ```sh
+					  git cat-file -p fdf4fc3
+					  tree d8329fc1cc938780ffdd9f94e0d364e0ea74f579
+					  author Scott Chacon <schacon@gmail.com> 1243040974 -0700
+					  committer Scott Chacon <schacon@gmail.com> 1243040974 -0700
+					  
+					  First commit
+					  ```
+				- Now, let's add 2nd and 3rd commits from trees we created earlier:
+				  ```sh
+				  echo 'Second commit' | git commit-tree 0155eb -p 855e47
+				  e2e5b85357181f7f796d58b1cf2eab51a6fbd1b7
+				  echo 'Third commit' | git commit-tree 3c4e9c -p e2e5b8
+				  d688b31c374c8109f3ead0111f3e934e34a0daaa
+				  ```
+				- After commit objects are created, `git log` works when given commit's SHA-1:
+				  ```sh
+				  git log 855e474e65e0c66175f11edd947f2c85d61cdea4
+				  commit 855e474e65e0c66175f11edd947f2c85d61cdea4
+				  Author: Prem Phansuriyanon <prem.p@lmwn.com>
+				  Date:   Sat Jun 6 02:50:15 2026 +0700
+				  
+				      First commit
+				  
+				  git log d688b31c374c8109f3ead0111f3e934e34a0daaa
+				  commit d688b31c374c8109f3ead0111f3e934e34a0daaa
+				  Author: Prem Phansuriyanon <prem.p@lmwn.com>
+				  Date:   Sat Jun 6 02:56:48 2026 +0700
+				  
+				      Third commit
+				  
+				  commit e2e5b85357181f7f796d58b1cf2eab51a6fbd1b7
+				  Author: Prem Phansuriyanon <prem.p@lmwn.com>
+				  Date:   Sat Jun 6 02:55:18 2026 +0700
+				  
+				      Second commit
+				  
+				  commit 855e474e65e0c66175f11edd947f2c85d61cdea4
+				  Author: Prem Phansuriyanon <prem.p@lmwn.com>
+				  Date:   Sat Jun 6 02:50:15 2026 +0700
+				  
+				      First commit
+				  ```
