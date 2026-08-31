@@ -5,17 +5,21 @@
 	- i.e. each repo is a repo in its own right
 - Git tries to be least destructive, and will track everything by default. If we can remember this it'll help to reason with Git behaviors
 - # Git as content-addressable store
+  id:: 6a2300eb-6e1a-43ec-a2b3-b425ad263c17
 	- At the core, Git is content-addressable filesystem, meaning:
-		- We can insert data into Git
+		- > See more for practical example: ((6a230811-ef00-42db-bd65-e0f7f8951d2c))
+		- We can insert some data into Git
 		  logseq.order-list-type:: number
-		- Git will return a unique key for the stored data ([[Git objects]])
+		- Git stores this data as [[Git objects]]
+		  logseq.order-list-type:: number
+		- Git will return a unique key for the stored data
 		  logseq.order-list-type:: number
 		- We can use to retrieve the data from Git later
 		  logseq.order-list-type:: number
 	- Git stores content similar to UNIX filesystems:
-		- *Everything* is stored as tree and blob objects
-		- *Trees* correspond to UNIX filesystem *directory entries*
-		- *Blobs* correspond to *inodes, or file content*
+		- *Everything* is stored as [[Git tree]] and [[Git blob]] objects
+			- *Blobs* correspond to *inodes, or file content*
+			- *Trees* correspond to UNIX filesystem *directory entries*
 - # Git internals
 	- Git can be thought of as content-addressable [[filesystem]]
 		- This means that at the core Git is key-value store

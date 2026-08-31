@@ -1,31 +1,33 @@
 - #Git
 - > https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
-- Git objects are what's stored in `.git/objects`, also called *object database*
+- Git objects are files stored in `.git/objects`, also called *object database*
 - An object also has its own type, such as blob, tree, and commits
 - # Walkthrough
+  id:: 6a230811-ef00-42db-bd65-e0f7f8951d2c
 	- A simple walkthrough with `git hash-object` and `git cat-file`
 	- We can use low-level `git hash-object` to see how hashing works
-		- Initialize **empty** repository and inspect the object db:
+		- Initialize **empty** repository and list all files inside of the object db:
 		  ```sh
-		  $ cd ~/git
-		  $ git init test
+		  cd ~/git
+		  git init test
 		  Initialized empty Git repository in ~/git/test/.git/
-		  $
-		  $ cd test
-		  $ find .git/objects
+		  
+		  cd test
+		  find .git/objects
 		  .git/objects
 		  .git/objects/info
 		  .git/objects/pack
-		  $ find .git/objects -type f
+		  find .git/objects -type f
 		  ```
-		  So, no object files are created yet
+		- At this point, no object files are created yet
 		- Give `hash-object` some data, in this case, string `test content`:
 		  ```sh
-		  $ echo 'test content' | git hash-object --stdin
+		  echo 'test content' | git hash-object --stdin
 		  d670460b4b4aece5915caf5c68d12f560a9fe3e4
 		  ```
-		- And we get a hash for the data `test content` is `d670460b4b4aece5915caf5c68d12f560a9fe3e4`. The string should return the same hash every time on every machine
-	- We can also use `hash-object -w` to also write the given data to object db:
+			- And we get a hash for the data `test content` is `d670460b4b4aece5915caf5c68d12f560a9fe3e4`.
+			- **`hash-object` should return the same hash string every time on every machine** for the same `test content` text
+	- We can also use `hash-object -w` to also write the given data to object db
 		- > `git hash-object -w` takes some data, writes the data as objects into `.git/objects`, and returning back a hash
 		- ```sh
 		  echo 'test content' | git hash-object -w --stdin
